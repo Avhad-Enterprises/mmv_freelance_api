@@ -1,0 +1,12 @@
+{% extends "layouts/layout.njk" %}
+
+{% block content %}
+  <section class="hero">
+    <h1>{{ settings.heroText }}</h1>
+  </section>
+  {% if settings.showNewsletterSignup %}
+    <section class="newsletter">
+      <p>Subscribe to our newsletter!</p>
+    </section>
+  {% endif %}
+{% endblock %}

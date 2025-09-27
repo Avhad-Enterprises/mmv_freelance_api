@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ pageTitle }}</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  {% include "sections/header.njk" %}
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  {% include "sections/footer.njk" %}
+</body>
+</html>
