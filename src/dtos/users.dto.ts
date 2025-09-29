@@ -54,6 +54,14 @@ export class UsersDto {
   @IsString()
   pincode: string;
 
+   @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
+
   @IsOptional()
   @IsString()
   password: string;
