@@ -29,6 +29,8 @@ export const seed = async (dropFirst = false) => {
             table.string('state').nullable();
             table.string('country').nullable();
             table.string('pincode').nullable();
+            table.decimal('latitude', 10, 8).nullable();
+            table.decimal('longitude', 11, 8).nullable();
             table.string('password').nullable();
             table.boolean('aadhaar_verification').defaultTo(false);
             table.boolean('email_verified').defaultTo(false);
