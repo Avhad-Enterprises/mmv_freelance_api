@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { UsersDto } from "./user.dto";
+import { ResponseUtil, UserRegistrationResponse, UserLoginResponse } from "../../utils/response.util";
 
 // Extend Express Request type to include 'user' and 'files'
 interface AuthenticatedRequest extends Request {
@@ -269,25 +270,38 @@ class UsersController {
   };
 
   public Login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-
     try {
-
       const { email, password } = req.body;
 
-
       if (!email || !password) {
-        throw new HttpException(400, "Please provide both email and password");
+        ResponseUtil.validationError(
+          res,
+          "Missing credentials",
+          ["Please provide both email and password"]
+        );
+        return;
       }
+
       const user = await this.UsersService.login(email, password);
       // Exclude password from response
       const { password: _pw, ...userData } = user as any;
 
       const token = generateToken(userData);
 
-      res.status(200).json({
-        data: { user: userData, token },
-        message: "Login successful",
-      });
+      // Prepare standardized response data
+      const responseData: UserLoginResponse = {
+        user: userData,
+        token,
+        redirectUrl: userData.account_type === 'freelancer' 
+          ? '/dashboard/candidate-dashboard' 
+          : '/dashboard/employ-dashboard'
+      };
+
+      ResponseUtil.success(
+        res,
+        responseData,
+        "Login successful"
+      );
     } catch (error) {
       next(error);
     }
@@ -380,19 +394,42 @@ class UsersController {
 
       // Validate account type
       if (!userData.account_type || !['freelancer', 'client'].includes(userData.account_type)) {
-        throw new HttpException(400, "Account type must be either 'freelancer' or 'client'");
+        ResponseUtil.validationError(
+          res,
+          "Invalid account type",
+          ["Account type must be either 'freelancer' or 'client'"]
+        );
+        return;
       }
 
       // Create user with the frontend registration service
       const result = await this.UsersService.registerUser(userData, files);
 
-      res.status(201).json({
-        data: {
-          user: result.user,
-          token: result.token
+      // Prepare standardized response data
+      const responseData: UserRegistrationResponse = {
+        user: {
+          user_id: result.user.user_id,
+          username: result.user.username,
+          first_name: result.user.first_name,
+          last_name: result.user.last_name,
+          email: result.user.email,
+          account_type: result.user.account_type,
+          phone_verified: result.user.phone_verified || false,
+          email_verified: result.user.email_verified || false,
+          is_active: result.user.is_active,
+          created_at: result.user.created_at
         },
-        message: `${userData.account_type} registered successfully`
-      });
+        token: result.token,
+        redirectUrl: userData.account_type === 'freelancer' 
+          ? '/dashboard/candidate-dashboard' 
+          : '/dashboard/employ-dashboard'
+      };
+
+      ResponseUtil.created(
+        res,
+        responseData,
+        `${userData.account_type.charAt(0).toUpperCase() + userData.account_type.slice(1)} registered successfully`
+      );
     } catch (error) {
       next(error);
     }

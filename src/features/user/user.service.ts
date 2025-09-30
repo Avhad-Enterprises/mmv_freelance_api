@@ -471,14 +471,40 @@ class UsersService {
       // Add account-type specific fields
       if (userData.account_type === 'freelancer') {
         userInsertData.profile_title = userData.profile_title || null;
-        userInsertData.skills = userData.skills ? JSON.stringify(userData.skills) : null;
+        
+        // Handle skills - check if it's already a JSON string or needs stringifying
+        if (userData.skills) {
+          if (typeof userData.skills === 'string') {
+            // Already a JSON string from FormData
+            userInsertData.skills = userData.skills;
+          } else {
+            // Array that needs stringifying
+            userInsertData.skills = JSON.stringify(userData.skills);
+          }
+        } else {
+          userInsertData.skills = null;
+        }
+        
         userInsertData.experience_level = userData.experience_level || null;
         userInsertData.portfolio_links = userData.portfolio_links || null;
         userInsertData.hourly_rate = userData.hourly_rate || null;
         userInsertData.availability = userData.availability || null;
         userInsertData.hours_per_week = userData.hours_per_week || null;
         userInsertData.work_type = userData.work_type || null;
-        userInsertData.languages = userData.languages ? JSON.stringify(userData.languages) : null;
+        
+        // Handle languages - same logic as skills
+        if (userData.languages) {
+          if (typeof userData.languages === 'string') {
+            // Already a JSON string from FormData
+            userInsertData.languages = userData.languages;
+          } else {
+            // Array that needs stringifying
+            userInsertData.languages = JSON.stringify(userData.languages);
+          }
+        } else {
+          userInsertData.languages = null;
+        }
+        
         userInsertData.id_type = userData.id_type || null;
         
         // Address fields for freelancer
@@ -493,10 +519,29 @@ class UsersService {
         userInsertData.website = userData.website || null;
         userInsertData.social_links = userData.social_links || null;
         userInsertData.company_size = userData.company_size || null;
-        userInsertData.required_services = userData.required_services ? JSON.stringify(userData.required_services) : null;
-        userInsertData.required_skills = userData.required_skills ? JSON.stringify(userData.required_skills) : null;
-        userInsertData.required_editor_proficiencies = userData.required_editor_proficiencies ? JSON.stringify(userData.required_editor_proficiencies) : null;
-        userInsertData.required_videographer_proficiencies = userData.required_videographer_proficiencies ? JSON.stringify(userData.required_videographer_proficiencies) : null;
+        
+        // Handle array fields for client - check if already JSON strings
+        const arrayFields = [
+          'required_services',
+          'required_skills', 
+          'required_editor_proficiencies',
+          'required_videographer_proficiencies'
+        ];
+        
+        arrayFields.forEach(field => {
+          if (userData[field]) {
+            if (typeof userData[field] === 'string') {
+              // Already a JSON string from FormData
+              userInsertData[field] = userData[field];
+            } else {
+              // Array that needs stringifying
+              userInsertData[field] = JSON.stringify(userData[field]);
+            }
+          } else {
+            userInsertData[field] = null;
+          }
+        });
+        
         userInsertData.budget_min = userData.budget_min || null;
         userInsertData.budget_max = userData.budget_max || null;
         userInsertData.tax_id = userData.tax_id || null;

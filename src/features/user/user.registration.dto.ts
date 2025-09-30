@@ -12,6 +12,7 @@ import {
   ArrayMinSize,
   IsUrl
 } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class UserRegistrationDto {
   // Step 1: Basic Information
@@ -41,12 +42,22 @@ export class UserRegistrationDto {
   @IsEnum(['freelancer', 'client'])
   account_type: 'freelancer' | 'client';
 
-  // Freelancer-specific fields (Step 2)
+  // Freelancer-specific fields (Step 2) - Required for freelancers
   @IsOptional()
   @IsString()
   profile_title?: string;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [value];
+  })
   @IsArray()
   @ArrayMinSize(1)
   skills?: string[];
@@ -60,16 +71,26 @@ export class UserRegistrationDto {
   portfolio_links?: string;
 
   @IsOptional()
+  @Transform(({ value }) => parseInt(value))
   @IsNumber()
   @Min(100)
   @Max(10000)
   hourly_rate?: number;
 
-  // Step 3: Contact & Location (Freelancer)
+  // Step 3: Contact & Location (Required for both but field names differ)
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      // Remove all non-numeric characters except + for country code
+      const cleanPhone = value.replace(/[^\d+]/g, '');
+      return cleanPhone;
+    }
+    return value;
+  })
   phone_number?: string;
 
+  // Freelancer address fields
   @IsOptional()
   @IsString()
   street_address?: string;
@@ -108,6 +129,16 @@ export class UserRegistrationDto {
   work_type?: string;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [value];
+  })
   @IsArray()
   @ArrayMinSize(1)
   languages?: string[];
@@ -134,31 +165,73 @@ export class UserRegistrationDto {
   company_size?: string;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [value];
+  })
   @IsArray()
   @ArrayMinSize(1)
   required_services?: string[];
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [value];
+  })
   @IsArray()
   @ArrayMinSize(1)
   required_skills?: string[];
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [value];
+  })
   @IsArray()
   @ArrayMinSize(1)
   required_editor_proficiencies?: string[];
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [value];
+  })
   @IsArray()
   @ArrayMinSize(1)
   required_videographer_proficiencies?: string[];
 
   @IsOptional()
+  @Transform(({ value }) => parseInt(value))
   @IsNumber()
   @Min(0)
   budget_min?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseInt(value))
   @IsNumber()
   budget_max?: number;
 
