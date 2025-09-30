@@ -4,6 +4,7 @@ import App from './app';
 
 // Feature-based route imports
 import usersRoutes from './features/user/user.routes';
+import AuthRoute from './features/user/auth.routes';
 import roleRoute from './features/role/role.routes';
 import permissionRoute from './features/permission/permission.routes';
 import projectstaskRoute from './features/projectstask/projectstask.routes';
@@ -46,6 +47,7 @@ validateEnv();
 // Instantiate App with all route classes
 const app = new App([
     new usersRoutes(),
+    new AuthRoute(),
     new roleRoute(),
     new permissionRoute(),
     new projectstaskRoute(),
@@ -68,7 +70,7 @@ const app = new App([
     new WebhookRoute(),
     new LocationRoute(),
     new BrandingRoute(),
-    new FirebaseAuthRoute(),
+    // new FirebaseAuthRoute(), // Temporarily disabled to avoid conflicts
     new DocumentRoute(),
     new CategoryRoute(),
     new TagRoute(),
