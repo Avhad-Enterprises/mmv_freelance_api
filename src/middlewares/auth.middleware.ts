@@ -2,14 +2,20 @@ import { NextFunction, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import HttpException from '../exceptions/HttpException';
 import { DataStoredInToken, RequestWithUser } from '../interfaces/auth.interface';
-import DB from '../../database/index.schema';
+import DB, { T } from '../../database/index.schema';
 import { IsEmpty } from 'class-validator';
 
 const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFunction) => {
 
   try {
 
-    if (req.path.includes('/users/login') || req.path.includes('/users/insert_user') || req.path.includes('/projectsTask/getallprojectlisting') || req.path.includes('/users/loginf')) {
+    if (req.path.includes('/users/login') || 
+        req.path.includes('/users/insert_user') || 
+        req.path.includes('/projectsTask/getallprojectlisting') || 
+        req.path.includes('/users/loginf') ||
+        req.path.includes('/auth/register') ||
+        req.path.includes('/auth/login') ||
+        req.path.includes('/health')) {
       console.log(DB)
       await DB.raw("SET search_path TO public");
       return next();
@@ -27,8 +33,16 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
         const verificationResponse = (await jwt.verify(bearerToken, secret)) as DataStoredInToken;
        
         if (verificationResponse) {
-          await DB.raw("SET search_path TO public");
-          next();
+          const userId = verificationResponse.id;
+          const findUser = await DB(T.USERS_TABLE).where({ user_id: userId }).first();
+          
+          if (findUser) {
+            req.user = findUser;
+            await DB.raw("SET search_path TO public");
+            next();
+          } else {
+            next(new HttpException(401, 'Invalid authentication token'));
+          }
         }
         else { next(new HttpException(401, 'UnAuthorized User')); }
       } else {
