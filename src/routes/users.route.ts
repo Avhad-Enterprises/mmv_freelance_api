@@ -22,7 +22,7 @@ class UsersRoute implements Route {
     this.router.get(`${this.path}/client/active`, this.usersController.getAllActiveClient);
     this.router.get(`${this.path}/freelancers/active`, this.usersController.getAllActiveFreelance);    //active freelancers
     this.router.get(`${this.path}/geteditorcount/active`, this.usersController.geteditorcount);
-
+    // Register
     this.router.post(`${this.path}/insert_user`, validationMiddleware(UsersDto, 'body', false, []), this.usersController.insertUser);
     //backend login
     this.router.post(`${this.path}/login`, this.usersController.loginEmployee);
@@ -47,7 +47,7 @@ class UsersRoute implements Route {
     this.router.post(`${this.path}/getfreelaner`, (req, res, next) => this.usersController.getfreelancer(req, res, next));
 
     this.router.post(`${this.path}/change-password`, authMiddleware, this.usersController.changePassword);
-    
+
     // Invite user (Admin only)
     this.router.post(`${this.path}/send-invitation`, this.usersController.sendInvitation);
 

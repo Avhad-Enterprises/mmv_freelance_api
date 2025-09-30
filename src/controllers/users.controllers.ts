@@ -331,8 +331,7 @@ class UsersController {
   public sendInvitation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const {
-        first_name,
-        last_name,
+        full_name,
         username,
         email,
         phone_number,
@@ -350,7 +349,7 @@ class UsersController {
         to: email,
         subject: `You're Invited to Register - ${process.env.FRONTEND_APPNAME}`,
         html: `
-        <p>Hi ${first_name},</p>
+        <p>Hi ${full_name},</p>
         <p>You've been invited to join <strong>${process.env.FRONTEND_APPNAME}</strong>.</p>
         <p>Please click the link below to register your account:</p>
         <p><a href="${inviteLink}" target="_blank" style="color: #1a73e8; text-decoration: underline;">Click here to register</a></p>
