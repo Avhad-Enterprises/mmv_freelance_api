@@ -1,8 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { AnalyticsDto } from './analytics.dto';
 import AnalyticsService  from './analytics.service';
-import { T } from '../../../database/index.schema';
-import { validate } from 'class-validator';
 
 class AnalyticsController  {
 

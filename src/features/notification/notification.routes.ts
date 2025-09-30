@@ -1,8 +1,6 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
-import validationMiddleware from '../../middlewares/validation.middleware';
 import notificationController from './notification.controller';
-import { NotificationDto } from './notification.dto';
 
 class notificationRoute implements Route {
 

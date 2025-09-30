@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
-import { RequestHandler } from 'express';
 import validationMiddleware from '../../middlewares/validation.middleware';
 import projectstaskcontroller from './projectstask.controller';
 import { ProjectsTaskDto } from './projectstask.dto';

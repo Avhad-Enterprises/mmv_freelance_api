@@ -39,36 +39,7 @@ import RobotsTxtRoute from './features/robots-txt/robots-txt.routes';
 import EmcRoute from './features/emc/emc.routes';
 import ReportTemplatesRoute from './features/report-templates/report-templates.routes';
 
-// Legacy route imports (to be migrated)
-// Removed: import TagsRoute from './routes/tags.routes'; - Now using feature-based
-// Removed: import uploadtoaws from './routes/uploadtoaws.route'; - Now using feature-based
-// Removed: import projects_taskRoute from './routes/projectstask.routes'; - Now using feature-based
-// Removed: import AppliedProjectsRoute from './routes/applied_projects.route'; - Now using feature-based
-// Removed: import blogRoute from './routes/blog.routes'; - Now using feature-based
-// Removed: import categoryRoute from './routes/categories.routes'; - Now using feature-based
-// Removed: import EMCRoute from './routes/emc.routes'; - Now using feature-based
-// Removed: import favoritesRoute from './routes/favorites.routes'; - Now using feature-based
-// Removed: import notificationRoute from './routes/notification.routes'; - Now using feature-based
-// Removed: import permissionRoute from './routes/permission.routes'; - Now using feature-based
-// Removed: import ReportsRoute from './routes/report_system.routes'; - Now using feature-based
-// Removed: import roleRoute from './routes/role.routes'; - Now using feature-based
-// Removed: import visitor_logsRoute from './routes/visitor_logs.routes'; - Now using feature-based
-// Removed: import report_templatesRoute from './routes/report_templates.routes'; - Now using feature-based
-// Removed: import ReviewRoute from './routes/review.route'; - Now using feature-based
-// Removed: import supportTicketsRoute from './routes/support_tickets.route'; - Now using feature-based
-// Removed: import faqRoute from './routes/faq.routes'; - Now using feature-based
-// Removed: import PaymentRoute from './routes/payment.route'; - Now using feature-based
-// Removed: import WebhookRoute from './routes/webhook.route'; - Now using feature-based
-// Removed: import CmsRoute from './routes/cms.routes'; - Now using feature-based
-import validateEnv from './utils/validateEnv';
-// Removed: import SEORoute from './routes/SEO.routes'; - Now using feature-based
-// Removed: import branding_assetsRoute from './routes/branding_assets.routes'; - Now using feature-based
-// Removed: import analytics_settingsRoute from './routes/analytics_Settings.routes'; - Now using feature-based
-// Removed: import subscribed_emailsRoute from './routes/subscribed_emails.routes'; - Now using feature-based
-// Removed: import robotstxtRoutes from './routes/robotstxt.routes'; - Now using feature-based
-// Removed: import SavedprojectRoute from './routes/saved_project.route'; - Now using feature-based
-// Removed: import locationRoute from './routes/location.routes'; - Now using feature-based
-// Removed: import dashboardRoute from './routes/dashboard.routes'; - Now using feature-based
+import validateEnv from './utils/validation/validateEnv';
 // Validate .env variables
 validateEnv();
 
@@ -90,28 +61,6 @@ const app = new App([
     new AnalyticsRoute(),
     new ReportRoute(),
     new VisitorLogRoute(),
-    // Removed: new TagsRoute(), - Now using feature-based
-    // Removed: new uploadtoaws(), - Now using feature-based
-    // Removed: new categoryRoute(), - Now using feature-based
-    // Removed: new EMCRoute(), - Now using feature-based
-    // Removed: new notificationRoute(), - Now using feature-based
-    // Removed: new ReportsRoute(), - Now added above with feature-based routes
-    // Removed: new roleRoute(), - Now added above with feature-based routes
-    // Removed: new visitor_logsRoute(), - Now added above with feature-based routes
-    // Removed: new robotstxtRoutes(), - Now using feature-based
-    // Removed: new report_templatesRoute(), - Now using feature-based
-    // Removed: new ReviewRoute(), - Now using feature-based
-    // Removed: new supportTicketsRoute(), - Now using feature-based
-    // Removed: new PaymentRoute(), - Now added above with feature-based routes
-    // Removed: new WebhookRoute(), - Now using feature-based
-    // Removed: new branding_assetsRoute(), - Now using feature-based
-    // Removed: new analytics_settingsRoute(), - Now added above with feature-based routes
-    // Removed: new subscribed_emailsRoute(), - Now using feature-based
-    // Removed: new SEORoute(), - Now added above with feature-based routes
-    // Removed: new CmsRoute(), - Now added above with feature-based routes
-    // Removed: new SavedprojectRoute(), - Now added above with feature-based routes
-    // Removed: new locationRoute(), - Now using feature-based
-    // Feature-based routes (Phases 1-8)
     new notificationRoute(),
     new supportTicketsRoute(),
     new EmailRoute(),
@@ -121,14 +70,12 @@ const app = new App([
     new BrandingRoute(),
     new FirebaseAuthRoute(),
     new DocumentRoute(),
-    // Phase 9: Remaining Features
     new CategoryRoute(),
     new TagRoute(),
     new ReviewRoute(),
     new RobotsTxtRoute(),
     new EmcRoute(),
     new ReportTemplatesRoute(),
-    // Removed: new dashboardRoute(), - Now added above with feature-based routes
 ]);
 
 // Start server

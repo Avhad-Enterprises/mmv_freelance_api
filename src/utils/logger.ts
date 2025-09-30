@@ -2,11 +2,11 @@ import fs from 'fs';
 import winston from 'winston';
 import winstonDaily from 'winston-daily-rotate-file';
 
-// logs dir
-const logDir = __dirname + '/../logs';
+// logs dir - outside src folder at project root
+const logDir = __dirname + '/../../logs';
 
 if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir);
+  fs.mkdirSync(logDir, { recursive: true });
 }
 
 // winston format

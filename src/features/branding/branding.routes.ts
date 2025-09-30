@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
-import { RequestHandler } from 'express';
 import validationMiddleware from '../../middlewares/validation.middleware';
 import brandingcontrollers from './branding.controller';
 import { BrandingAssetsDto } from './branding.dto';

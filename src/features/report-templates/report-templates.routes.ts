@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { RequestHandler } from 'express';
 import validationMiddleware from '../../middlewares/validation.middleware';
 import ReportTemplateController from './report-templates.controller';
 import { ReportTemplateDTO } from './report-templates.dto';
