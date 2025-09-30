@@ -420,5 +420,129 @@ class UsersService {
     return res[0];
   }
 
+  // Frontend Multi-Step Registration Service
+  public async registerUser(userData: any, files?: any): Promise<{ user: any; token: string }> {
+    try {
+      // Check if email already exists
+      const existingUser = await DB(T.USERS_TABLE).where({ email: userData.email }).first();
+      if (existingUser) {
+        throw new HttpException(409, "Email already exists");
+      }
+
+      // Check if username already exists
+      const existingUsername = await DB(T.USERS_TABLE).where({ username: userData.username }).first();
+      if (existingUsername) {
+        throw new HttpException(409, "Username already taken");
+      }
+
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+      // Prepare user data for insertion
+      const userInsertData: any = {
+        username: userData.username,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        email: userData.email,
+        password: hashedPassword,
+        account_type: userData.account_type,
+        phone_number: userData.phone_number || null,
+        is_active: true,
+        is_banned: false,
+        email_verified: false,
+        phone_verified: false,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+
+      // Handle file uploads if present
+      if (files) {
+        if (files.id_document && files.id_document[0]) {
+          // TODO: Upload to AWS S3 and get URL
+          userInsertData.id_document_url = `temp_${files.id_document[0].filename}`;
+        }
+        if (files.business_documents && files.business_documents.length > 0) {
+          // TODO: Upload multiple files to AWS S3 and get URLs
+          const documentUrls = files.business_documents.map((file: any) => `temp_${file.filename}`);
+          userInsertData.business_documents = JSON.stringify(documentUrls);
+        }
+      }
+
+      // Add account-type specific fields
+      if (userData.account_type === 'freelancer') {
+        userInsertData.profile_title = userData.profile_title || null;
+        userInsertData.skills = userData.skills ? JSON.stringify(userData.skills) : null;
+        userInsertData.experience_level = userData.experience_level || null;
+        userInsertData.portfolio_links = userData.portfolio_links || null;
+        userInsertData.hourly_rate = userData.hourly_rate || null;
+        userInsertData.availability = userData.availability || null;
+        userInsertData.hours_per_week = userData.hours_per_week || null;
+        userInsertData.work_type = userData.work_type || null;
+        userInsertData.languages = userData.languages ? JSON.stringify(userData.languages) : null;
+        userInsertData.id_type = userData.id_type || null;
+        
+        // Address fields for freelancer
+        userInsertData.address_line_first = userData.street_address || null;
+        userInsertData.city = userData.city || null;
+        userInsertData.state = userData.state || null;
+        userInsertData.country = userData.country || null;
+        userInsertData.pincode = userData.zip_code || null;
+      } else if (userData.account_type === 'client') {
+        userInsertData.company_name = userData.company_name || null;
+        userInsertData.industry = userData.industry || null;
+        userInsertData.website = userData.website || null;
+        userInsertData.social_links = userData.social_links || null;
+        userInsertData.company_size = userData.company_size || null;
+        userInsertData.required_services = userData.required_services ? JSON.stringify(userData.required_services) : null;
+        userInsertData.required_skills = userData.required_skills ? JSON.stringify(userData.required_skills) : null;
+        userInsertData.required_editor_proficiencies = userData.required_editor_proficiencies ? JSON.stringify(userData.required_editor_proficiencies) : null;
+        userInsertData.required_videographer_proficiencies = userData.required_videographer_proficiencies ? JSON.stringify(userData.required_videographer_proficiencies) : null;
+        userInsertData.budget_min = userData.budget_min || null;
+        userInsertData.budget_max = userData.budget_max || null;
+        userInsertData.tax_id = userData.tax_id || null;
+        userInsertData.work_arrangement = userData.work_arrangement || null;
+        userInsertData.project_frequency = userData.project_frequency || null;
+        userInsertData.hiring_preferences = userData.hiring_preferences || null;
+        userInsertData.expected_start_date = userData.expected_start_date || null;
+        userInsertData.project_duration = userData.project_duration || null;
+        
+        // Address fields for client
+        userInsertData.address = userData.address || null;
+        userInsertData.city = userData.city || null;
+        userInsertData.state = userData.state || null;
+        userInsertData.country = userData.country || null;
+        userInsertData.pincode = userData.pincode || null;
+      }
+
+      // Insert user into database
+      const [newUser] = await DB(T.USERS_TABLE).insert(userInsertData).returning("*");
+
+      // Remove password from response
+      const { password: _, ...userResponse } = newUser;
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          id: newUser.user_id,
+          email: newUser.email,
+          account_type: newUser.account_type 
+        },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '7d' }
+      );
+
+      return {
+        user: userResponse,
+        token: token
+      };
+
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(500, `Registration failed: ${error}`);
+    }
+  }
+
 }
 export default UsersService;
