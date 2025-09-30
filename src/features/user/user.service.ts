@@ -95,7 +95,7 @@ class UsersService {
       throw new HttpException(404, "User not registered");
     }
 
-    if (user.is_banned = false) {
+    if (user.is_banned === true) {
       throw new HttpException(403, "Your account has been banned.");
     }
 
@@ -311,7 +311,7 @@ class UsersService {
     if (!user) {
       throw new HttpException(404, "Email not registered");
     }
-    if (user.is_banned = false) {
+    if (user.is_banned === true) {
       throw new HttpException(403, "Your account has been banned.");
     }
 
