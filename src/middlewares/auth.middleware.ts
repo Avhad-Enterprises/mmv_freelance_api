@@ -14,7 +14,8 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
         req.path.includes('/projectsTask/getallprojectlisting') || 
         req.path.includes('/users/loginf') ||
         req.path.includes('/auth/register') ||
-        req.path.includes('/auth/login')) {
+        req.path.includes('/auth/login') ||
+        req.path.includes('/health')) {
       console.log(DB)
       await DB.raw("SET search_path TO public");
       return next();

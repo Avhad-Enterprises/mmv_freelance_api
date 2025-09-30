@@ -3,6 +3,9 @@ import Route from "../../interfaces/route.interface";
 import validationMiddleware from "../../middlewares/validation.middleware";
 import UsersController from "./user.controller";
 import { UserRegistrationDto, UserLoginDto } from "./user.registration.dto";
+import { registrationRateLimit, authRateLimit } from "../../middlewares/rate-limit.middleware";
+import { SecurityMiddleware } from "../../middlewares/security.middleware";
+import { BusinessValidationMiddleware } from "../../middlewares/business-validation.middleware";
 import multer from "multer";
 import path from "path";
 
@@ -42,19 +45,26 @@ class AuthRoute implements Route {
   }
 
   private initializeRoutes() {
-    // Multi-step registration endpoint (temporarily without validation)
+    // Multi-step registration endpoint with backend-specific validation
     this.router.post(
       `${this.path}/register`,
+      registrationRateLimit, // Prevent registration spam
+      SecurityMiddleware.essential, // XSS, SQL injection, request size protection
       upload.fields([
         { name: 'id_document', maxCount: 1 },
         { name: 'business_documents', maxCount: 5 }
       ]),
+      validationMiddleware(UserRegistrationDto, 'body', false, []),
+      BusinessValidationMiddleware.registrationValidation, // Business logic validation
       this.usersController.register
     );
 
-    // Login endpoint (alternative to /users/loginf)
+    // Login endpoint with backend security
     this.router.post(
       `${this.path}/login`,
+      authRateLimit, // Prevent brute force attacks
+      SecurityMiddleware.essential, // XSS, SQL injection protection
+      validationMiddleware(UserLoginDto, 'body', false, []),
       this.usersController.Login
     );
   }

@@ -70,7 +70,7 @@ const app = new App([
     new WebhookRoute(),
     new LocationRoute(),
     new BrandingRoute(),
-    new FirebaseAuthRoute(),
+    // new FirebaseAuthRoute(), // Temporarily disabled to avoid conflicts
     new DocumentRoute(),
     new CategoryRoute(),
     new TagRoute(),
