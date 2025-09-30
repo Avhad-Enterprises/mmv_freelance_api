@@ -2,8 +2,7 @@ import { NextFunction, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import HttpException from '../exceptions/HttpException';
 import { DataStoredInToken, RequestWithUser } from '../interfaces/auth.interface';
-import userModel from '../models/users.model';
-import DB from '../database/index.schema';
+import DB from '../../database/index.schema';
 import { IsEmpty } from 'class-validator';
 
 const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFunction) => {

@@ -1,26 +1,48 @@
 {
-  "name": "itw-backend",
+  "name": "mmv-api",
   "version": "1.0.0",
-  "description": "rest api for ITW",
-  "main": "app.ts",
+  "description": "REST API for MMV Freelance Platform - A comprehensive freelance marketplace backend service",
+  "main": "build/server.js",
   "scripts": {
     "main": "npm run build && cross-env NODE_ENV=production node build/server.js",
     "start": "cross-env NODE_ENV=production node build/server.js",
+    "start:dev": "cross-env NODE_ENV=development nodemon",
     "dev": "cross-env NODE_ENV=development nodemon",
     "build": "tsc",
+    "build:prod": "tsc --sourceMap false",
+    "clean": "rm -rf build/",
     "test": "jest --forceExit --detectOpenHandles",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "lint": "eslint --ignore-path .gitignore --ext .ts src/",
-    "lint:fix": "npm run lint -- --fix"
+    "lint:fix": "npm run lint -- --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
-    "analog",
-    "digital",
-    "paslode",
-    "itw.",
-    "digitization"
+    "mmv",
+    "freelance",
+    "marketplace",
+    "api",
+    "backend",
+    "nodejs",
+    "typescript",
+    "express",
+    "postgresql",
+    "rest-api",
+    "feature-based-architecture"
   ],
-  "author": "supra infotech",
+  "author": "MMV Freelance Team",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Avhad-Enterprises/mmv_freelance_api.git"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "dependencies": {
     "aws-sdk": "^2.1692.0",
     "axios": "^1.10.0",

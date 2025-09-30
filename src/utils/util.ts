@@ -1,4 +1,4 @@
-// import { AWS_BUCKET_NAME, AWS_ID, AWS_SECRET } from '../database/index.schema';
+// import { AWS_BUCKET_NAME, AWS_ID, AWS_SECRET } from '../../database/index.schema';
 import AWS from 'aws-sdk';
 import dotenv from 'dotenv';
 
