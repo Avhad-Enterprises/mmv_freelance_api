@@ -1,8 +1,6 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
-import validationMiddleware from '../../middlewares/validation.middleware';
 import locationController from './location.controller';
-import { BlogDto } from '../blog/blog.dto';
 
 class locationRoute implements Route {
 
