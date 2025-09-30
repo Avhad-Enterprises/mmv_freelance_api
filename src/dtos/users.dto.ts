@@ -6,13 +6,17 @@ export class UsersDto {
   @IsInt({ groups: ["update"] })
   user_id: number;
 
-  @IsOptional()
-  @IsString()
-  first_name: string;
+  // @IsOptional()
+  // @IsString()
+  // first_name: string;
+
+  // @IsOptional()
+  // @IsString()
+  // last_name: string;
 
   @IsOptional()
   @IsString()
-  last_name: string;
+  full_name: string;
 
   @IsOptional()
   @IsString()
@@ -54,7 +58,7 @@ export class UsersDto {
   @IsString()
   pincode: string;
 
-   @IsOptional()
+  @IsOptional()
   @IsNumber()
   latitude?: number;
 
@@ -131,26 +135,20 @@ export class UsersDto {
   education: any; // JSONB
 
   @IsOptional()
-  @IsString()
-  experience: string;
+  @IsArray()
+  experience: any[]; // Updated to accept an array
 
   @IsOptional()
-  services: any; // JSONB
+  @IsArray()
+  projects_created: number[]; // Updated to accept an array of integers
 
   @IsOptional()
-  previous_works: any; // JSONB
+  @IsArray()
+  projects_applied: number[]; // Updated to accept an array of integers
 
   @IsOptional()
-  @IsInt()
-  projects_created: number;
-
-  @IsOptional()
-  @IsInt()
-  projects_applied: number;
-
-  @IsOptional()
-  @IsInt()
-  projects_completed: number;
+  @IsArray()
+  projects_completed: number[]; // Updated to accept an array of integers
 
   @IsOptional()
   @IsInt()
@@ -202,20 +200,84 @@ export class UsersDto {
   is_banned: boolean;
 
   @IsOptional()
-  @IsInt()
-  created_at: Number;
+  @IsString()
+  created_at: string; // Updated to accept ISO date string
 
   @IsOptional()
-  @IsInt()
-  updated_at: Number;
+  @IsString()
+  updated_at: string; // Updated to accept ISO date string
 
   @IsOptional()
-  @IsInt()
-  updated_by?: number;
+  @IsString()
+  last_login_at: string; // Updated to accept ISO date string
 
   @IsOptional()
-  @IsInt()
-  last_login_at: number;
+  @IsString()
+  profile_title: string; // Profile Title
+
+  @IsOptional()
+  @IsArray()
+  category_of_services: any[]; // Category of Services
+
+  @IsOptional()
+  @IsString()
+  experience_level: string; // Experience Level (Beginner, Intermediate, Expert)
+
+  @IsOptional()
+  @IsArray()
+  portfolio_links: any[]; // Portfolio Upload/Links
+
+  @IsOptional()
+  @IsNumber()
+  hourly_rate: number; // Hourly Rate
+
+  @IsOptional()
+  @IsNumber()
+  project_rate: number; // Project Rate
+
+  @IsOptional()
+  @IsString()
+  work_type: string; // Work Type (Remote Only, On-Site, Hybrid)
+
+  @IsOptional()
+  @IsArray()
+  languages_spoken: any[]; // Languages Spoken
+
+  // Employer-specific fields
+
+  @IsOptional()
+  @IsString()
+  company_name: string; // Company/Brand Name
+
+  @IsOptional()
+  @IsString()
+  industry: string; // Industry (Film, Ad Agency, etc.)
+
+  @IsOptional()
+  @IsArray()
+  website_links: any[]; // Website/Social Links
+
+  @IsOptional()
+  @IsString()
+  company_size: string; // Company Size (1-10, 11-50, etc.)
+
+  @IsOptional()
+  @IsArray()
+  services_required: any[]; // Type of Services Required
+
+  @IsOptional()
+  @IsString()
+  average_project_budget: string; // Average Project Budget Range
+
+  @IsOptional()
+  @IsString()
+  project_frequency: string; // Project Frequency (One-time, Occasional, Ongoing)
+
+  @IsOptional()
+  @IsString()
+  hiring_preferences: string; // Hiring Preferences (Individuals, Agencies, Both)
+
+  
 }
 
 export class ArtworkSelectionDto {
@@ -242,6 +304,9 @@ export class ArtworkSelectionDto {
   @IsOptional()
   updated_by?: Date;
 
+  @IsOptional({ groups: ['create', 'update'] })
+  @IsBoolean({ groups: ['create', 'update'] })
+  is_deleted?: boolean;
 
   @IsOptional()
   last_login_at?: Date;
