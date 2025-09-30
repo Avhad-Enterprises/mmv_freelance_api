@@ -1,9 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { UsersDto } from "./user.dto";
 
-// Extend Express Request type to include 'user'
+// Extend Express Request type to include 'user' and 'files'
 interface AuthenticatedRequest extends Request {
   user?: { user_id: string };
+}
+
+interface MulterRequest extends Request {
+  files?: any; // Will be populated by multer middleware
 }
 
 import { Users } from "./user.interface";
@@ -359,6 +363,36 @@ class UsersController {
       `,
       });
       res.status(201).json({ data: locationData, message: "Inserted" });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Frontend Multi-Step Registration
+  public register = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userData = req.body;
+      const files = req.files as any;
+
+      // Validate account type
+      if (!userData.account_type || !['freelancer', 'client'].includes(userData.account_type)) {
+        throw new HttpException(400, "Account type must be either 'freelancer' or 'client'");
+      }
+
+      // Create user with the frontend registration service
+      const result = await this.UsersService.registerUser(userData, files);
+
+      res.status(201).json({
+        data: {
+          user: result.user,
+          token: result.token
+        },
+        message: `${userData.account_type} registered successfully`
+      });
     } catch (error) {
       next(error);
     }

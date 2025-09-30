@@ -18,7 +18,10 @@
     "lint:fix": "eslint src/ --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "ts-node scripts/migrate.ts migrate",
+    "db:rollback": "ts-node scripts/migrate.ts rollback",
+    "db:status": "ts-node scripts/migrate.ts status"
   },
   "keywords": [
     "mmv",
@@ -44,6 +47,7 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
+    "@types/multer": "^2.0.0",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
@@ -62,6 +66,7 @@
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
     "morgan": "^1.10.0",
+    "multer": "^2.0.2",
     "nodemailer": "^7.0.5",
     "nodemon": "^3.1.9",
     "nunjucks": "^3.2.4",
