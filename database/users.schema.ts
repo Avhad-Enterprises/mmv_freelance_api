@@ -2,6 +2,19 @@ import DB from './index.schema';
 
 export const USERS_TABLE = 'users';
 
+/**
+ * Users Schema - Updated for Phase 2 Registration System
+ * 
+ * Migration History:
+ * - 001_update_users_table_phase2.ts: Added Phase 2 fields for freelancer/client registration
+ * - 002_fix_full_name_constraint.ts: Made full_name nullable, added first_name/last_name
+ * - 003_fix_not_null_constraints.ts: Made profile_title, phone_number, company_name nullable
+ * - 004_comprehensive_nullable_fixes.ts: Made all Phase 2 fields nullable for flexible registration
+ * 
+ * This schema reflects the current state after all migrations.
+ * For new deployments, run: npm run db:migrate
+ */
+
 export const seed = async (dropFirst = false) => {
 
     try {
@@ -16,13 +29,14 @@ export const seed = async (dropFirst = false) => {
             table.increments('user_id').primary(); // ID
             table.string("first_name").notNullable();
             table.string("last_name").notNullable();
+            table.string("full_name").nullable(); // Legacy field, now nullable
             table.string('username').notNullable();
-            table.string('phone_number').notNullable();
+            table.string('phone_number').nullable(); // Made nullable in migration 003
             table.string('email').unique();
             table.string('password').nullable();
             table.string('profile_picture').nullable();
             
-            // Address fields
+            // Address fields (added in migration 001)
             table.string('address_line_first').nullable();
             table.string('address_line_second').nullable();
             table.string('city').nullable();
@@ -31,40 +45,39 @@ export const seed = async (dropFirst = false) => {
             table.string('pincode').nullable();
             table.boolean('phone_verified').defaultTo(false);
             
-       
             // Freelancer-specific fields
-            table.string("profile_title").nullable();
-            table.jsonb('skills').nullable(); // Array of skill names
-            table.enu("experience_level", ["entry", "intermediate", "expert", "master"]).nullable();
+            table.string("profile_title").nullable(); // Made nullable in migration 003
+            table.jsonb('skills').nullable(); // Array of skill names (added in migration 001)
+            table.enu("experience_level", ["entry", "intermediate", "expert", "master"]).nullable(); // Updated enums and made nullable
             table.string("portfolio_links").nullable(); // Single URL
             table.decimal("hourly_rate", 10, 2).nullable();
-            table.enu("availability", ["full_time", "part_time", "flexible", "on_demand"]).nullable();
-            table.enu("work_type", ["remote", "on_site", "hybrid"]).nullable();
-            table.enu("hours_per_week", ["less_than_20", "20_30", "30_40", "more_than_40"]).nullable();
-            table.jsonb('languages').defaultTo(DB.raw(`'[]'`)); // Array of languages
-            table.enu("id_type", ["passport", "driving_license", "national_id"]).nullable();
+            table.enu("availability", ["full_time", "part_time", "flexible", "on_demand"]).nullable(); // Updated enums
+            table.enu("work_type", ["remote", "on_site", "hybrid"]).nullable(); // Updated enums
+            table.enu("hours_per_week", ["less_than_20", "20_30", "30_40", "more_than_40"]).nullable(); // Added in migration 001
+            table.jsonb('languages').defaultTo(DB.raw(`'[]'`)); // Array of languages (added in migration 001)
+            table.enu("id_type", ["passport", "driving_license", "national_id"]).nullable(); // Updated enums
             table.string("id_document_url").nullable();
             
             // Client-specific fields
-            table.string("company_name").nullable();
-            table.enu('industry', ["film", "ad_agency", "events", "youtube", "corporate", "other"]).nullable();
-            table.string('website').nullable(); // Single website URL
-            table.string('social_links').nullable(); // Social media links
+            table.string("company_name").nullable(); // Made nullable in migration 003
+            table.enu('industry', ["film", "ad_agency", "events", "youtube", "corporate", "other"]).nullable(); // Updated enums
+            table.string('website').nullable(); // Single website URL (added in migration 001)
+            table.string('social_links').nullable(); // Social media links (added in migration 001)
             table.enu("company_size", ["1-10", "11-50", "51-200", "200+"]).nullable();
-            table.jsonb("required_services").nullable(); // Array of required services
-            table.jsonb("required_skills").nullable(); // Array of required skills  
-            table.jsonb("required_editor_proficiencies").nullable(); // Array of editor proficiencies
-            table.jsonb("required_videographer_proficiencies").nullable(); // Array of videographer proficiencies
-            table.decimal("budget_min", 12, 2).nullable();
-            table.decimal("budget_max", 12, 2).nullable();
-            table.string("address").nullable(); // Business address for clients
-            table.string("tax_id").nullable();
-            table.jsonb("business_documents").nullable(); // Array of document URLs
-            table.enu("work_arrangement", ["remote", "on_site", "hybrid"]).nullable();
-            table.enu("project_frequency", ["one_time", "occasional", "ongoing"]).nullable();
-            table.enu("hiring_preferences", ["individuals", "agencies", "both"]).nullable();
-            table.string("expected_start_date").nullable();
-            table.enu("project_duration", ["less_than_week", "1_2_weeks", "2_4_weeks", "1_3_months", "3_plus_months"]).nullable();
+            table.jsonb("required_services").nullable(); // Array of required services (added in migration 001)
+            table.jsonb("required_skills").nullable(); // Array of required skills (added in migration 001)
+            table.jsonb("required_editor_proficiencies").nullable(); // Array of editor proficiencies (added in migration 001)
+            table.jsonb("required_videographer_proficiencies").nullable(); // Array of videographer proficiencies (added in migration 001)
+            table.decimal("budget_min", 12, 2).nullable(); // Added in migration 001
+            table.decimal("budget_max", 12, 2).nullable(); // Added in migration 001
+            table.string("address").nullable(); // Business address for clients (added in migration 001)
+            table.string("tax_id").nullable(); // Added in migration 001
+            table.jsonb("business_documents").nullable(); // Array of document URLs (added in migration 001)
+            table.enu("work_arrangement", ["remote", "on_site", "hybrid"]).nullable(); // Added in migration 001
+            table.enu("project_frequency", ["one_time", "occasional", "ongoing"]).nullable(); // Added in migration 001
+            table.enu("hiring_preferences", ["individuals", "agencies", "both"]).nullable(); // Added in migration 001
+            table.string("expected_start_date").nullable(); // Added in migration 001
+            table.enu("project_duration", ["less_than_week", "1_2_weeks", "2_4_weeks", "1_3_months", "3_plus_months"]).nullable(); // Added in migration 001
 
             table.string("otp_code").nullable(); // temp storage during verification
             table.decimal('latitude', 10, 8).nullable();
