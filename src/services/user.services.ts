@@ -119,8 +119,7 @@ class UsersService {
       {
         user_id: user.user_id,
         email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
+        full_name: user.full_name,
         profile_picture: user.profile_picture,
         role: user.role,
       },
@@ -136,7 +135,7 @@ class UsersService {
 
   public async getById(user_id: number): Promise<Users> {
     const user = await DB(T.USERS_TABLE)
-      .where({ user_id, is_active: true, account_status: '1' }) // active user
+      .where({ user_id, is_active: true, account_status: 'Active' }) // active user
       .first();
 
 
@@ -185,7 +184,7 @@ class UsersService {
       .where({ user_id })
       .update({
         is_active: false,
-        account_status: '0',
+        account_status: 'inactive',
         updated_at: new Date()
       })
       .returning("*");
@@ -239,7 +238,7 @@ class UsersService {
       .where({
         user_id,
         account_type,
-        account_status: '1',
+        account_status: 'Active',
         is_active: true,
         is_banned: false,
       })
@@ -336,8 +335,7 @@ class UsersService {
       {
         user_id: user.user_id,
         email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
+        full_name: user.full_name,
         profile_picture: user.profile_picture,
         role: user.role,
         is_banned: user.is_banned,
@@ -392,7 +390,7 @@ class UsersService {
 
   public async createuserInvitation(data: UsersDto): Promise<Users> {
 
-    if (!data.first_name || !data.last_name || !data.username || !data.password || !data.email || !data.phone_number) {
+    if (!data.full_name || !data.username || !data.password || !data.email || !data.phone_number) {
       throw new HttpException(400, "Missing required fields");
     }
     if (isEmpty(data)) throw new HttpException(400, "Data Invalid");
