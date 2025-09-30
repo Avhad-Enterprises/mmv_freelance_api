@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
-import { RequestHandler } from 'express';
 import validationMiddleware from '../../middlewares/validation.middleware';
 import SubscribedEmailsController from './email.controller';
 import { SubscribedEmailDTO } from './email.dto';

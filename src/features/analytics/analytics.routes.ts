@@ -1,8 +1,7 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
-import { RequestHandler } from 'express';
 import validationMiddleware from '../../middlewares/validation.middleware';
-import AnalyticsController  from './analytics.controller';
+import AnalyticsController from './analytics.controller';
 import { AnalyticsDto } from './analytics.dto';
 
 class subscribed_emailsRoute implements Route {

@@ -4,7 +4,7 @@ import HttpException from '../../exceptions/HttpException';
 import { USERS_TABLE } from '../../../database/users.schema';
 import { PROJECTS_TASK } from '../../../database/projectstask.schema';
 import { NICHES_TABLE } from '../../../database/niches.schema';
-import { calculateEmcScore } from '../../utils/matchEngine';
+import { calculateEmcScore } from './matchEngine';
 
 class emcService {
 
