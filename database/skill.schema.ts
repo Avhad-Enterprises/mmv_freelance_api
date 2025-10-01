@@ -11,6 +11,78 @@ import DB from './index.schema';
 
 export const SKILLS = 'skills';
 
+const SKILL_DATA = [
+    'Creative Direction',
+    'Concept Development',
+    'Mood Boards',
+    'Script Writing',
+    'Screenwriting',
+    'Production Planning',
+    'Budgeting',
+    'Scheduling',
+    'Casting',
+    'Location Scouting',
+    'Prop Sourcing',
+    'Costume Design',
+    'Storyboarding',
+    'Shot List Creation',
+    'Pre-visualization (Previs)',
+    'Production Design',
+    'Lighting Setup Planning',
+    'Cinematography',
+    'Camera Operation',
+    'Multi-Cam Setup',
+    'Drone Videography',
+    '360°/VR Filming',
+    'Green Screen Filming',
+    'Lighting Setup',
+    'Sound Recording',
+    'Boom Operation',
+    'Live Streaming',
+    'Directing',
+    'Color Correction',
+    'Color Grading',
+    'LUTs Application',
+    'VFX (Visual Effects)',
+    'CGI',
+    'Rotoscoping',
+    'Green Screen Keying',
+    'Motion Graphics',
+    '2D Animation',
+    '3D Animation',
+    'Character Animation',
+    'Explainer Videos',
+    'Infographic Animation',
+    'Audio Editing',
+    'Sound Design',
+    'Foley',
+    'Voiceover Editing',
+    'ADR (Automated Dialogue Replacement)',
+    'Mixing & Mastering',
+    'Background Score',
+    'Subtitling',
+    'Closed Captioning',
+    'Multi-language Subtitles',
+    'Aspect Ratio Formatting (16:9, 9:16, 1:1 etc.)',
+    'Video Compression & Export',
+    'YouTube Optimization',
+    'Social Media Video Formatting',
+    'Adobe Premiere Pro',
+    'Final Cut Pro',
+    'DaVinci Resolve',
+    'Avid Media Composer',
+    'Sony Vegas Pro',
+    'Adobe After Effects',
+    'Blender',
+    'Cinema 4D',
+    'Maya',
+    '3ds Max',
+    'Adobe Audition',
+    'Pro Tools',
+    'Logic Pro',
+    'Audacity'
+];
+
 export const seed = async (dropFirst = false) => {
 
     try {
@@ -35,6 +107,14 @@ export const seed = async (dropFirst = false) => {
             table.integer('deleted_by').nullable();
             table.timestamp('deleted_at').nullable();
         });
+
+        console.log('Inserting skill data...');
+        const skillInserts = SKILL_DATA.map(skill => ({
+            skill_name: skill,
+            created_by: 1 // Assuming admin user ID 1
+        }));
+        await DB(SKILLS).insert(skillInserts);
+        console.log(`Inserted ${SKILL_DATA.length} skills`);
 
         console.log('Finished Seeding Tables');
         await DB.raw(`
