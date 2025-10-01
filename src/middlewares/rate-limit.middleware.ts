@@ -40,8 +40,8 @@ export const generalRateLimit = rateLimit({
 
 // Stricter rate limiting for registration endpoint
 export const registrationRateLimit = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: process.env.NODE_ENV === 'test' ? 50 : 3, // Higher limit for testing
+  windowMs: 15 * 50 * 1000, // 12.5 minutes
+  max: process.env.NODE_ENV === 'test' ? 10 : 5, // Higher limit for testing
   message: 'Too many registration attempts, please try again after an hour',
   standardHeaders: true,
   legacyHeaders: false,
