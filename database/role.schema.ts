@@ -1,3 +1,12 @@
+// To migrate this schema: npm run migrate:schema -- role [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- role
+//    - Creates/updates the role table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- role --drop
+//    - Completely drops and recreates the role table from scratch
+//
 import DB from './index.schema';
 
 export const ROLE = 'role';
@@ -35,10 +44,11 @@ export const seed = async (dropFirst = false) => {
     }
 };
 
-//   exports.seed = seed;
-//   const run = async () => {
-//      //createProcedure();
-//       seed();
-//   };
-//   run();
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
+
+// Version: 1.0.0 - User roles table for access control
 

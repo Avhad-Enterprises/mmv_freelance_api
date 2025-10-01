@@ -1,19 +1,15 @@
+// To migrate this schema: npm run migrate:schema -- users [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- users
+//    - Creates/updates the users table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- users --drop
+//    - Completely drops and recreates the users table from scratch
+//
 import DB from './index.schema';
 
 export const USERS_TABLE = 'users';
-
-/**
- * Users Schema - Updated for Phase 2 Registration System
- * 
- * Migration History:
- * - 001_update_users_table_phase2.ts: Added Phase 2 fields for freelancer/client registration
- * - 002_fix_full_name_constraint.ts: Made full_name nullable, added first_name/last_name
- * - 003_fix_not_null_constraints.ts: Made profile_title, phone_number, company_name nullable
- * - 004_comprehensive_nullable_fixes.ts: Made all Phase 2 fields nullable for flexible registration
- * 
- * This schema reflects the current state after all migrations.
- * For new deployments, run: npm run db:migrate
- */
 
 export const seed = async (dropFirst = false) => {
 
@@ -138,10 +134,10 @@ export const seed = async (dropFirst = false) => {
     }
 };
 
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
 
-//   exports.seed = seed;
-//   const run = async () => {
-//      //createProcedure();
-//       seed();
-//   };
-//   run();
+// Version: 1.0.0 - Complete users table with Phase 2 registration fields

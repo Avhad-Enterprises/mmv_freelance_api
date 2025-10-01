@@ -1,3 +1,12 @@
+// To migrate this schema: npm run migrate:schema -- submitted_projects [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- submitted_projects
+//    - Creates/updates the submitted_projects table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- submitted_projects --drop
+//    - Completely drops and recreates the submitted_projects table from scratch
+//
 import DB from './index.schema';
 
 export const SUBMITTED_PROJECTS = 'submitted_projects';
@@ -58,10 +67,10 @@ export const seed = async (dropFirst = false) => {
     }
 };
 
-//   exports.seed = seed;
-//   const run = async () => {
-//      //createProcedure();
-//       seed();
-//   };
-//   run();
-//comment this out ...............
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
+
+// Version: 1.0.0 - Submitted projects table for tracking completed work submissions

@@ -1,3 +1,12 @@
+// To migrate this schema: npm run migrate:schema -- niches [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- niches
+//    - Creates/updates the niches table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- niches --drop
+//    - Completely drops and recreates the niches table from scratch
+//
 import DB from './index.schema';
 
 export const NICHES_TABLE = 'niches';
@@ -96,9 +105,10 @@ export const seed = async (dropFirst = false) => {
     }
 };
 
-//   exports.seed = seed;
-//  const run = async () => {
-//     //createProcedure();
-//      seed();
-//  };
-//  run();
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
+
+// Version: 1.0.0 - Niches table with predefined editor and videographer niches

@@ -15,9 +15,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "typecheck": "tsc --noEmit",
-    "db:migrate": "ts-node scripts/migrate.ts migrate",
-    "db:rollback": "ts-node scripts/migrate.ts rollback",
-    "db:status": "ts-node scripts/migrate.ts status"
+    "migrate:all": "ts-node scripts/migrate-all.ts",
+    "migrate:schema": "ts-node scripts/migrate-schema.ts",
+    "migrate:status": "ts-node scripts/migrate-status.ts"
   },
   "keywords": [
     "mmv",

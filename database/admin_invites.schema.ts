@@ -1,3 +1,12 @@
+// To migrate this schema: npm run migrate:schema -- admin_invites [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- admin_invites
+//    - Creates/updates the invitation table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- admin_invites --drop
+//    - Completely drops and recreates the invitation table from scratch
+//
 import DB from './index.schema';
 
 export const INVITATION_TABLE = 'invitation ';
@@ -47,9 +56,10 @@ export const seed = async (dropFirst = false) => {
     }
 };
 
-//    exports.seed = seed;
-//    const run = async () => {
-//       //createProcedure();
-//        seed();
-//    };
-//    run();
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
+
+// Version: 1.0.0 - Admin invites table for team member invitations

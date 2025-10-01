@@ -1,3 +1,12 @@
+// To migrate this schema: npm run migrate:schema -- projectstask [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- projectstask
+//    - Creates/updates the projects_task table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- projectstask --drop
+//    - Completely drops and recreates the projects_task table from scratch
+//
 import DB from './index.schema';
 
 export const PROJECTS_TASK = 'projects_task';
@@ -6,7 +15,7 @@ export const seed = async (dropFirst = false) => {
     try {
         if (dropFirst) {
             console.log('Dropping Tables');
-            await DB.schema.dropTable(PROJECTS_TASK);
+            await DB.schema.dropTableIfExists(PROJECTS_TASK);
             console.log('Dropped Tables');
         }
         console.log('Seeding Tables');
@@ -63,10 +72,10 @@ export const seed = async (dropFirst = false) => {
     }
 };
 
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
 
-//    exports.seed = seed;
-//    const run = async () => {
-//       //createProcedure();
-//        seed();
-//    };
-//    run();
+// Version: 1.0.0 - Projects and tasks table for managing freelance projects

@@ -1,3 +1,12 @@
+// To migrate this schema: npm run migrate:schema -- transactions [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- transactions
+//    - Creates/updates the transactions table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- transactions --drop
+//    - Completely drops and recreates the transactions table from scratch
+//
 import DB, { T } from "./index.schema";
 
 export const TRANSACTION_TABLE = "transactions";
@@ -26,7 +35,7 @@ export const seed = async (dropFirst = false) => {
                 .onDelete("CASCADE");
             table
                 .integer("application_id")
-                .references("id")
+                .references("applied_projects_id")
                 .inTable(T.APPLIED_PROJECTS)
                 .onDelete("CASCADE"); //doubtful, what is this, and from where I can get this application id.
 
@@ -54,9 +63,10 @@ export const seed = async (dropFirst = false) => {
     }
 };
 
-//  exports.seed = seed;
-//  const run = async () => {
-//     //createProcedure();
-//      seed();
-//  };
-//  run();
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
+
+// Version: 1.0.0 - Transactions table for payment and financial records

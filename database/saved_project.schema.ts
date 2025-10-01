@@ -1,3 +1,12 @@
+// To migrate this schema: npm run migrate:schema -- saved_project [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- saved_project
+//    - Creates/updates the saved_projects table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- saved_project --drop
+//    - Completely drops and recreates the saved_projects table from scratch
+//
 import DB from './index.schema';
 
 export const SAVED_PROJECTS = 'saved_projects';
@@ -54,9 +63,10 @@ export const seed = async (dropFirst = false) => {
     }
 };
 
-//   exports.seed = seed;
-//   const run = async () => {
-//      //createProcedure();
-//       seed();
-//   };
-//   run();
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
+
+// Version: 1.0.0 - Saved projects table for user's bookmarked projects

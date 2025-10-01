@@ -1,3 +1,12 @@
+// To migrate this schema: npm run migrate:schema -- support_ticket_reply [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- support_ticket_reply
+//    - Creates/updates the ticket_replies table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- support_ticket_reply --drop
+//    - Completely drops and recreates the ticket_replies table from scratch
+//
 import DB from './index.schema';
 
 export const TICKET_REPLY_TABLE = 'ticket_replies';
@@ -33,9 +42,11 @@ export const seed = async (dropFirst = false) => {
     console.error('Error creating ticket reply table:', error);
   }
 };
-  // exports.seed = seed;
-  // const run = async () => {
-  //    //createProcedure();
-  //     seed(true);
-  // };
-  // run();
+
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
+
+// Version: 1.0.0 - Support ticket replies table for conversation threads

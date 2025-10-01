@@ -1,3 +1,12 @@
+// To migrate this schema: npm run migrate:schema -- support_ticket [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- support_ticket
+//    - Creates/updates the support_tickets table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- support_ticket --drop
+//    - Completely drops and recreates the support_tickets table from scratch
+//
 // db/support_tickets.schema.ts
 import DB from './index.schema';
 
@@ -7,7 +16,7 @@ export const seed = async (dropFirst = false) => {
   try {
     if (dropFirst) {
       console.log('Dropping Tables');
-      await DB.schema.dropTable(SUPPORT_TICKETS_TABLE);
+      await DB.schema.dropTableIfExists(SUPPORT_TICKETS_TABLE);
       console.log('Dropped Tables');
     }
     console.log('Seeding Tables');
@@ -56,13 +65,14 @@ export const seed = async (dropFirst = false) => {
     `);
     console.log('Finished Creating Triggers');
   } catch (error) {
-    console.error('Error seeding support_tickets table:', error);
+    console.error(error);
   }
 };
 
-  // exports.seed = seed;
-  // const run = async () => {
-  //    //createProcedure();
-  //     seed();
-  // };
-  // run();
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
+
+// Version: 1.0.0 - Support tickets table for customer service

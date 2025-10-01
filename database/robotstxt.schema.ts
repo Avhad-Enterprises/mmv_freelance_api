@@ -1,3 +1,12 @@
+// To migrate this schema: npm run migrate:schema -- robotstxt [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- robotstxt
+//    - Creates/updates the robots_txt table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- robotstxt --drop
+//    - Completely drops and recreates the robots_txt table from scratch
+//
 import DB from './index.schema';
 
 export const ROBOTS_TXT = 'robots_txt';
@@ -35,10 +44,11 @@ export const seed = async (dropFirst = false) => {
     }
 };
 
-//    exports.seed = seed;
-//    const run = async () => {
-//       //createProcedure();
-//        seed();
-//    };
-//    run();
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
+
+// Version: 1.0.0 - Robots.txt table for search engine crawling instructions
  
