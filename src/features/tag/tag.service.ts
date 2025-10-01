@@ -2,7 +2,7 @@ import { TagsDto } from "./tag.dto";
 import { SkillsDto } from "./skill.dto";
 import DB, { T } from "../../../database/index.schema";
 import HttpException from "../../exceptions/HttpException";
-import { isEmpty } from "../../utils/util";
+import { isEmpty } from "../../utils/common";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 

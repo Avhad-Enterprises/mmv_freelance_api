@@ -2,11 +2,17 @@ import { UsersDto } from "./user.dto";
 import DB, { T } from "../../../database/index.schema";
 import { Users } from "./user.interface";
 import HttpException from "../../exceptions/HttpException";
-import { isEmpty } from "../../utils/util";
+import { isEmpty } from "../../utils/common";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import sendEmail from '../../utils/email/sendemail';
 import validator from "validator";
+import { 
+  uploadRegistrationFile, 
+  uploadMultipleRegistrationFiles, 
+  UploadResult
+} from '../../utils/registration-upload';
+import { MulterFile, DocumentType, AccountType } from '../../interfaces/file-upload.interface';
 
 class UsersService {
 
@@ -50,88 +56,6 @@ class UsersService {
 
     return users;
   }
-
-  public async Insert(data: UsersDto): Promise<Users> {
-
-    if (isEmpty(data)) throw new HttpException(400, "Data Invalid");
-    const existingEmployee = await DB(T.USERS_TABLE)
-      .where({ email: data.email })
-      .first();
-    if (existingEmployee)
-      throw new HttpException(409, "Email already registered");
-
-
-    if (data.username) {
-      const existingUsername = await DB(T.USERS_TABLE)
-        .where({ username: data.username })
-        .first();
-
-
-      if (existingUsername) {
-        throw new HttpException(409, "Username already taken");
-      }
-    }
-
-
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-    data.password = hashedPassword;
-    const res = await DB(T.USERS_TABLE).insert(data).returning("*");
-    return res[0];
-  }
-
-
-  public async Login(email: string, password: string): Promise<Users & { token: string }> {
-
-    let user: any;
-
-    if (validator.isEmail(email)) {
-      user = await DB(T.USERS_TABLE).where({ email }).first();
-    }
-    else {
-      user = await DB(T.USERS_TABLE).where({ username: email }).first();
-    }
-
-    if (!user) {
-      throw new HttpException(404, "User not registered");
-    }
-
-    if (user.is_banned === true) {
-      throw new HttpException(403, "Your account has been banned.");
-    }
-
-    if (!user.is_active) {
-      throw new HttpException(403, "Your account is not active.");
-    }
-
-    const allowedaccountTypes = ['admin'];
-
-
-    if (!allowedaccountTypes.includes(user.account_type)) {
-      throw new HttpException(403, "Access denied for this account type");
-    }
-
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new HttpException(401, "Incorrect password");
-    }
-    const token = jwt.sign(
-      {
-        user_id: user.user_id,
-        email: user.email,
-        full_name: user.full_name,
-        profile_picture: user.profile_picture,
-        role: user.role,
-      },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "24h" }
-    );
-    return {
-      ...user,
-      token,
-    };
-  }
-
 
   public async getById(user_id: number): Promise<Users> {
     const user = await DB(T.USERS_TABLE)
@@ -286,18 +210,6 @@ class UsersService {
 
   }
 
-  public async validateInvitation(email: string, token: string): Promise<void> {
-    const invite = await DB(T.USERS_TABLE)
-      .where({ email, invite_token: token, used: false })
-      .andWhere('expires_at', '>', new Date())
-      .first();
-
-
-    if (!invite) {
-      throw new HttpException(403, "Invalid or expired invitation token");
-    }
-  }
-
   public async login(email: string, password: string): Promise<Users & { token: string }> {
 
     let user: any;
@@ -429,18 +341,33 @@ class UsersService {
         throw new HttpException(409, "Email already exists");
       }
 
-      // Check if username already exists
-      const existingUsername = await DB(T.USERS_TABLE).where({ username: userData.username }).first();
-      if (existingUsername) {
-        throw new HttpException(409, "Username already taken");
+      // Check if provided username already exists (only if username was provided)
+      if (userData.username) {
+        const existingUsername = await DB(T.USERS_TABLE).where({ username: userData.username }).first();
+        if (existingUsername) {
+          throw new HttpException(409, "Username already taken");
+        }
       }
 
       // Hash the password
       const hashedPassword = await bcrypt.hash(userData.password, 10);
 
+      // Handle username fallback from full_name (first_name + last_name)
+      let username = userData.username;
+      if (!username) {
+        username = `${userData.first_name}${userData.last_name}`.toLowerCase().replace(/\s+/g, '');
+        
+        // Check if generated username already exists
+        const existingGeneratedUsername = await DB(T.USERS_TABLE).where({ username }).first();
+        if (existingGeneratedUsername) {
+          // Add random suffix if exists
+          username = `${username}${Math.floor(Math.random() * 1000)}`;
+        }
+      }
+
       // Prepare user data for insertion
       const userInsertData: any = {
-        username: userData.username,
+        username: username,
         first_name: userData.first_name,
         last_name: userData.last_name,
         email: userData.email,
@@ -455,16 +382,52 @@ class UsersService {
         updated_at: new Date()
       };
 
-      // Handle file uploads if present
+      // Handle file uploads with S3
+      let temporaryUserId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      
       if (files) {
-        if (files.id_document && files.id_document[0]) {
-          // TODO: Upload to AWS S3 and get URL
-          userInsertData.id_document_url = `temp_${files.id_document[0].filename}`;
-        }
-        if (files.business_documents && files.business_documents.length > 0) {
-          // TODO: Upload multiple files to AWS S3 and get URLs
-          const documentUrls = files.business_documents.map((file: any) => `temp_${file.filename}`);
-          userInsertData.business_documents = JSON.stringify(documentUrls);
+        // Map account type for S3 folder structure
+        const accountType = userData.account_type === 'freelancer' 
+          ? AccountType.VIDEOGRAPHER // Default for freelancer, could be refined based on role
+          : AccountType.CLIENT;
+
+        try {
+          // Upload ID document
+          if (files.id_document && files.id_document[0]) {
+            const idDocResult = await uploadRegistrationFile(
+              files.id_document[0] as MulterFile,
+              temporaryUserId,
+              DocumentType.ID_DOCUMENT,
+              accountType
+            );
+            userInsertData.id_document_url = idDocResult.url;
+          }
+
+          // Upload business documents (clients only)
+          if (files.business_documents && files.business_documents.length > 0) {
+            const businessDocResults = await uploadMultipleRegistrationFiles(
+              files.business_documents as MulterFile[],
+              temporaryUserId,
+              DocumentType.BUSINESS_DOCUMENT,
+              accountType
+            );
+            const documentUrls = businessDocResults.map(result => result.url);
+            userInsertData.business_documents = JSON.stringify(documentUrls);
+          }
+
+          // Upload profile picture
+          if (files.profile_picture && files.profile_picture[0]) {
+            const profilePicResult = await uploadRegistrationFile(
+              files.profile_picture[0] as MulterFile,
+              temporaryUserId,
+              DocumentType.PROFILE_PHOTO,
+              accountType
+            );
+            userInsertData.profile_picture = profilePicResult.url;
+          }
+        } catch (uploadError) {
+          console.error('File upload error:', uploadError);
+          throw new HttpException(500, `File upload failed: ${uploadError}`);
         }
       }
 
@@ -472,47 +435,75 @@ class UsersService {
       if (userData.account_type === 'freelancer') {
         userInsertData.profile_title = userData.profile_title || null;
         
-        // Handle skills - check if it's already a JSON string or needs stringifying
-        if (userData.skills) {
-          if (typeof userData.skills === 'string') {
-            // Already a JSON string from FormData
-            userInsertData.skills = userData.skills;
-          } else {
-            // Array that needs stringifying
-            userInsertData.skills = JSON.stringify(userData.skills);
-          }
+        // NEW PHASE 1 FIELDS: Handle new freelancer fields
+        userInsertData.role = userData.role || null;
+        userInsertData.short_description = userData.short_description || null;
+        
+        // Handle superpowers array
+        if (userData.superpowers && userData.superpowers.length > 0) {
+          userInsertData.superpowers = JSON.stringify(userData.superpowers);
         } else {
-          userInsertData.skills = null;
+          userInsertData.superpowers = null;
+        }
+        
+        // Handle skill_tags array
+        if (userData.skill_tags && userData.skill_tags.length > 0) {
+          userInsertData.skill_tags = JSON.stringify(userData.skill_tags);
+        } else {
+          userInsertData.skill_tags = null;
+        }
+        
+        // Handle skills - maps from base_skills in frontend, with default fallback
+        if (userData.skills && userData.skills.length > 0) {
+          userInsertData.skills = JSON.stringify(userData.skills);
+        } else {
+          userInsertData.skills = JSON.stringify(["General Skills"]); // Default fallback
         }
         
         userInsertData.experience_level = userData.experience_level || null;
-        userInsertData.portfolio_links = userData.portfolio_links || null;
+        
+        // Handle portfolio_links array (updated from single URL)
+        if (userData.portfolio_links && userData.portfolio_links.length > 0) {
+          userInsertData.portfolio_links = JSON.stringify(userData.portfolio_links);
+        } else {
+          userInsertData.portfolio_links = null;
+        }
+        
+        // Handle hourly_rate - maps from rate_amount in frontend
         userInsertData.hourly_rate = userData.hourly_rate || null;
         userInsertData.availability = userData.availability || null;
         userInsertData.hours_per_week = userData.hours_per_week || null;
         userInsertData.work_type = userData.work_type || null;
         
-        // Handle languages - same logic as skills
-        if (userData.languages) {
-          if (typeof userData.languages === 'string') {
-            // Already a JSON string from FormData
-            userInsertData.languages = userData.languages;
-          } else {
-            // Array that needs stringifying
-            userInsertData.languages = JSON.stringify(userData.languages);
-          }
+        // Handle languages array
+        if (userData.languages && userData.languages.length > 0) {
+          userInsertData.languages = JSON.stringify(userData.languages);
         } else {
           userInsertData.languages = null;
         }
         
         userInsertData.id_type = userData.id_type || null;
         
-        // Address fields for freelancer
-        userInsertData.address_line_first = userData.street_address || null;
+        // Address fields for freelancer - handle coordinate mapping
+        if (userData.street_address) {
+          // Check if it's coordinates format "lat,lng"
+          const coordPattern = /^-?\d+\.?\d*,-?\d+\.?\d*$/;
+          if (coordPattern.test(userData.street_address)) {
+            const [lat, lng] = userData.street_address.split(',');
+            userInsertData.latitude = parseFloat(lat);
+            userInsertData.longitude = parseFloat(lng);
+            userInsertData.address_line_first = null; // Don't store coordinates as address
+          } else {
+            userInsertData.address_line_first = userData.street_address;
+          }
+        } else {
+          userInsertData.address_line_first = null;
+        }
+        
         userInsertData.city = userData.city || null;
         userInsertData.state = userData.state || null;
         userInsertData.country = userData.country || null;
-        userInsertData.pincode = userData.zip_code || null;
+        userInsertData.pincode = userData.zip_code || null; // Maps zip_code to pincode
       } else if (userData.account_type === 'client') {
         userInsertData.company_name = userData.company_name || null;
         userInsertData.industry = userData.industry || null;
@@ -520,27 +511,32 @@ class UsersService {
         userInsertData.social_links = userData.social_links || null;
         userInsertData.company_size = userData.company_size || null;
         
-        // Handle array fields for client - check if already JSON strings
-        const arrayFields = [
-          'required_services',
-          'required_skills', 
-          'required_editor_proficiencies',
-          'required_videographer_proficiencies'
-        ];
+        // Handle required_services with default fallback
+        if (userData.required_services && userData.required_services.length > 0) {
+          userInsertData.required_services = JSON.stringify(userData.required_services);
+        } else {
+          userInsertData.required_services = JSON.stringify(["General Services"]); // Default fallback
+        }
         
-        arrayFields.forEach(field => {
-          if (userData[field]) {
-            if (typeof userData[field] === 'string') {
-              // Already a JSON string from FormData
-              userInsertData[field] = userData[field];
-            } else {
-              // Array that needs stringifying
-              userInsertData[field] = JSON.stringify(userData[field]);
-            }
-          } else {
-            userInsertData[field] = null;
-          }
-        });
+        // Handle required_skills with default fallback
+        if (userData.required_skills && userData.required_skills.length > 0) {
+          userInsertData.required_skills = JSON.stringify(userData.required_skills);
+        } else {
+          userInsertData.required_skills = JSON.stringify(["General Skills"]); // Default fallback
+        }
+        
+        // Handle optional proficiency arrays
+        if (userData.required_editor_proficiencies && userData.required_editor_proficiencies.length > 0) {
+          userInsertData.required_editor_proficiencies = JSON.stringify(userData.required_editor_proficiencies);
+        } else {
+          userInsertData.required_editor_proficiencies = null;
+        }
+        
+        if (userData.required_videographer_proficiencies && userData.required_videographer_proficiencies.length > 0) {
+          userInsertData.required_videographer_proficiencies = JSON.stringify(userData.required_videographer_proficiencies);
+        } else {
+          userInsertData.required_videographer_proficiencies = null;
+        }
         
         userInsertData.budget_min = userData.budget_min || null;
         userInsertData.budget_max = userData.budget_max || null;
@@ -548,8 +544,8 @@ class UsersService {
         userInsertData.work_arrangement = userData.work_arrangement || null;
         userInsertData.project_frequency = userData.project_frequency || null;
         userInsertData.hiring_preferences = userData.hiring_preferences || null;
-        userInsertData.expected_start_date = userData.expected_start_date || null;
-        userInsertData.project_duration = userData.project_duration || null;
+        userInsertData.expected_start_date = userData.expected_start_date || "Flexible"; // Default fallback
+        userInsertData.project_duration = userData.project_duration || "Flexible"; // Default fallback
         
         // Address fields for client
         userInsertData.address = userData.address || null;
@@ -561,6 +557,61 @@ class UsersService {
 
       // Insert user into database
       const [newUser] = await DB(T.USERS_TABLE).insert(userInsertData).returning("*");
+
+      // Update file paths with real user ID if files were uploaded
+      if (files && Object.keys(files).length > 0) {
+        const realUserId = newUser.user_id.toString();
+        const accountType = userData.account_type === 'freelancer' 
+          ? AccountType.VIDEOGRAPHER 
+          : AccountType.CLIENT;
+
+        const updatedData: any = {};
+
+        try {
+          // Update ID document path
+          if (userInsertData.id_document_url) {
+            const newIdDocUrl = userInsertData.id_document_url.replace(
+              `${DocumentType.ID_DOCUMENT}/${temporaryUserId}/`,
+              `${DocumentType.ID_DOCUMENT}/${realUserId}/`
+            );
+            updatedData.id_document_url = newIdDocUrl;
+          }
+
+          // Update business documents paths
+          if (userInsertData.business_documents) {
+            const businessDocs = JSON.parse(userInsertData.business_documents);
+            const updatedBusinessDocs = businessDocs.map((url: string) => 
+              url.replace(
+                `${DocumentType.BUSINESS_DOCUMENT}/${temporaryUserId}/`,
+                `${DocumentType.BUSINESS_DOCUMENT}/${realUserId}/`
+              )
+            );
+            updatedData.business_documents = JSON.stringify(updatedBusinessDocs);
+          }
+
+          // Update profile picture path
+          if (userInsertData.profile_picture) {
+            const newProfileUrl = userInsertData.profile_picture.replace(
+              `${DocumentType.PROFILE_PHOTO}/${temporaryUserId}/`,
+              `${DocumentType.PROFILE_PHOTO}/${realUserId}/`
+            );
+            updatedData.profile_picture = newProfileUrl;
+          }
+
+          // Update database with corrected file paths
+          if (Object.keys(updatedData).length > 0) {
+            await DB(T.USERS_TABLE)
+              .where({ user_id: newUser.user_id })
+              .update(updatedData);
+            
+            // Update the response object with correct URLs
+            Object.assign(newUser, updatedData);
+          }
+        } catch (pathUpdateError) {
+          console.error('Error updating file paths:', pathUpdateError);
+          // Non-critical error, continue with registration
+        }
+      }
 
       // Remove password from response
       const { password: _, ...userResponse } = newUser;

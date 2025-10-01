@@ -52,7 +52,8 @@ class AuthRoute implements Route {
       SecurityMiddleware.essential, // XSS, SQL injection, request size protection
       upload.fields([
         { name: 'id_document', maxCount: 1 },
-        { name: 'business_documents', maxCount: 5 }
+        { name: 'business_documents', maxCount: 5 },
+        { name: 'profile_picture', maxCount: 1 }
       ]),
       validationMiddleware(UserRegistrationDto, 'body', false, []),
       BusinessValidationMiddleware.registrationValidation, // Business logic validation

@@ -2,7 +2,7 @@ import { ProjectsTaskDto } from "./projectstask.dto";
 import DB, { T } from "../../../database/index.schema";
 import { IProjectTask } from './projectstask.interface';
 import HttpException from "../../exceptions/HttpException";
-import { isEmpty } from "../../utils/util";
+import { isEmpty } from "../../utils/common";
 import { PROJECTS_TASK } from "../../../database/projectstask.schema";
 import { SubmitProjectDto } from "./submit-project.dto";
 import { SUBMITTED_PROJECTS } from "../../../database/submitted_projects.schema";

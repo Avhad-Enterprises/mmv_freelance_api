@@ -1,7 +1,7 @@
 import { SavedProjectsDto } from "./saved_project.dto";
 import DB, { T } from "../../../database/index.schema";
 import HttpException from "../../exceptions/HttpException";
-import { isEmpty } from "../../utils/util";
+import { isEmpty } from "../../utils/common";
 import { SAVED_PROJECTS } from "../../../database/saved_project.schema";
 
 

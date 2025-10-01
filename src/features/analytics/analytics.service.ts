@@ -2,7 +2,7 @@ import DB, { T } from "../../../database/index.schema";
 import { AnalyticsInterface } from './analytics.interface';
 import { AnalyticsDto } from './analytics.dto';
 import HttpException from "../../exceptions/HttpException";
-import { isEmpty } from "../../utils/util";
+import { isEmpty } from "../../utils/common";
 
  class AnalyticsService {
 

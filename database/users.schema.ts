@@ -45,8 +45,11 @@ export const seed = async (dropFirst = false) => {
             table.string("profile_title").nullable(); // Made nullable in migration 003
             table.jsonb('skills').nullable(); // Array of skill names (added in migration 001)
             table.enu("experience_level", ["entry", "intermediate", "expert", "master"]).nullable(); // Updated enums and made nullable
-            table.string("portfolio_links").nullable(); // Single URL
+            table.jsonb("portfolio_links").nullable(); // Array of portfolio URLs (updated in migration 004)
             table.decimal("hourly_rate", 10, 2).nullable();
+            table.jsonb('superpowers').nullable(); // Array of freelancer superpowers (added in migration 004)
+            table.jsonb('skill_tags').nullable(); // Array of skill tags (added in migration 004)
+            table.text('short_description').nullable(); // Freelancer profile description (added in migration 004)
             table.enu("availability", ["full_time", "part_time", "flexible", "on_demand"]).nullable(); // Updated enums
             table.enu("work_type", ["remote", "on_site", "hybrid"]).nullable(); // Updated enums
             table.enu("hours_per_week", ["less_than_20", "20_30", "30_40", "more_than_40"]).nullable(); // Added in migration 001
@@ -140,4 +143,4 @@ export const migrate = async (dropFirst = false) => {
     await seed(true); // Always drop and recreate for clean migrations
 };
 
-// Version: 1.0.0 - Complete users table with Phase 2 registration fields
+// Version: 1.1.0 - Added freelancer fields: superpowers, skill_tags, short_description, updated portfolio_links to jsonb
