@@ -14,10 +14,6 @@
     "test": "jest --forceExit --detectOpenHandles",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "lint": "eslint src/ --ext .ts",
-    "lint:fix": "eslint src/ --ext .ts --fix",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
     "db:migrate": "ts-node scripts/migrate.ts migrate",
     "db:rollback": "ts-node scripts/migrate.ts rollback",
@@ -94,9 +90,6 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.13.4",
     "@types/nunjucks": "^3.2.6",
-    "@typescript-eslint/eslint-plugin": "^8.45.0",
-    "@typescript-eslint/parser": "^8.45.0",
-    "eslint": "^9.36.0",
     "form-data": "^4.0.4",
     "ts-node": "^10.9.2"
   }
