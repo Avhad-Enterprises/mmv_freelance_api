@@ -1,3 +1,12 @@
+// To migrate this schema: npm run migrate:schema -- permission [--drop]
+//
+// Migration Commands:
+// 1. Standard Migration: npm run migrate:schema -- permission
+//    - Creates/updates the permission table while preserving existing data
+//
+// 2. Drop and Recreate: npm run migrate:schema -- permission --drop
+//    - Completely drops and recreates the permission table from scratch
+//
 import DB from './index.schema';
 
 export const PERMISSION = 'permission';
@@ -38,10 +47,10 @@ export const seed = async (dropFirst = false) => {
     }
 };
 
-    //  exports.seed = seed;
-    //  const run = async () => {
-    //  //createProcedure();
-    //    seed();
-    //  };
-    //  run();
+// Migration function for schema-based migrations
+export const migrate = async (dropFirst = false) => {
+    // For schema-based migrations, always ensure clean state
+    await seed(true); // Always drop and recreate for clean migrations
+};
 
+// Version: 1.0.0 - Permissions table for granular access control
