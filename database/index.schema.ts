@@ -6,15 +6,14 @@ import 'reflect-metadata';
 dotenv.config();
 
 const awsConf = {
-
   client: 'pg',
   connection: {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
-    port: 5432,
-    ssl: {
+    port: process.env.DB_PORT || 5432,
+    ssl: process.env.DB_HOST === 'localhost' ? false : {
       rejectUnauthorized: false
     },
   },
@@ -66,6 +65,13 @@ import { STATES } from './states.schema';
 import { CITIES } from './city.schema';
 import { EMAIL_LOG_TABLE } from './emailog.schema';
 
+// New Profile Tables (Architecture Refactor)
+import { FREELANCER_PROFILES } from './freelancer_profiles.schema';
+import { VIDEOGRAPHER_PROFILES } from './videographer_profiles.schema';
+import { VIDEOEDITOR_PROFILES } from './videoeditor_profiles.schema';
+import { CLIENT_PROFILES } from './client_profiles.schema';
+import { ADMIN_PROFILES } from './admin_profiles.schema';
+
 
 export const T = {
   USERS_TABLE,
@@ -107,8 +113,12 @@ export const T = {
   STATES,
   CITIES,
   EMAIL_LOG_TABLE,
-
-
+  // New Profile Tables
+  FREELANCER_PROFILES,
+  VIDEOGRAPHER_PROFILES,
+  VIDEOEDITOR_PROFILES,
+  CLIENT_PROFILES,
+  ADMIN_PROFILES,
 };
 
 // Creates the procedure that is then added as a trigger to every table

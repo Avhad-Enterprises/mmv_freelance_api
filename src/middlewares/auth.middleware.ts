@@ -9,20 +9,29 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
 
   try {
 
-    if (req.path.includes('/users/login') || 
-        req.path.includes('/users/insert_user') || 
-        req.path.includes('/projectsTask/getallprojectlisting') || 
-        req.path.includes('/users/loginf') ||
-        req.path.includes('/auth/register') ||
-        req.path.includes('/auth/login') ||
-        req.path.includes('/health') ||
-        req.path.includes('/users/get_user_by_id') ||
-        req.path.includes('/users/get_freelancer_by_id') ||
-        req.path.includes('/users/get_client_by_id') ||
-        req.path.includes('/users/get_admin_by_id') ||
-        req.path.includes('/applications/my-applications') ||
-        req.path.includes('/applications/count/')) {
-      console.log(DB)
+    // Public routes that don't require authentication
+    const publicRoutes = [
+      '/users/login',
+      '/users/insert_user',
+      '/users/loginf',
+      '/users/get_user_by_id',
+      '/users/get_freelancer_by_id',
+      '/users/get_client_by_id',
+      '/users/get_admin_by_id',
+      '/users/password-reset-request',
+      '/users/password-reset',
+      '/auth/register',
+      '/auth/login',
+      '/health',
+      '/projectsTask/getallprojectlisting',
+      '/applications/my-applications',
+      '/applications/count/'
+    ];
+
+    // Check if the current path matches any public route
+    const isPublicRoute = publicRoutes.some(route => req.path.includes(route));
+    
+    if (isPublicRoute) {
       await DB.raw("SET search_path TO public");
       return next();
     }
