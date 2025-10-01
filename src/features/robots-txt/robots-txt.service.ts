@@ -1,7 +1,7 @@
 import { VisitorLogDto } from "../visitor-log/visitor-log.dto";
 import DB, { T } from "../../../database/index.schema";
 import HttpException from "../../exceptions/HttpException";
-import { isEmpty } from "../../utils/util";
+import { isEmpty } from "../../utils/common";
 
 class robotsservice {
     public async getLatestContent(): Promise<string | null> {

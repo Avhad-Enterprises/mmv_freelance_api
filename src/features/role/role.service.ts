@@ -1,7 +1,7 @@
 import { RoleDto } from "./role.dto";
 import DB, { T } from "../../../database/index.schema";
 import HttpException from "../../exceptions/HttpException";
-import { isEmpty } from "../../utils/util";
+import { isEmpty } from "../../utils/common";
 import { ROLE } from "../../../database/role.schema";
 import { ROLE_PERMISSION } from "../../../database/role_permission.schema"
 
