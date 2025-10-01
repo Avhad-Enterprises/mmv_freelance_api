@@ -8,10 +8,9 @@ Quick reference for fetching Categories and Skills from the MMV Freelance API.
 
 **Base URL:** `http://localhost:8000/api/v1`
 
-**Authentication Header:**
-```javascript
-'Authorization': 'Bearer YOUR_JWT_TOKEN'
-```
+**Authentication:** ✅ **Not Required** - These are public master data endpoints
+
+> 💡 Categories and Skills are master tables accessible without authentication tokens.
 
 ---
 
@@ -90,11 +89,7 @@ export default function CategoriesDropdown({ type }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/v1/category/getallcategorys', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    })
+    fetch('http://localhost:8000/api/v1/category/getallcategorys')
     .then(res => res.json())
     .then(data => {
       const filtered = type 
@@ -130,11 +125,7 @@ export default function SkillsSelector() {
   const [selected, setSelected] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/v1/tags/getallskill', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    })
+    fetch('http://localhost:8000/api/v1/tags/getallskill')
     .then(res => res.json())
     .then(data => setSkills(data.data || []))
     .catch(err => console.error(err));
@@ -168,16 +159,7 @@ const api = axios.create({
   baseURL: 'http://localhost:8000/api/v1'
 });
 
-// Add token to all requests
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Usage
+// No authentication required for these endpoints
 export const getCategories = () => api.get('/category/getallcategorys');
 export const getSkills = () => api.get('/tags/getallskill');
 ```
@@ -207,15 +189,9 @@ interface Skill {
 
 ```javascript
 try {
-  const response = await fetch(url, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
+  const response = await fetch(url);
 
   if (!response.ok) {
-    if (response.status === 401) {
-      // Redirect to login
-      window.location.href = '/login';
-    }
     throw new Error(`HTTP ${response.status}`);
   }
 
@@ -228,7 +204,6 @@ try {
 
 **Status Codes:**
 - `200` - Success
-- `401` - Unauthorized (missing/invalid token)
 - `404` - Not found
 - `500` - Server error
 
@@ -241,6 +216,7 @@ try {
 3. **Handle errors** - Show user-friendly error messages
 4. **Use environment variables** - Store API URL in `.env`
 5. **TypeScript** - Use interfaces for type safety
+6. **Load on app startup** - Fetch master data when app initializes
 
 ---
 
@@ -248,10 +224,10 @@ try {
 
 | Issue | Solution |
 |-------|----------|
-| Unauthorized error | Check JWT token in Authorization header |
 | CORS error | Contact backend team to whitelist domain |
 | Empty data | Verify database is seeded |
 | Slow response | Implement caching |
+| Network error | Check API URL and network connection |
 
 ---
 

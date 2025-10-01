@@ -25,7 +25,10 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/health',
       '/projectsTask/getallprojectlisting',
       '/applications/my-applications',
-      '/applications/count/'
+      '/applications/count/',
+      '/category/getallcategorys',
+      '/category/getcategorytypes',
+      '/tags/getallskill'
     ];
 
     // Check if the current path matches any public route

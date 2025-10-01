@@ -6,12 +6,15 @@ Quick reference for Registration and Login APIs for all user roles.
 
 ## 🌐 Setup
 
-**Base URL:** `http://localhost:8000/api/v1`  
-**Auth Header:** `'Authorization': 'Bearer YOUR_JWT_TOKEN'`
+**Base URL:** `http://localhost:8000/api/v1`
+
+**Note:** Registration and Login routes are **public** - no authentication required. After successful login, use the returned token for protected routes.
 
 ---
 
 ## 📝 Registration APIs
+
+**All registration endpoints are public** - No authentication required.
 
 ### 1️⃣ Client Registration
 ```
@@ -21,16 +24,23 @@ Content-Type: multipart/form-data
 
 **Required:** `first_name`, `last_name`, `email`, `password`, `company_name`
 
-**Optional:** `phone_number`, `city`, `country`, `industry`, `website`, `required_services` (JSON array), `budget_min`, `budget_max`, `profile_picture` (file), `id_document` (file), `business_document` (file)
+**Optional:** `phone_number`, `address_line_first`, `city`, `country`, `industry`, `website`, `required_services` (JSON array), `budget_min`, `budget_max`, `profile_picture` (file), `id_document` (file), `business_document` (file)
 
 **Response (201):**
 ```json
 {
   "success": true,
+  "message": "Client registered successfully",
   "data": {
-    "user": { "user_id": 123, "email": "...", "user_type": "CLIENT" },
-    "token": "eyJhbGci...",
-    "profile": { "client_profile_id": 456, "company_name": "..." }
+    "user": {
+      "user_id": 123,
+      "email": "john@company.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "user_type": "CLIENT",
+      "profile_picture": "https://..."
+    },
+    "token": "eyJhbGci..."
   }
 }
 ```
@@ -47,7 +57,24 @@ Content-Type: multipart/form-data
 
 **Optional:** `phone_number`, `city`, `country`, `experience_level` (entry/intermediate/expert/master), `hourly_rate` (1-10000), `short_description`, `skills` (JSON array), `portfolio_links` (JSON array), `profile_picture` (file), `id_document` (file)
 
-**Response (201):** Same structure as Client, `user_type`: "VIDEOGRAPHER"
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Videographer registered successfully",
+  "data": {
+    "user": {
+      "user_id": 124,
+      "email": "maria@videography.com",
+      "first_name": "Maria",
+      "last_name": "Rodriguez",
+      "user_type": "VIDEOGRAPHER",
+      "profile_picture": "https://..."
+    },
+    "token": "eyJhbGci..."
+  }
+}
+```
 
 ---
 
@@ -61,7 +88,24 @@ Content-Type: multipart/form-data
 
 **Optional:** Same as Videographer
 
-**Response (201):** Same structure, `user_type`: "VIDEO_EDITOR"
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Video editor registered successfully",
+  "data": {
+    "user": {
+      "user_id": 125,
+      "email": "alex@videoediting.com",
+      "first_name": "Alex",
+      "last_name": "Johnson",
+      "user_type": "VIDEO_EDITOR",
+      "profile_picture": "https://..."
+    },
+    "token": "eyJhbGci..."
+  }
+}
+```
 
 ---
 
@@ -72,6 +116,8 @@ POST /auth/login
 Content-Type: application/json
 ```
 
+**No authentication required** - This is a public endpoint.
+
 **Body:**
 ```json
 { "email": "user@example.com", "password": "YourPassword123!" }
@@ -81,6 +127,7 @@ Content-Type: application/json
 ```json
 {
   "success": true,
+  "message": "Login successful",
   "data": {
     "user": { 
       "user_id": 123, 
@@ -194,6 +241,31 @@ api.interceptors.response.use(
 export const registerClient = (formData) => api.post('/auth/register/client', formData);
 export const login = (email, password) => api.post('/auth/login', { email, password });
 ```
+
+---
+
+### Using Token for Protected Routes
+After login, include the token in protected API calls:
+
+```javascript
+// Example: Fetch user profile (protected route)
+const fetchProfile = async () => {
+  const token = localStorage.getItem('token');
+  
+  const res = await fetch('http://localhost:8000/api/v1/user/profile', {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  return res.json();
+};
+
+// With Axios (token auto-added via interceptor above)
+const profile = await api.get('/user/profile');
+```
+
 ---
 
 ## 📝 TypeScript Types
@@ -207,21 +279,41 @@ interface User {
   first_name: string;
   last_name: string;
   username?: string;
-  roles: string[];  // e.g., ['CLIENT'], ['VIDEOGRAPHER'], ['VIDEO_EDITOR']
+  roles?: string[];  // Only in login response
+  user_type?: string;  // Only in registration response
+  profile_picture?: string;
 }
 
-interface AuthResponse {
+interface RegistrationResponse {
   success: boolean;
+  message: string;
   data: { 
-    user: User & { user_type: string; profile_picture?: string };
-    token: string; 
-    profile?: any 
+    user: {
+      user_id: number;
+      email: string;
+      first_name: string;
+      last_name: string;
+      user_type: string;  // 'CLIENT' | 'VIDEOGRAPHER' | 'VIDEO_EDITOR'
+      profile_picture?: string;
+    };
+    token: string;
   };
 }
 
 interface LoginResponse {
   success: boolean;
-  data: { user: User; token: string };
+  message: string;
+  data: { 
+    user: {
+      user_id: number;
+      email: string;
+      first_name: string;
+      last_name: string;
+      username: string;
+      roles: string[];  // e.g., ['CLIENT']
+    };
+    token: string;
+  };
 }
 ```
 
@@ -231,7 +323,11 @@ interface LoginResponse {
 
 **Password Requirements:** Min 6 chars (validation enforced)
 
-**File Limits:** Images (5MB), Documents (10MB)
+**File Limits:** All files (images and documents) - max 10MB each, up to 3 files total
+
+**File Types:** 
+- Profile pictures: image files only (jpg, png, gif, etc.)
+- Documents (ID, business): images or PDF files
 
 **Experience Levels:** `entry`, `intermediate`, `expert`, `master` (not beginner)
 
@@ -264,13 +360,14 @@ form.append('skills', JSON.stringify(['Premiere Pro', 'After Effects']));
 
 ## 💡 Best Practices
 
-1. Store tokens in `localStorage` or `sessionStorage`
-2. Validate files before upload (type & size)
-3. Show loading states during API calls
-4. Handle errors with user-friendly messages
-5. Clear tokens on logout
-6. Use HTTPS in production
-7. Implement token refresh mechanism
+1. **No Auth Header for Registration/Login** - These routes are public
+2. Store tokens in `localStorage` or `sessionStorage` after successful login
+3. Add `Authorization: Bearer <token>` header for protected routes (e.g., profile, dashboard)
+4. Validate files before upload (type & size)
+5. Show loading states during API calls
+6. Handle errors with user-friendly messages
+7. Clear tokens on logout
+8. Use HTTPS in production
 
 ---
 
