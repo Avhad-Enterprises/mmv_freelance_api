@@ -17,7 +17,11 @@
     "typecheck": "tsc --noEmit",
     "migrate:all": "ts-node scripts/migrate-all.ts",
     "migrate:schema": "ts-node scripts/migrate-schema.ts",
-    "migrate:status": "ts-node scripts/migrate-status.ts"
+    "migrate:status": "ts-node scripts/migrate-status.ts",
+    "seed:roles": "ts-node scripts/seed-roles.ts",
+    "seed:permissions": "ts-node scripts/seed-permissions.ts",
+    "seed:assign-permissions": "ts-node scripts/assign-role-permissions.ts",
+    "seed:rbac": "npm run seed:roles && npm run seed:permissions && npm run seed:assign-permissions"
   },
   "keywords": [
     "mmv",
