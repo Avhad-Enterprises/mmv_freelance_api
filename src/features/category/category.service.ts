@@ -1,7 +1,7 @@
 import { CategoryDto } from "./category.dto";
 import DB, { T } from "../../../database/index.schema";
 import HttpException from "../../exceptions/HttpException";
-import { isEmpty } from "../../utils/util";
+import { isEmpty } from "../../utils/common";
 import { CATEGORY } from "../../../database/category.schema";
 
 class CategoryService {

@@ -17,8 +17,10 @@ export const authRateLimit = rateLimit({
     );
   },
   skip: (req: Request) => {
-    // Skip rate limiting for test environment or specific test headers
-    return process.env.NODE_ENV === 'test' || req.headers['x-test-mode'] === 'true';
+    // Skip rate limiting for test environment, specific test headers, or when disabled
+    return process.env.NODE_ENV === 'test' ||
+           req.headers['x-test-mode'] === 'true' ||
+           process.env.DISABLE_RATE_LIMIT === 'true';
   }
 });
 
@@ -35,6 +37,10 @@ export const generalRateLimit = rateLimit({
       'Too many requests, please try again later',
       429
     );
+  },
+  skip: (req: Request) => {
+    // Skip rate limiting when disabled
+    return process.env.DISABLE_RATE_LIMIT === 'true';
   }
 });
 
@@ -53,7 +59,9 @@ export const registrationRateLimit = rateLimit({
     );
   },
   skip: (req: Request) => {
-    // Skip rate limiting for test environment or specific test headers
-    return process.env.NODE_ENV === 'test' || req.headers['x-test-mode'] === 'true';
+    // Skip rate limiting for test environment, specific test headers, or when disabled
+    return process.env.NODE_ENV === 'test' ||
+           req.headers['x-test-mode'] === 'true' ||
+           process.env.DISABLE_RATE_LIMIT === 'true';
   }
 });

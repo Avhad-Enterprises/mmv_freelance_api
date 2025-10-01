@@ -2,7 +2,7 @@
 import DB, { T } from '../../../database/index.schema';
 import { SupportTicket } from './support-ticket.interface';
 import HttpException from '../../exceptions/HttpException';
-import { isEmpty } from '../../utils/util';
+import { isEmpty } from '../../utils/common';
 import { sendSupportEmail } from '../../utils/email/support_ticket_email.util';
 import { ITicketNote } from '../../interfaces/support_ticket_notes.interface';
 import { TicketNoteDto } from './support-ticket-notes.dto';
