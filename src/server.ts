@@ -93,7 +93,9 @@ const app = new App([
 ]);
 
 // Start server
-app.listen();
+(async () => {
+  await app.listen();
+})();
 
 // Global error handlers to prevent app crashes
 process.on('uncaughtException', (error) => {

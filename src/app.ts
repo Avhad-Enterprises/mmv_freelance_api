@@ -11,6 +11,7 @@ import { logger, stream } from "./utils/logger";
 import authMiddleware from "./middlewares/auth.middleware";
 import dotenv from 'dotenv';
 import multerErrorHandler from './middlewares/multer-error.middleware';
+import DB from '../database/index.schema';
 dotenv.config();
 
 
@@ -29,8 +30,13 @@ class App {
     this.initializeErrorHandling();
   }
 
-  public listen() {
+  public async listen() {
     try {
+      // Test database connection before starting server
+      console.log('🔍 Testing database connection...');
+      await DB.raw('SELECT 1 as test');
+      console.log('✅ Database connection successful');
+
       this.app.listen(this.port, () => {
         logger.info(
           `🚀 App listening on the port ${this.port}. Current Env ${this.env}.`
@@ -46,7 +52,8 @@ class App {
         }
       });
     } catch (error: any) {
-      logger.error(`❌ Failed to start server: ${error.message}`);
+      console.error('❌ Database connection failed:', error.message);
+      logger.error(`❌ Database connection failed: ${error.message}`);
       process.exit(1);
     }
   }
