@@ -16,10 +16,10 @@ import { Transform, Type } from 'class-transformer';
 
 export class UserRegistrationDto {
   // Step 1: Basic Information
-  @IsNotEmpty()
+  @IsOptional() // Made optional as frontend can derive from full_name
   @IsString()
   @MinLength(3)
-  username: string;
+  username?: string;
 
   @IsNotEmpty()
   @IsString()
@@ -42,7 +42,44 @@ export class UserRegistrationDto {
   @IsEnum(['freelancer', 'client'])
   account_type: 'freelancer' | 'client';
 
-  // Freelancer-specific fields (Step 2) - Required for freelancers
+  // Freelancer-specific fields (NEW PHASE 1 FIELDS)
+  @IsOptional()
+  @IsString()
+  role?: string; // New field from frontend
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [];
+  })
+  @IsArray()
+  superpowers?: string[]; // New field from frontend
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [];
+  })
+  @IsArray()
+  skill_tags?: string[]; // New field from frontend
+
+  @IsOptional()
+  @IsString()
+  short_description?: string; // New field from frontend
+
+  // Existing freelancer fields with updates
   @IsOptional()
   @IsString()
   profile_title?: string;
@@ -59,23 +96,39 @@ export class UserRegistrationDto {
     return Array.isArray(value) ? value : [value];
   })
   @IsArray()
-  @ArrayMinSize(1)
-  skills?: string[];
+  skills?: string[]; // Maps from base_skills in frontend
 
   @IsOptional()
   @IsEnum(['entry', 'intermediate', 'expert', 'master'])
   experience_level?: string;
 
   @IsOptional()
-  @IsUrl()
-  portfolio_links?: string;
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return [value]; // Single URL becomes array
+      }
+    }
+    return Array.isArray(value) ? value : [];
+  })
+  @IsArray()
+  portfolio_links?: string[]; // Updated to handle multiple URLs
 
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => {
+    // Handle both string and number inputs from rate_amount
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? undefined : parsed;
+    }
+    return typeof value === 'number' ? value : undefined;
+  })
   @IsNumber()
-  @Min(100)
+  @Min(1)
   @Max(10000)
-  hourly_rate?: number;
+  hourly_rate?: number; // Maps from rate_amount in frontend
 
   // Step 3: Contact & Location (Required for both but field names differ)
   @IsOptional()
@@ -93,7 +146,7 @@ export class UserRegistrationDto {
   // Freelancer address fields
   @IsOptional()
   @IsString()
-  street_address?: string;
+  street_address?: string; // Can contain "lat,lng" coordinates
 
   @IsOptional()
   @IsString()
@@ -109,7 +162,7 @@ export class UserRegistrationDto {
 
   @IsOptional()
   @IsString()
-  zip_code?: string;
+  zip_code?: string; // Maps to pincode in database
 
   @IsOptional()
   @IsEnum(['passport', 'driving_license', 'national_id'])
@@ -137,10 +190,9 @@ export class UserRegistrationDto {
         return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
       }
     }
-    return Array.isArray(value) ? value : [value];
+    return Array.isArray(value) ? value : [];
   })
   @IsArray()
-  @ArrayMinSize(1)
   languages?: string[];
 
   // Client-specific fields (Step 2)
@@ -173,11 +225,10 @@ export class UserRegistrationDto {
         return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
       }
     }
-    return Array.isArray(value) ? value : [value];
+    return Array.isArray(value) ? value : [];
   })
   @IsArray()
-  @ArrayMinSize(1)
-  required_services?: string[];
+  required_services?: string[]; // Default: ["General Services"] if missing
 
   @IsOptional()
   @Transform(({ value }) => {
@@ -188,11 +239,10 @@ export class UserRegistrationDto {
         return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
       }
     }
-    return Array.isArray(value) ? value : [value];
+    return Array.isArray(value) ? value : [];
   })
   @IsArray()
-  @ArrayMinSize(1)
-  required_skills?: string[];
+  required_skills?: string[]; // Default: ["General Skills"] if missing
 
   @IsOptional()
   @Transform(({ value }) => {
@@ -203,10 +253,9 @@ export class UserRegistrationDto {
         return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
       }
     }
-    return Array.isArray(value) ? value : [value];
+    return Array.isArray(value) ? value : [];
   })
   @IsArray()
-  @ArrayMinSize(1)
   required_editor_proficiencies?: string[];
 
   @IsOptional()
@@ -218,21 +267,33 @@ export class UserRegistrationDto {
         return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
       }
     }
-    return Array.isArray(value) ? value : [value];
+    return Array.isArray(value) ? value : [];
   })
   @IsArray()
-  @ArrayMinSize(1)
   required_videographer_proficiencies?: string[];
 
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? undefined : parsed;
+    }
+    return typeof value === 'number' ? value : undefined;
+  })
   @IsNumber()
   @Min(0)
   budget_min?: number;
 
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? undefined : parsed;
+    }
+    return typeof value === 'number' ? value : undefined;
+  })
   @IsNumber()
+  @Min(0)
   budget_max?: number;
 
   // Step 3: Contact & Business Details (Client)

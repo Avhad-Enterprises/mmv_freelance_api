@@ -54,56 +54,6 @@ class UsersController {
     }
   };
 
-  public insertUser = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const userData: UsersDto = req.body;
-      const locationData: Users = await this.UsersService.Insert(
-        userData
-      );
-      res.status(201).json({ data: locationData, message: "Inserted" });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-
-  public loginEmployee = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const { email, password } = req.body;
-
-
-      if (!email || !password) {
-        throw new HttpException(400, "Please provide both email and password");
-      }
-
-
-      const user = await this.UsersService.Login(email, password);
-
-
-      const { password: _pw, ...userData } = user as any;
-
-
-      const token = generateToken(userData);
-
-
-      res.status(200).json({
-        data: { user: userData, token },
-        message: "Login successful",
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-
   public getUserById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { user_id } = req.body;
@@ -254,20 +204,6 @@ class UsersController {
   //     next(error);
   //   }
   // };
-
-  public insertEmployee = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const userData: UsersDto & { invite_token: string } = req.body;
-      await this.UsersService.validateInvitation(userData.email, userData.invite_token);
-      const user = await this.UsersService.Insert(userData);
-      await DB(T.USERS_TABLE)
-        .where({ email: userData.email })
-        .update({ used: true });
-      res.status(201).json({ data: user, message: "User registered successfully" });
-    } catch (error) {
-      next(error);
-    }
-  };
 
   public Login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

@@ -22,10 +22,6 @@ class UsersRoute implements Route {
     this.router.get(`${this.path}/client/active`, this.usersController.getAllActiveClient);
     this.router.get(`${this.path}/freelancers/active`, this.usersController.getAllActiveFreelance);    //active freelancers
     this.router.get(`${this.path}/geteditorcount/active`, this.usersController.geteditorcount);
-    // Register
-    this.router.post(`${this.path}/insert_user`, validationMiddleware(UsersDto, 'body', false, []), this.usersController.insertUser);
-    //backend login
-    this.router.post(`${this.path}/login`, this.usersController.loginEmployee);
     this.router.post(`${this.path}/get_user_by_id`, this.usersController.getUserById);
     this.router.post(`${this.path}/update_user_by_id`, validationMiddleware(UsersDto, 'body', false, []), this.usersController.updateUserById);
     this.router.post(`${this.path}/soft_delete_user`, this.usersController.softDeleteUser);
@@ -38,11 +34,6 @@ class UsersRoute implements Route {
     this.router.post(`${this.path}/get_client_by_id`, this.usersController.getClientById);
 
     this.router.post(`${this.path}/get_admin_by_id`, this.usersController.getAdminById);
-
-    // Register invited user
-    this.router.post(`${this.path}/register`, validationMiddleware(UsersDto, 'body', false, []), this.usersController.insertEmployee);
-    // frontend login user
-    this.router.post(`${this.path}/loginf`, this.usersController.Login);
 
     this.router.post(`${this.path}/getfreelaner`, (req, res, next) => this.usersController.getfreelancer(req, res, next));
 
