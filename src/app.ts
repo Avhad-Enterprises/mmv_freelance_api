@@ -10,6 +10,7 @@ import errorMiddleware from "./middlewares/error.middleware";
 import { logger, stream } from "./utils/logger";
 import authMiddleware from "./middlewares/auth.middleware";
 import dotenv from 'dotenv';
+import multerErrorHandler from './middlewares/multer-error.middleware';
 dotenv.config();
 
 
@@ -29,11 +30,25 @@ class App {
   }
 
   public listen() {
-    this.app.listen(this.port, () => {
-      logger.info(
-        `🚀 App listening on the port ${this.port}. Current Env ${this.env}.`
-      );
-    });
+    try {
+      this.app.listen(this.port, () => {
+        logger.info(
+          `🚀 App listening on the port ${this.port}. Current Env ${this.env}.`
+        );
+      }).on('error', (error: any) => {
+        if (error.code === 'EADDRINUSE') {
+          logger.error(`❌ Port ${this.port} is already in use. Please use a different port or kill the process using it.`);
+          logger.error(`To kill processes on port ${this.port}, run: lsof -ti:${this.port} | xargs kill -9`);
+          process.exit(1);
+        } else {
+          logger.error(`❌ Server startup error: ${error.message}`);
+          throw error;
+        }
+      });
+    } catch (error: any) {
+      logger.error(`❌ Failed to start server: ${error.message}`);
+      process.exit(1);
+    }
   }
 
   public getServer() {
@@ -91,6 +106,9 @@ class App {
   }
 
   private initializeErrorHandling() {
+    // Handle multer-specific errors first
+    this.app.use(multerErrorHandler);
+    // General error handling
     this.app.use(errorMiddleware);
   }
 }

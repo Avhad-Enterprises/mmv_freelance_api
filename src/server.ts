@@ -94,3 +94,16 @@ const app = new App([
 
 // Start server
 app.listen();
+
+// Global error handlers to prevent app crashes
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // Don't exit the process, just log the error
+  // process.exit(1); // Commented out to prevent crashes
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit the process, just log the error
+  // process.exit(1); // Commented out to prevent crashes
+});
