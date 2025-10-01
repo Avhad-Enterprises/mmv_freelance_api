@@ -3,8 +3,14 @@ import 'reflect-metadata';
 import App from './app';
 
 // Feature-based route imports
-import usersRoutes from './features/user/user.routes';
-import AuthRoute from './features/user/auth.routes';
+// User & Auth routes (refactored with RBAC)
+import { UserRoutes } from './features/user/user.routes';
+import { AuthRoutes } from './features/auth/auth.routes';
+import { ClientRoutes } from './features/clients/client.routes';
+import { VideographerRoutes } from './features/videographers/videographer.routes';
+import { VideoEditorRoutes } from './features/videoeditors/videoeditor.routes';
+
+// RBAC routes
 import roleRoute from './features/role/role.routes';
 import permissionRoute from './features/permission/permission.routes';
 import projectstaskRoute from './features/projectstask/projectstask.routes';
@@ -46,8 +52,14 @@ validateEnv();
 
 // Instantiate App with all route classes
 const app = new App([
-    new usersRoutes(),
-    new AuthRoute(),
+    // Refactored routes with RBAC
+    new UserRoutes(),
+    new AuthRoutes(),
+    new ClientRoutes(),
+    new VideographerRoutes(),
+    new VideoEditorRoutes(),
+    
+    // RBAC routes
     new roleRoute(),
     new permissionRoute(),
     new projectstaskRoute(),
@@ -82,3 +94,16 @@ const app = new App([
 
 // Start server
 app.listen();
+
+// Global error handlers to prevent app crashes
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // Don't exit the process, just log the error
+  // process.exit(1); // Commented out to prevent crashes
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit the process, just log the error
+  // process.exit(1); // Commented out to prevent crashes
+});

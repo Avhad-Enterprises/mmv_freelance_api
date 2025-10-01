@@ -1,286 +1,229 @@
-import { UsersDto } from "./user.dto";
+// Refactored User Service - RBAC & Profile-based Architecture
 import DB, { T } from "../../../database/index.schema";
 import { Users } from "./user.interface";
 import HttpException from "../../exceptions/HttpException";
-import { isEmpty } from "../../utils/common";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import sendEmail from '../../utils/email/sendemail';
-import validator from "validator";
-import { 
-  uploadRegistrationFile, 
-  uploadMultipleRegistrationFiles, 
-  UploadResult
-} from '../../utils/registration-upload';
-import { MulterFile, DocumentType, AccountType } from '../../interfaces/file-upload.interface';
+import { loadUserProfile } from "../../utils/user/profile-loader";
+import { getUserRoles, hasRole } from "../../utils/rbac/role-checker";
 
-class UsersService {
-
-  public async getAllActiveClients(): Promise<Users[]> {
-    const users = await DB(T.USERS_TABLE)
-      .select("*")
-      .where({
-        account_type: "client",
-        is_active: true,
-        is_banned: false,
-      })
-      .orderBy("created_at", "desc");
-
-
-    return users;
-  }
-  public async getAllActiveFreelancers(): Promise<Users[]> {
-    const users = await DB(T.USERS_TABLE)
-      .select("*")
-      .where({
-        account_type: "freelancer",
-        is_active: true,
-        is_banned: false,
-      })
-      .orderBy("created_at", "desc");
-    return users;
+/**
+ * Base User Service
+ * Handles common user operations across all user types
+ * Uses RBAC system and profile loading utilities
+ */
+class UserService {
+  
+  /**
+   * Get user by ID with their profile loaded
+   * Automatically loads the appropriate profile based on user's role
+   */
+  public async getUserWithProfile(user_id: number): Promise<any> {
+    const result = await loadUserProfile(user_id);
+    
+    if (!result) {
+      throw new HttpException(404, "User not found");
+    }
+    
+    return result;
   }
 
-  public async getactiveeditorcount(): Promise<Users[]> {
-
-    const users = await DB("users as u")
-      .leftJoin("projects_task as t", "u.user_id", "t.editor_id")
-      .select(
-        "u.user_id as editor_id",
-        "u.*",
-        DB.raw("COALESCE(COUNT(t.projects_task_id), 0) as task_count")
-      )
-      .where("u.account_type", "freelancer") // ✅ condition on users table
-      .groupBy("u.user_id", "u.*")
-      .orderBy("task_count", "desc");
-
-    return users;
-  }
-
+  /**
+   * Get basic user info without profile
+   */
   public async getById(user_id: number): Promise<Users> {
     const user = await DB(T.USERS_TABLE)
-      .where({ user_id, is_active: true, account_status: 'Active' }) // active user
+      .where({ user_id, is_active: true })
       .first();
 
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
 
-    if (!user) throw new HttpException(404, "User not found");
     return user;
   }
 
+  /**
+   * Get all users with a specific role
+   */
+  public async getUsersByRole(roleName: string): Promise<Users[]> {
+    const users = await DB(T.USERS_TABLE)
+      .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
+      .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
+      .where(`${T.ROLE}.name`, roleName)
+      .where(`${T.USERS_TABLE}.is_active`, true)
+      .where(`${T.USERS_TABLE}.is_banned`, false)
+      .select(`${T.USERS_TABLE}.*`)
+      .orderBy(`${T.USERS_TABLE}.created_at`, "desc");
 
-  public async updateById(data: UsersDto): Promise<Users> {
-    if (!data.user_id) throw new HttpException(400, "User ID required for update");
+    return users;
+  }
 
+  /**
+   * Get all active clients
+   */
+  public async getAllActiveClients(): Promise<Users[]> {
+    return this.getUsersByRole('CLIENT');
+  }
 
+  /**
+   * Get all active videographers
+   */
+  public async getAllActiveVideographers(): Promise<Users[]> {
+    return this.getUsersByRole('VIDEOGRAPHER');
+  }
+
+  /**
+   * Get all active video editors
+   */
+  public async getAllActiveVideoEditors(): Promise<Users[]> {
+    return this.getUsersByRole('VIDEO_EDITOR');
+  }
+
+  /**
+   * Get all active freelancers (videographers + video editors)
+   */
+  public async getAllActiveFreelancers(): Promise<Users[]> {
+    const users = await DB(T.USERS_TABLE)
+      .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
+      .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
+      .whereIn(`${T.ROLE}.name`, ['VIDEOGRAPHER', 'VIDEO_EDITOR'])
+      .where(`${T.USERS_TABLE}.is_active`, true)
+      .where(`${T.USERS_TABLE}.is_banned`, false)
+      .select(`${T.USERS_TABLE}.*`)
+      .orderBy(`${T.USERS_TABLE}.created_at`, "desc");
+
+    return users;
+  }
+
+  /**
+   * Update user basic info (fields in users table only)
+   */
+  public async updateBasicInfo(user_id: number, data: Partial<Users>): Promise<Users> {
     const user = await DB(T.USERS_TABLE)
-      .where({ user_id: data.user_id })
+      .where({ user_id })
       .first();
 
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
 
-    if (!user) throw new HttpException(404, "User not found");
-
-
+    // Hash password if provided
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
     }
 
-
     const updated = await DB(T.USERS_TABLE)
-      .where({ user_id: data.user_id })
-      .update({ ...data, updated_at: new Date() })
+      .where({ user_id })
+      .update({ 
+        ...data, 
+        updated_at: DB.fn.now() 
+      })
       .returning("*");
-
 
     return updated[0];
   }
 
-
+  /**
+   * Soft delete user
+   */
   public async softDelete(user_id: number): Promise<Users> {
     const user = await DB(T.USERS_TABLE)
       .where({ user_id })
       .first();
 
-
-    if (!user) throw new HttpException(404, "User not found");
-
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
 
     const updated = await DB(T.USERS_TABLE)
       .where({ user_id })
       .update({
         is_active: false,
-        account_status: 'inactive',
-        updated_at: new Date()
+        is_deleted: true,
+        updated_at: DB.fn.now()
       })
       .returning("*");
-
 
     return updated[0];
   }
 
+  /**
+   * Ban user
+   */
+  public async banUser(user_id: number, reason?: string): Promise<Users> {
+    const user = await DB(T.USERS_TABLE)
+      .where({ user_id })
+      .first();
 
-  public async getUserByEmail(email: string): Promise<Users> {
-    return await DB(T.USERS_TABLE).where({ email }).first();
-  }
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
 
-
-  public async saveResetToken(user_id: number, token: string, expires: Date): Promise<void> {
-    await DB(T.USERS_TABLE)
+    const updated = await DB(T.USERS_TABLE)
       .where({ user_id })
       .update({
-        reset_token: token,
-        reset_token_expires: expires,
-      });
-  }
-
-
-  public async resetPassword(token: string, newPassword: string): Promise<void> {
-    const user = await DB(T.USERS_TABLE)
-      .where({ reset_token: token })
-      .andWhere('reset_token_expires', '>', new Date())
-      .first();
-
-
-    if (!user) throw new HttpException(400, "Invalid or expired token");
-
-
-    const hashed = await bcrypt.hash(newPassword, 10);
-
-
-    await DB(T.USERS_TABLE)
-      .where({ user_id: user.user_id })
-      .update({
-        password: hashed,
-        reset_token: null,
-        reset_token_expires: null,
-        updated_at: new Date(),
-      });
-  }
-
-
-  private async getUserByType(user_id: number, account_type: string): Promise<Users> {
-    const user = await DB(T.USERS_TABLE)
-      .where({
-        user_id,
-        account_type,
-        account_status: 'Active',
-        is_active: true,
-        is_banned: false,
+        is_banned: true,
+        banned_reason: reason || 'Banned by admin',
+        updated_at: DB.fn.now()
       })
+      .returning("*");
+
+    return updated[0];
+  }
+
+  /**
+   * Unban user
+   */
+  public async unbanUser(user_id: number): Promise<Users> {
+    const user = await DB(T.USERS_TABLE)
+      .where({ user_id })
       .first();
 
-
-    if (!user) throw new HttpException(404, `${account_type} user not found`);
-    return user;
-  }
-
-
-  public getFreelancerById(user_id: number): Promise<Users> {
-    return this.getUserByType(user_id, 'freelancer');
-  }
-
-
-  public getClientById(user_id: number): Promise<Users> {
-    return this.getUserByType(user_id, 'client');
-  }
-
-
-  public getAdminById(user_id: number): Promise<Users> {
-    return this.getUserByType(user_id, 'admin');
-  }
-
-
-  public async createUserInvitations(data: Record<string, any>,): Promise<void> {
-    const { email, username, password } = data;
-
-    if (!email) throw new HttpException(400, "Email is required");
-
-    if (!username) throw new HttpException(400, "Username is required");
-
-    if (!password) throw new HttpException(400, "Password is required");
-
-    const exists = await DB(T.USERS_TABLE).where({ email }).first();
-    if (exists) throw new HttpException(409, "User already invited");
-
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-    data.password = hashedPassword;
-    const res = await DB(T.USERS_TABLE).insert(data).returning("*");
-    return res[0];
-
-    // await DB(T.USERS_TABLE).insert(data);
-
-  }
-
-  public async login(email: string, password: string): Promise<Users & { token: string }> {
-
-    let user: any;
-
-    if (validator.isEmail(email)) {
-      user = await DB(T.USERS_TABLE).where({ email }).first();
-    }
-    else {
-      user = await DB(T.USERS_TABLE).where({ username: email }).first();
-    }
     if (!user) {
-      throw new HttpException(404, "Email not registered");
-    }
-    if (user.is_banned === true) {
-      throw new HttpException(403, "Your account has been banned.");
+      throw new HttpException(404, "User not found");
     }
 
+    const updated = await DB(T.USERS_TABLE)
+      .where({ user_id })
+      .update({
+        is_banned: false,
+        banned_reason: null,
+        updated_at: DB.fn.now()
+      })
+      .returning("*");
 
-    if (!user.is_active) {
-      throw new HttpException(403, "Your account is not active.");
-    }
-
-
-    const allowedaccountTypes = ['freelancer', 'client'];
-    if (!allowedaccountTypes.includes(user.account_type)) {
-      throw new HttpException(403, "Access denied for this account type");
-    }
-
-
-    const ispasswordValid = await bcrypt.compare(password, user.password);
-    if (!ispasswordValid) {
-      throw new HttpException(401, "Incorrect password");
-    }
-    const token = jwt.sign(
-      {
-        user_id: user.user_id,
-        email: user.email,
-        full_name: user.full_name,
-        profile_picture: user.profile_picture,
-        role: user.role,
-        is_banned: user.is_banned,
-        is_active: user.is_active,
-        account_type: user.account_type,
-      },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "24h" }
-    );
-    return {
-      ...user,
-      token,
-    };
-
+    return updated[0];
   }
 
-  public async getfreelancerbyusername(username: string): Promise<any> {
-    if (!username) throw new HttpException(400, "Username is required");
-
-    const freelancer = await DB(T.USERS_TABLE)
-      .where({ username, account_type: 'freelancer' })
+  /**
+   * Get user by email
+   */
+  public async getUserByEmail(email: string): Promise<Users | null> {
+    return await DB(T.USERS_TABLE)
+      .where({ email })
       .first();
-
-    if (!freelancer) throw new HttpException(404, "Freelancer not found");
-
-    return freelancer;
   }
 
+  /**
+   * Get user by username
+   */
+  public async getUserByUsername(username: string): Promise<Users | null> {
+    return await DB(T.USERS_TABLE)
+      .where({ username })
+      .first();
+  }
 
-  public async changePassword(userId: number, oldPassword: string, newPassword: string): Promise<void> {
-
-
-    const user = await DB(T.USERS_TABLE).where({ user_id: userId }).first();
+  /**
+   * Change password
+   */
+  public async changePassword(
+    user_id: number, 
+    oldPassword: string, 
+    newPassword: string
+  ): Promise<void> {
+    const user = await DB(T.USERS_TABLE)
+      .where({ user_id })
+      .first();
 
     if (!user) {
       throw new HttpException(404, "User not found");
@@ -295,350 +238,139 @@ class UsersService {
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
     await DB(T.USERS_TABLE)
-      .where({ user_id: userId })
-      .update({ password: hashedNewPassword, updated_at: new Date() });
+      .where({ user_id })
+      .update({ 
+        password: hashedNewPassword, 
+        updated_at: DB.fn.now() 
+      });
   }
 
+  /**
+   * Save password reset token
+   */
+  public async saveResetToken(
+    user_id: number, 
+    token: string, 
+    expires: Date
+  ): Promise<void> {
+    await DB(T.USERS_TABLE)
+      .where({ user_id })
+      .update({
+        reset_token: token,
+        reset_token_expires: expires,
+      });
+  }
 
-  public async createuserInvitation(data: UsersDto): Promise<Users> {
-
-    if (!data.full_name || !data.username || !data.password || !data.email || !data.phone_number) {
-      throw new HttpException(400, "Missing required fields");
-    }
-    if (isEmpty(data)) throw new HttpException(400, "Data Invalid");
-
-    const existingEmployee = await DB(T.USERS_TABLE)
-      .where({ email: data.email })
+  /**
+   * Reset password using token
+   */
+  public async resetPassword(token: string, newPassword: string): Promise<void> {
+    const user = await DB(T.USERS_TABLE)
+      .where({ reset_token: token })
+      .andWhere('reset_token_expires', '>', DB.fn.now())
       .first();
 
-    if (existingEmployee)
-      throw new HttpException(409, "Email already registered");
-
-    if (data.username) {
-      const existingUsername = await DB(T.USERS_TABLE)
-        .where({ username: data.username })
-        .first();
-
-
-      if (existingUsername) {
-        throw new HttpException(409, "Username already taken");
-      }
+    if (!user) {
+      throw new HttpException(400, "Invalid or expired token");
     }
 
+    const hashed = await bcrypt.hash(newPassword, 10);
 
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-    data.password = hashedPassword;
-    const res = await DB(T.USERS_TABLE).insert(data).returning("*");
-    return res[0];
+    await DB(T.USERS_TABLE)
+      .where({ user_id: user.user_id })
+      .update({
+        password: hashed,
+        reset_token: null,
+        reset_token_expires: null,
+        updated_at: DB.fn.now(),
+      });
   }
 
-  // Frontend Multi-Step Registration Service
-  public async registerUser(userData: any, files?: any): Promise<{ user: any; token: string }> {
-    try {
-      // Check if email already exists
-      const existingUser = await DB(T.USERS_TABLE).where({ email: userData.email }).first();
-      if (existingUser) {
-        throw new HttpException(409, "Email already exists");
-      }
-
-      // Check if provided username already exists (only if username was provided)
-      if (userData.username) {
-        const existingUsername = await DB(T.USERS_TABLE).where({ username: userData.username }).first();
-        if (existingUsername) {
-          throw new HttpException(409, "Username already taken");
-        }
-      }
-
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
-
-      // Handle username fallback from full_name (first_name + last_name)
-      let username = userData.username;
-      if (!username) {
-        username = `${userData.first_name}${userData.last_name}`.toLowerCase().replace(/\s+/g, '');
-        
-        // Check if generated username already exists
-        const existingGeneratedUsername = await DB(T.USERS_TABLE).where({ username }).first();
-        if (existingGeneratedUsername) {
-          // Add random suffix if exists
-          username = `${username}${Math.floor(Math.random() * 1000)}`;
-        }
-      }
-
-      // Prepare user data for insertion
-      const userInsertData: any = {
-        username: username,
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        email: userData.email,
-        password: hashedPassword,
-        account_type: userData.account_type,
-        phone_number: userData.phone_number || null,
-        is_active: true,
-        is_banned: false,
-        email_verified: false,
-        phone_verified: false,
-        created_at: new Date(),
-        updated_at: new Date()
-      };
-
-      // Handle file uploads with S3
-      let temporaryUserId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-      
-      if (files) {
-        // Map account type for S3 folder structure
-        const accountType = userData.account_type === 'freelancer' 
-          ? AccountType.VIDEOGRAPHER // Default for freelancer, could be refined based on role
-          : AccountType.CLIENT;
-
-        try {
-          // Upload ID document
-          if (files.id_document && files.id_document[0]) {
-            const idDocResult = await uploadRegistrationFile(
-              files.id_document[0] as MulterFile,
-              temporaryUserId,
-              DocumentType.ID_DOCUMENT,
-              accountType
-            );
-            userInsertData.id_document_url = idDocResult.url;
-          }
-
-          // Upload business documents (clients only)
-          if (files.business_documents && files.business_documents.length > 0) {
-            const businessDocResults = await uploadMultipleRegistrationFiles(
-              files.business_documents as MulterFile[],
-              temporaryUserId,
-              DocumentType.BUSINESS_DOCUMENT,
-              accountType
-            );
-            const documentUrls = businessDocResults.map(result => result.url);
-            userInsertData.business_documents = JSON.stringify(documentUrls);
-          }
-
-          // Upload profile picture
-          if (files.profile_picture && files.profile_picture[0]) {
-            const profilePicResult = await uploadRegistrationFile(
-              files.profile_picture[0] as MulterFile,
-              temporaryUserId,
-              DocumentType.PROFILE_PHOTO,
-              accountType
-            );
-            userInsertData.profile_picture = profilePicResult.url;
-          }
-        } catch (uploadError) {
-          console.error('File upload error:', uploadError);
-          throw new HttpException(500, `File upload failed: ${uploadError}`);
-        }
-      }
-
-      // Add account-type specific fields
-      if (userData.account_type === 'freelancer') {
-        userInsertData.profile_title = userData.profile_title || null;
-        
-        // NEW PHASE 1 FIELDS: Handle new freelancer fields
-        userInsertData.role = userData.role || null;
-        userInsertData.short_description = userData.short_description || null;
-        
-        // Handle superpowers array
-        if (userData.superpowers && userData.superpowers.length > 0) {
-          userInsertData.superpowers = JSON.stringify(userData.superpowers);
-        } else {
-          userInsertData.superpowers = null;
-        }
-        
-        // Handle skill_tags array
-        if (userData.skill_tags && userData.skill_tags.length > 0) {
-          userInsertData.skill_tags = JSON.stringify(userData.skill_tags);
-        } else {
-          userInsertData.skill_tags = null;
-        }
-        
-        // Handle skills - maps from base_skills in frontend, with default fallback
-        if (userData.skills && userData.skills.length > 0) {
-          userInsertData.skills = JSON.stringify(userData.skills);
-        } else {
-          userInsertData.skills = JSON.stringify(["General Skills"]); // Default fallback
-        }
-        
-        userInsertData.experience_level = userData.experience_level || null;
-        
-        // Handle portfolio_links array (updated from single URL)
-        if (userData.portfolio_links && userData.portfolio_links.length > 0) {
-          userInsertData.portfolio_links = JSON.stringify(userData.portfolio_links);
-        } else {
-          userInsertData.portfolio_links = null;
-        }
-        
-        // Handle hourly_rate - maps from rate_amount in frontend
-        userInsertData.hourly_rate = userData.hourly_rate || null;
-        userInsertData.availability = userData.availability || null;
-        userInsertData.hours_per_week = userData.hours_per_week || null;
-        userInsertData.work_type = userData.work_type || null;
-        
-        // Handle languages array
-        if (userData.languages && userData.languages.length > 0) {
-          userInsertData.languages = JSON.stringify(userData.languages);
-        } else {
-          userInsertData.languages = null;
-        }
-        
-        userInsertData.id_type = userData.id_type || null;
-        
-        // Address fields for freelancer - handle coordinate mapping
-        if (userData.street_address) {
-          // Check if it's coordinates format "lat,lng"
-          const coordPattern = /^-?\d+\.?\d*,-?\d+\.?\d*$/;
-          if (coordPattern.test(userData.street_address)) {
-            const [lat, lng] = userData.street_address.split(',');
-            userInsertData.latitude = parseFloat(lat);
-            userInsertData.longitude = parseFloat(lng);
-            userInsertData.address_line_first = null; // Don't store coordinates as address
-          } else {
-            userInsertData.address_line_first = userData.street_address;
-          }
-        } else {
-          userInsertData.address_line_first = null;
-        }
-        
-        userInsertData.city = userData.city || null;
-        userInsertData.state = userData.state || null;
-        userInsertData.country = userData.country || null;
-        userInsertData.pincode = userData.zip_code || null; // Maps zip_code to pincode
-      } else if (userData.account_type === 'client') {
-        userInsertData.company_name = userData.company_name || null;
-        userInsertData.industry = userData.industry || null;
-        userInsertData.website = userData.website || null;
-        userInsertData.social_links = userData.social_links || null;
-        userInsertData.company_size = userData.company_size || null;
-        
-        // Handle required_services with default fallback
-        if (userData.required_services && userData.required_services.length > 0) {
-          userInsertData.required_services = JSON.stringify(userData.required_services);
-        } else {
-          userInsertData.required_services = JSON.stringify(["General Services"]); // Default fallback
-        }
-        
-        // Handle required_skills with default fallback
-        if (userData.required_skills && userData.required_skills.length > 0) {
-          userInsertData.required_skills = JSON.stringify(userData.required_skills);
-        } else {
-          userInsertData.required_skills = JSON.stringify(["General Skills"]); // Default fallback
-        }
-        
-        // Handle optional proficiency arrays
-        if (userData.required_editor_proficiencies && userData.required_editor_proficiencies.length > 0) {
-          userInsertData.required_editor_proficiencies = JSON.stringify(userData.required_editor_proficiencies);
-        } else {
-          userInsertData.required_editor_proficiencies = null;
-        }
-        
-        if (userData.required_videographer_proficiencies && userData.required_videographer_proficiencies.length > 0) {
-          userInsertData.required_videographer_proficiencies = JSON.stringify(userData.required_videographer_proficiencies);
-        } else {
-          userInsertData.required_videographer_proficiencies = null;
-        }
-        
-        userInsertData.budget_min = userData.budget_min || null;
-        userInsertData.budget_max = userData.budget_max || null;
-        userInsertData.tax_id = userData.tax_id || null;
-        userInsertData.work_arrangement = userData.work_arrangement || null;
-        userInsertData.project_frequency = userData.project_frequency || null;
-        userInsertData.hiring_preferences = userData.hiring_preferences || null;
-        userInsertData.expected_start_date = userData.expected_start_date || "Flexible"; // Default fallback
-        userInsertData.project_duration = userData.project_duration || "Flexible"; // Default fallback
-        
-        // Address fields for client
-        userInsertData.address = userData.address || null;
-        userInsertData.city = userData.city || null;
-        userInsertData.state = userData.state || null;
-        userInsertData.country = userData.country || null;
-        userInsertData.pincode = userData.pincode || null;
-      }
-
-      // Insert user into database
-      const [newUser] = await DB(T.USERS_TABLE).insert(userInsertData).returning("*");
-
-      // Update file paths with real user ID if files were uploaded
-      if (files && Object.keys(files).length > 0) {
-        const realUserId = newUser.user_id.toString();
-        const accountType = userData.account_type === 'freelancer' 
-          ? AccountType.VIDEOGRAPHER 
-          : AccountType.CLIENT;
-
-        const updatedData: any = {};
-
-        try {
-          // Update ID document path
-          if (userInsertData.id_document_url) {
-            const newIdDocUrl = userInsertData.id_document_url.replace(
-              `${DocumentType.ID_DOCUMENT}/${temporaryUserId}/`,
-              `${DocumentType.ID_DOCUMENT}/${realUserId}/`
-            );
-            updatedData.id_document_url = newIdDocUrl;
-          }
-
-          // Update business documents paths
-          if (userInsertData.business_documents) {
-            const businessDocs = JSON.parse(userInsertData.business_documents);
-            const updatedBusinessDocs = businessDocs.map((url: string) => 
-              url.replace(
-                `${DocumentType.BUSINESS_DOCUMENT}/${temporaryUserId}/`,
-                `${DocumentType.BUSINESS_DOCUMENT}/${realUserId}/`
-              )
-            );
-            updatedData.business_documents = JSON.stringify(updatedBusinessDocs);
-          }
-
-          // Update profile picture path
-          if (userInsertData.profile_picture) {
-            const newProfileUrl = userInsertData.profile_picture.replace(
-              `${DocumentType.PROFILE_PHOTO}/${temporaryUserId}/`,
-              `${DocumentType.PROFILE_PHOTO}/${realUserId}/`
-            );
-            updatedData.profile_picture = newProfileUrl;
-          }
-
-          // Update database with corrected file paths
-          if (Object.keys(updatedData).length > 0) {
-            await DB(T.USERS_TABLE)
-              .where({ user_id: newUser.user_id })
-              .update(updatedData);
-            
-            // Update the response object with correct URLs
-            Object.assign(newUser, updatedData);
-          }
-        } catch (pathUpdateError) {
-          console.error('Error updating file paths:', pathUpdateError);
-          // Non-critical error, continue with registration
-        }
-      }
-
-      // Remove password from response
-      const { password: _, ...userResponse } = newUser;
-
-      // Generate JWT token
-      const token = jwt.sign(
-        { 
-          id: newUser.user_id,
-          email: newUser.email,
-          account_type: newUser.account_type 
-        },
-        process.env.JWT_SECRET as string,
-        { expiresIn: '7d' }
-      );
-
-      return {
-        user: userResponse,
-        token: token
-      };
-
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(500, `Registration failed: ${error}`);
-    }
+  /**
+   * Verify email
+   */
+  public async verifyEmail(user_id: number): Promise<void> {
+    await DB(T.USERS_TABLE)
+      .where({ user_id })
+      .update({
+        email_verified: true,
+        updated_at: DB.fn.now()
+      });
   }
 
+  /**
+   * Verify phone
+   */
+  public async verifyPhone(user_id: number): Promise<void> {
+    await DB(T.USERS_TABLE)
+      .where({ user_id })
+      .update({
+        phone_verified: true,
+        updated_at: DB.fn.now()
+      });
+  }
+
+  /**
+   * Check if user has specific role
+   */
+  public async userHasRole(user_id: number, roleName: string): Promise<boolean> {
+    return await hasRole(user_id, roleName);
+  }
+
+  /**
+   * Get user roles
+   */
+  public async getUserRoles(user_id: number): Promise<string[]> {
+    return await getUserRoles(user_id);
+  }
+
+  /**
+   * Check if user has any profile
+   */
+  public async userHasProfile(user_id: number): Promise<boolean> {
+    // Check if user has any profile in profile tables
+    const clientProfile = await DB(T.CLIENT_PROFILES).where({ user_id }).first();
+    if (clientProfile) return true;
+    
+    const freelancerProfile = await DB(T.FREELANCER_PROFILES).where({ user_id }).first();
+    if (freelancerProfile) return true;
+    
+    const adminProfile = await DB(T.ADMIN_PROFILES).where({ user_id }).first();
+    if (adminProfile) return true;
+    
+    return false;
+  }
+
+  /**
+   * Update last login time
+   */
+  public async updateLastLogin(user_id: number): Promise<void> {
+    await DB(T.USERS_TABLE)
+      .where({ user_id })
+      .update({
+        last_login_at: DB.fn.now()
+      });
+  }
+
+  /**
+   * Increment login attempts
+   */
+  public async incrementLoginAttempts(user_id: number): Promise<void> {
+    await DB(T.USERS_TABLE)
+      .where({ user_id })
+      .increment('login_attempts', 1);
+  }
+
+  /**
+   * Reset login attempts
+   */
+  public async resetLoginAttempts(user_id: number): Promise<void> {
+    await DB(T.USERS_TABLE)
+      .where({ user_id })
+      .update({
+        login_attempts: 0
+      });
+  }
 }
-export default UsersService;
+
+export default UserService;

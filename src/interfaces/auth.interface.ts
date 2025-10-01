@@ -11,5 +11,7 @@ export interface TokenData {
 }
 
 export interface RequestWithUser extends Request {
-  user: Users;
+  user: Users & {
+    roles?: string[];
+  };
 }
