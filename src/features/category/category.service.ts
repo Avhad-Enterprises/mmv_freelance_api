@@ -65,34 +65,60 @@ class CategoryService {
 
     public async getallcategorysbytable(): Promise<any> {
         try {
-            const result = await DB(T.CATEGORY)
-                .where({ is_active: true, is_deleted: false })
-                .select("*")
-                .distinct();
-            const uniqueCategories = result.filter((category, index, self) =>
-                index === self.findIndex((c) => (
-                    c.value.toLowerCase() === category.value.toLowerCase()
-                ))
-            );
+            // Log the query being executed
+            const query = DB(T.CATEGORY)
+                .where({ is_deleted: false })
+                .select(
+                    'category_id',
+                    'category_name',
+                    'category_type',
+                    'is_active'
+                )
+                .orderBy('category_id');
 
-            return uniqueCategories;
+            console.log('Executing query:', query.toString());
+            
+            const result = await query;
+            console.log('Query result:', result);
+
+            if (!result || result.length === 0) {
+                console.log('No categories found in database');
+                return []; // Return empty array instead of error for no results
+            }
+
+            return result;
         } catch (error) {
-            throw new Error('Error fetching category');
+            // Log detailed error information
+            console.error('Database error details:', {
+                message: error.message,
+                code: error.code,
+                stack: error.stack,
+                sqlMessage: error.sqlMessage,
+                sql: error.sql
+            });
+
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            // Include more specific error information
+            const errorMessage = error.sqlMessage || error.message || 'Error fetching categories';
+            throw new HttpException(500, `Database error: ${errorMessage}`);
         }
     }
 
     public async getcategorytypesbytable(type: string): Promise<any> {
-        if (!type) {
-
-            throw new HttpException(400, "Category name is required");
-
+        try {
+            if (!type) {
+                throw new HttpException(400, "Category name is required");
+            }
+            const result = await DB(T.CATEGORY)
+                .where({ is_active: true, is_deleted: false, type: type })
+                .select("*");
+            return result;
+        } catch(error) {
+            throw new HttpException(500, 'Error fetching category');
         }
-        const result = await DB(T.CATEGORY)
-            .where({ is_active: false, is_deleted: true })
-            .select("*");
-        return result;
-    } catch(error) {
-        throw new Error('Error fetching category');
     }
 
 
