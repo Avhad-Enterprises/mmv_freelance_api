@@ -128,7 +128,9 @@ class ProjectstaskService {
   public getAllProjectsTask = async (): Promise<any[]> => {
     const result = await DB(T.PROJECTS_TASK)
       .leftJoin(`${T.USERS_TABLE} as client`, `${T.PROJECTS_TASK}.client_id`, 'client.user_id')
+      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.user_id`)
       .leftJoin(`${T.USERS_TABLE} as editor`, `${T.PROJECTS_TASK}.editor_id`, 'editor.user_id')
+      .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.editor_id`, `${T.FREELANCER_PROFILES}.user_id`)
       .where(`${T.PROJECTS_TASK}.is_deleted`, false)
       .orderBy(`${T.PROJECTS_TASK}.created_at`, 'desc')
       .select(
@@ -139,12 +141,16 @@ class ProjectstaskService {
         'client.first_name as client_first_name',
         'client.last_name as client_last_name',
         'client.profile_picture as client_profile_picture',
+        `${T.CLIENT_PROFILES}.company_name as client_company_name`,
+        `${T.CLIENT_PROFILES}.industry as client_industry`,
 
         // Editor Info
         'editor.user_id as editor_user_id',
         'editor.first_name as editor_first_name',
         'editor.last_name as editor_last_name',
-        'editor.profile_picture as editor_profile_picture'
+        'editor.profile_picture as editor_profile_picture',
+        `${T.FREELANCER_PROFILES}.profile_title as editor_profile_title`,
+        `${T.FREELANCER_PROFILES}.experience_level as editor_experience_level`
       );
 
     return result;
@@ -247,11 +253,14 @@ class ProjectstaskService {
   public async getTasksWithClientInfo(): Promise<any[]> {
     const result = await DB(T.PROJECTS_TASK)
       .innerJoin(T.USERS_TABLE, `${T.PROJECTS_TASK}.client_id`, '=', `${T.USERS_TABLE}.user_id`)
+      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.user_id`)
       .select(
         `${T.USERS_TABLE}.username`,
         `${T.USERS_TABLE}.email`,
         `${T.USERS_TABLE}.first_name`,
         `${T.USERS_TABLE}.last_name`,
+        `${T.CLIENT_PROFILES}.company_name`,
+        `${T.CLIENT_PROFILES}.industry`,
         `${T.PROJECTS_TASK}.*`
       );
 
@@ -261,11 +270,14 @@ class ProjectstaskService {
   public async getTaskWithClientById(clientId: number): Promise<any[]> {
     const result = await DB(T.PROJECTS_TASK)
       .innerJoin(T.USERS_TABLE, `${T.PROJECTS_TASK}.client_id`, '=', `${T.USERS_TABLE}.user_id`)
+      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.user_id`)
       .select(
         `${T.USERS_TABLE}.username`,
         `${T.USERS_TABLE}.email`,
         `${T.USERS_TABLE}.first_name`,
         `${T.USERS_TABLE}.last_name`,
+        `${T.CLIENT_PROFILES}.company_name`,
+        `${T.CLIENT_PROFILES}.industry`,
         `${T.PROJECTS_TASK}.*`
       )
       .where(`${T.PROJECTS_TASK}.client_id`, clientId)
@@ -399,7 +411,9 @@ class ProjectstaskService {
   public getAllProjectslisting = async (): Promise<any[]> => {
     const result = await DB(T.PROJECTS_TASK)
       .leftJoin(`${T.USERS_TABLE} as client`, `${T.PROJECTS_TASK}.client_id`, 'client.user_id')
+      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.user_id`)
       .leftJoin(`${T.USERS_TABLE} as editor`, `${T.PROJECTS_TASK}.editor_id`, 'editor.user_id')
+      .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.editor_id`, `${T.FREELANCER_PROFILES}.user_id`)
       .where(`${T.PROJECTS_TASK}.is_deleted`, false)
       .orderBy(`${T.PROJECTS_TASK}.created_at`, 'desc')
       .select(
@@ -410,12 +424,16 @@ class ProjectstaskService {
         'client.first_name as client_first_name',
         'client.last_name as client_last_name',
         'client.profile_picture as client_profile_picture',
+        `${T.CLIENT_PROFILES}.company_name as client_company_name`,
+        `${T.CLIENT_PROFILES}.industry as client_industry`,
 
         // Editor Info
         'editor.user_id as editor_user_id',
         'editor.first_name as editor_first_name',
         'editor.last_name as editor_last_name',
-        'editor.profile_picture as editor_profile_picture'
+        'editor.profile_picture as editor_profile_picture',
+        `${T.FREELANCER_PROFILES}.profile_title as editor_profile_title`,
+        `${T.FREELANCER_PROFILES}.experience_level as editor_experience_level`
       );
 
     return result;

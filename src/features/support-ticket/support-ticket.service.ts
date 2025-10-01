@@ -6,6 +6,7 @@ import { isEmpty } from '../../utils/common';
 import { sendSupportEmail } from '../../utils/email/support_ticket_email.util';
 import { ITicketNote } from '../../interfaces/support_ticket_notes.interface';
 import { TicketNoteDto } from './support-ticket-notes.dto';
+import { hasRole, getUserRoles } from '../../utils/rbac/role-checker';
 
 class supportTicketService {
  public async createTicket(ticketData: Partial<SupportTicket>): Promise<SupportTicket> {
@@ -88,10 +89,11 @@ User Email: ${email ?? 'N/A'}
       throw new HttpException(400, "ticket_id, admin_id, and note are required");
     }
 
-    const admin = await DB(T.USERS_TABLE)
-      .where({ user_id: admin_id, role: "admin" })
-      .first();
-    if (!admin) throw new HttpException(403, "Only admins can perform this action");
+    // ✅ Check if user has ADMIN role using RBAC
+    const isAdmin = await hasRole(admin_id, 'ADMIN');
+    if (!isAdmin) {
+      throw new HttpException(403, "Only admins can perform this action");
+    }
 
     const ticket = await DB(T.SUPPORT_TICKETS_TABLE).where({ id: ticket_id }).first();
     if (!ticket) throw new HttpException(404, "Ticket not found");
@@ -119,10 +121,11 @@ User Email: ${email ?? 'N/A'}
       throw new HttpException(400, "ticket_id and admin_id are required");
     }
 
-    const admin = await DB(T.USERS_TABLE)
-      .where({ user_id: admin_id, role: "admin" })
-      .first();
-    if (!admin) throw new HttpException(403, "Only admins can view notes");
+    // ✅ Check if user has ADMIN role using RBAC
+    const isAdmin = await hasRole(admin_id, 'ADMIN');
+    if (!isAdmin) {
+      throw new HttpException(403, "Only admins can view notes");
+    }
 
     const ticket = await DB(T.SUPPORT_TICKETS_TABLE).where({ id: ticket_id }).first();
     if (!ticket) throw new HttpException(404, "Ticket not found");
@@ -144,7 +147,8 @@ User Email: ${email ?? 'N/A'}
     const ticket = await DB(T.SUPPORT_TICKETS_TABLE).where({ id: ticket_id }).first();
     if (!ticket) throw new HttpException(404, "Ticket not found");
 
-    const isAdmin = user_role === "admin";
+    // ✅ Check if user is admin using RBAC
+    const isAdmin = await hasRole(user_id, 'ADMIN');
     const isOwner = ticket.user_id === user_id;
 
     if (!isAdmin && (!isOwner || ticket.status !== "open")) {
@@ -169,7 +173,9 @@ User Email: ${email ?? 'N/A'}
 
     let query = DB(T.SUPPORT_TICKETS_TABLE).where({ is_deleted: false });
 
-    if (role !== "admin") {
+    // ✅ Check if user is admin using RBAC
+    const isAdmin = await hasRole(user_id, 'ADMIN');
+    if (!isAdmin) {
       query = query.andWhere({ user_id });
     }
 
@@ -218,10 +224,9 @@ User Email: ${email ?? 'N/A'}
   }): Promise<SupportTicket> {
     const { admin_id, ticket_id, status } = data;
 
-    const admin = await DB(T.USERS_TABLE)
-      .where({ user_id: admin_id, role: "admin" })
-      .first();
-    if (!admin) {
+    // ✅ Check if user has ADMIN role using RBAC
+    const isAdmin = await hasRole(admin_id, 'ADMIN');
+    if (!isAdmin) {
       throw new HttpException(403, "Only admins can update ticket status");
     }
 
@@ -253,10 +258,38 @@ User Email: ${email ?? 'N/A'}
     throw new HttpException(400, "ticket_id, sender_id, sender_role, and message are required");
   }
 
-  const sender = await DB(T.USERS_TABLE)
-    .where({ user_id: sender_id, role: sender_role })
-    .first();
-  if (!sender) throw new HttpException(403, "Invalid sender or role");
+  // ✅ Verify sender exists and has the claimed role using RBAC
+  const sender = await DB(T.USERS_TABLE).where({ user_id: sender_id }).first();
+  if (!sender) {
+    throw new HttpException(404, "Sender not found");
+  }
+
+  // Map legacy role names to RBAC role names
+  const roleMap: { [key: string]: string } = {
+    'client': 'CLIENT',
+    'freelancer': 'VIDEOGRAPHER', // or VIDEO_EDITOR
+    'admin': 'ADMIN'
+  };
+
+  // Verify sender has the claimed role
+  if (sender_role === 'admin') {
+    const isAdmin = await hasRole(sender_id, 'ADMIN');
+    if (!isAdmin) {
+      throw new HttpException(403, "Sender does not have admin role");
+    }
+  } else if (sender_role === 'client') {
+    const isClient = await hasRole(sender_id, 'CLIENT');
+    if (!isClient) {
+      throw new HttpException(403, "Sender does not have client role");
+    }
+  } else if (sender_role === 'freelancer') {
+    // Check if user is either videographer or video editor
+    const userRoles = await getUserRoles(sender_id);
+    const isFreelancer = userRoles.includes('VIDEOGRAPHER') || userRoles.includes('VIDEO_EDITOR');
+    if (!isFreelancer) {
+      throw new HttpException(403, "Sender does not have freelancer role");
+    }
+  }
 
   const ticket = await DB(T.SUPPORT_TICKETS_TABLE).where({ id: ticket_id }).first();
   if (!ticket) throw new HttpException(404, "Ticket not found");
@@ -275,9 +308,17 @@ User Email: ${email ?? 'N/A'}
     const user = await DB(T.USERS_TABLE).where({ user_id: ticket.user_id }).first();
     if (user) recipientEmail = user.email;
   } else {
-    const admin = await DB(T.USERS_TABLE).where({ role: "admin" }).first();
+    // ✅ Find an admin using RBAC system
+    const admin = await DB(T.USERS_TABLE)
+      .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
+      .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
+      .where(`${T.ROLE}.name`, 'ADMIN')
+      .where(`${T.USERS_TABLE}.is_active`, true)
+      .select(`${T.USERS_TABLE}.*`)
+      .first();
+    
     if (admin) {
-      recipientEmail = "aanyagupta980@gmail.com"; // OR admin.email if dynamic
+      recipientEmail = admin.email || "aanyagupta980@gmail.com";
     }
   }
 

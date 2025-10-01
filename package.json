@@ -14,6 +14,7 @@
     "test": "jest --forceExit --detectOpenHandles",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:db": "ts-node scripts/test-db-connection.ts",
     "typecheck": "tsc --noEmit",
     "migrate:all": "ts-node scripts/migrate-all.ts",
     "migrate:schema": "ts-node scripts/migrate-schema.ts",
