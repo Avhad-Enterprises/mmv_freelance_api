@@ -15,7 +15,13 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
         req.path.includes('/users/loginf') ||
         req.path.includes('/auth/register') ||
         req.path.includes('/auth/login') ||
-        req.path.includes('/health')) {
+        req.path.includes('/health') ||
+        req.path.includes('/users/get_user_by_id') ||
+        req.path.includes('/users/get_freelancer_by_id') ||
+        req.path.includes('/users/get_client_by_id') ||
+        req.path.includes('/users/get_admin_by_id') ||
+        req.path.includes('/applications/my-applications') ||
+        req.path.includes('/applications/count/')) {
       console.log(DB)
       await DB.raw("SET search_path TO public");
       return next();
