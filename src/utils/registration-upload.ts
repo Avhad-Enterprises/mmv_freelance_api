@@ -59,6 +59,22 @@ export async function uploadRegistrationFile(
     bufferLength: file.buffer?.length
   });
 
+  // Validate file exists and has content
+  if (!file.buffer || file.buffer.length === 0 || file.size === 0) {
+    console.error(`❌ Invalid file detected:`, {
+      hasBuffer: !!file.buffer,
+      bufferLength: file.buffer?.length || 0,
+      fileSize: file.size,
+      fileName: file.originalname
+    });
+    throw new Error(`Invalid file: File is empty or has no content. Please select a valid file.`);
+  }
+
+  // Check for suspicious filenames that indicate frontend issues
+  if (file.originalname === 'Unknown.pdf' || file.originalname === 'blob') {
+    throw new Error(`Invalid file: File name "${file.originalname}" indicates a frontend upload issue. Please refresh and try again.`);
+  }
+
   // Validate file
   validateFile(file, documentType);
 
