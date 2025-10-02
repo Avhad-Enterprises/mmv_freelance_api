@@ -48,45 +48,114 @@ export async function uploadRegistrationFile(
   accountType: AccountType
 ): Promise<UploadResult> {
   
+  // Log incoming file details for debugging
+  console.log(`🔍 Upload request details:`, {
+    originalName: file.originalname,
+    mimetype: file.mimetype,
+    size: file.size,
+    userId: userId,
+    documentType: documentType,
+    accountType: accountType,
+    bufferLength: file.buffer?.length
+  });
+
+  // Validate file exists and has content
+  if (!file.buffer || file.buffer.length === 0 || file.size === 0) {
+    console.error(`❌ Invalid file detected:`, {
+      hasBuffer: !!file.buffer,
+      bufferLength: file.buffer?.length || 0,
+      fileSize: file.size,
+      fileName: file.originalname
+    });
+    throw new Error(`Invalid file: File is empty or has no content. Please select a valid file.`);
+  }
+
+  // Check for suspicious filenames that indicate frontend issues
+  if (file.originalname === 'Unknown.pdf' || file.originalname === 'blob') {
+    throw new Error(`Invalid file: File name "${file.originalname}" indicates a frontend upload issue. Please refresh and try again.`);
+  }
+
   // Validate file
   validateFile(file, documentType);
 
+  // Sanitize userId (remove special characters and encode)
+  const sanitizedUserId = sanitizeUserId(userId);
+
   // Generate file path based on folder structure
   const fileName = generateFileName(file, accountType, documentType);
-  const filePath = `${documentType}/${userId}/${fileName}`;
+  const filePath = `${documentType}/${sanitizedUserId}/${fileName}`;
 
   try {
-    // Upload to S3
-    const uploadCommand = new PutObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: filePath,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-      Metadata: {
-        originalName: file.originalname,
-        accountType: accountType,
-        documentType: documentType,
-        userId: userId,
-        uploadDate: new Date().toISOString()
+    console.log(`🔄 Attempting upload: ${filePath}`);
+    console.log(`📁 File info: ${file.originalname} (${file.mimetype}, ${file.size} bytes)`);
+    
+    // Verify buffer exists and has content
+    if (!file.buffer || file.buffer.length === 0) {
+      throw new Error('File buffer is empty or undefined');
+    }
+    
+    // Retry logic for S3 uploads
+    let lastError;
+    const maxRetries = 3;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Upload attempt ${attempt}/${maxRetries}`);
+        
+        // Upload to S3
+        const uploadCommand = new PutObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: filePath,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+          ContentLength: file.size,
+        });
+
+        const result = await s3Client.send(uploadCommand);
+        console.log(`✅ Upload successful on attempt ${attempt}: ${filePath}`, result.ETag);
+
+        // Generate public URL
+        const url = `${process.env.AWS_ENDPOINT}/object/public/${BUCKET_NAME}/${filePath}`;
+
+        return {
+          url,
+          key: filePath,
+          size: file.size,
+          contentType: file.mimetype,
+          fileName: fileName
+        };
+        
+      } catch (error: any) {
+        lastError = error;
+        console.log(`❌ Upload attempt ${attempt} failed:`, error.message);
+        
+        // If it's a signature error and we have more attempts, wait and retry
+        if (error.Code === 'SignatureDoesNotMatch' && attempt < maxRetries) {
+          console.log(`⏳ Waiting 1 second before retry...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+        
+        // If it's not a signature error or we're out of attempts, throw immediately
+        break;
       }
+    }
+    
+    // If we get here, all attempts failed
+    throw lastError;
+
+  } catch (error: any) {
+    console.error('❌ S3 Upload Error:', {
+      message: error.message,
+      code: error.Code,
+      resource: error.Resource,
+      statusCode: error.$metadata?.httpStatusCode,
+      requestId: error.$metadata?.requestId,
+      filePath: filePath,
+      fileSize: file.size,
+      contentType: file.mimetype
     });
-
-    await s3Client.send(uploadCommand);
-
-    // Generate public URL
-    const url = `${process.env.AWS_ENDPOINT}/${BUCKET_NAME}/${filePath}`;
-
-    return {
-      url,
-      key: filePath,
-      size: file.size,
-      contentType: file.mimetype,
-      fileName: fileName
-    };
-
-  } catch (error) {
-    console.error('S3 Upload Error:', error);
-    throw new Error(`Failed to upload ${documentType}: ${error}`);
+    throw new Error(`Failed to upload ${documentType}: ${error.message || error}`);
   }
 }
 
@@ -171,6 +240,18 @@ function validateFile(file: MulterFile, documentType: DocumentType): void {
   if (!allowedTypes.includes(file.mimetype)) {
     throw new Error(`Invalid file type. Allowed types: ${allowedTypes.join(', ')}`);
   }
+}
+
+/**
+ * Sanitize user ID for use in file paths
+ * Converts email to safe filename format
+ */
+function sanitizeUserId(userId: string): string {
+  // Replace special characters with underscores
+  return userId
+    .replace(/[@.]/g, '_')
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .toLowerCase();
 }
 
 /**

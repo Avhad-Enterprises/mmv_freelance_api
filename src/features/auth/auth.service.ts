@@ -30,6 +30,13 @@ export class AuthService {
     let businessDocumentUrl = null;
 
     if (files) {
+      console.log('📁 Files received for client registration:', Object.keys(files));
+      console.log('📋 File details:', Object.entries(files).map(([key, fileArray]) => ({
+        field: key,
+        count: fileArray?.length || 0,
+        files: fileArray?.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) || []
+      })));
+      
       try {
         // Upload profile picture
         if (files.profile_picture && files.profile_picture[0]) {
@@ -54,16 +61,24 @@ export class AuthService {
         }
 
         // Upload business document (specific to clients)
-        if (files.business_document && files.business_document[0]) {
-          const businessUpload = await uploadRegistrationFile(
-            files.business_document[0],
-            data.email,
-            DocumentType.BUSINESS_DOCUMENT,
-            AccountType.CLIENT
-          );
-          businessDocumentUrl = businessUpload.url;
+        // Primary field name: business_document, fallback: business_documents (legacy)
+        const businessFile = files.business_document?.[0] || files.business_documents?.[0];
+        if (businessFile) {
+          // Frontend should now prevent empty files, but keep validation for safety
+          if (businessFile.size === 0 || !businessFile.buffer || businessFile.buffer.length === 0) {
+            console.warn('⚠️ Skipping empty business document upload (frontend should prevent this)');
+          } else {
+            const businessUpload = await uploadRegistrationFile(
+              businessFile,
+              data.email,
+              DocumentType.BUSINESS_DOCUMENT,
+              AccountType.CLIENT
+            );
+            businessDocumentUrl = businessUpload.url;
+          }
         }
-      } catch (error) {
+      } catch (error: any) {
+        console.error('❌ File upload error in auth service:', error.message);
         throw new HttpException(400, `File upload failed: ${error.message}`);
       }
     }
