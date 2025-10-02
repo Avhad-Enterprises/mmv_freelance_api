@@ -17,7 +17,7 @@ const fileFilter = (req: Request, file: MulterFile, cb: Function) => {
     }
   }
   // Allow images and PDFs for documents
-  else if (file.fieldname === 'id_document' || file.fieldname === 'business_document') {
+  else if (file.fieldname === 'id_document' || file.fieldname === 'business_document' || file.fieldname === 'business_documents') {
     if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
       cb(null, true);
     } else {
@@ -44,6 +44,8 @@ export const registrationUpload = upload.fields([
   { name: 'profile_picture', maxCount: 1 },
   { name: 'id_document', maxCount: 1 },
   { name: 'business_document', maxCount: 1 }, // Only for clients
+  // Note: business_documents support kept for backward compatibility
+  { name: 'business_documents', maxCount: 1 }, // Legacy field name support
 ]);
 
 export default { registrationUpload };
