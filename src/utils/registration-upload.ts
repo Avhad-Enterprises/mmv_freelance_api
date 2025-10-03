@@ -6,15 +6,17 @@ import {
   AccountType 
 } from '../interfaces/file-upload.interface';
 
-// Initialize S3 client with Supabase configuration
+// Initialize S3 client with conditional configuration for AWS or Supabase
 const s3Client = new S3Client({
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY!,
     secretAccessKey: process.env.AWS_SECRET_KEY!,
   },
   region: process.env.AWS_REGION!,
-  endpoint: process.env.AWS_ENDPOINT!,
-  forcePathStyle: true, // Required for Supabase S3 compatibility
+  ...(process.env.AWS_ENDPOINT && {
+    endpoint: process.env.AWS_ENDPOINT,
+    forcePathStyle: true, // Required for Supabase S3 compatibility
+  }),
 });
 
 const BUCKET_NAME = process.env.AWS_BUCKET_NAME || 'mmv';
@@ -114,8 +116,10 @@ export async function uploadRegistrationFile(
         const result = await s3Client.send(uploadCommand);
         console.log(`✅ Upload successful on attempt ${attempt}: ${filePath}`, result.ETag);
 
-        // Generate public URL
-        const url = `${process.env.AWS_ENDPOINT}/object/public/${BUCKET_NAME}/${filePath}`;
+        // Generate public URL based on endpoint configuration
+        const url = process.env.AWS_ENDPOINT
+          ? `${process.env.AWS_ENDPOINT}/object/public/${BUCKET_NAME}/${filePath}` // Supabase format
+          : `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${filePath}`; // AWS S3 format
 
         return {
           url,
