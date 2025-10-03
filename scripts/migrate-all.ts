@@ -3,7 +3,6 @@
 import fs from 'fs';
 import path from 'path';
 import DB from '../database/index.schema';
-import { seedRBAC } from '../database/seeds/rbac.seed';
 
 const SCHEMA_MIGRATIONS_TABLE = 'schema_migrations';
 const DATABASE_DIR = path.join(__dirname, '../database');
@@ -200,11 +199,7 @@ const migrateAll = async (dropFirst = false, verbose = false) => {
     console.log('\n🎉 Migration completed!');
     console.log(`📊 Summary: ${migratedCount} migrated, ${skippedCount} skipped`);
     
-    // Seed RBAC data after successful migration
-    if (migratedCount > 0 || dropFirst) {
-      console.log('\n🌱 Starting RBAC data seeding...');
-      await seedRBAC();
-    }
+    // RBAC data seeding is now handled by individual schema migrations
     
   } catch (error) {
     console.error('💥 Migration failed:', error);
