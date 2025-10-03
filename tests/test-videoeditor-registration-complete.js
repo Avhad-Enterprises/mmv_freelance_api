@@ -158,14 +158,12 @@ async function testCompleteVideoEditorRegistration() {
 
   const videoEditorData = {
     // Step 1: Basic Information (Required)
-    username: randomUsername('alexjohnson'),
-    first_name: 'Alex',
-    last_name: 'Johnson',
+    full_name: 'Alex Johnson',
     email: email,
     password: 'VideoEditor123!',
 
     // Step 2: Skills & Portfolio (Required)
-    skills: JSON.stringify([
+    skill_tags: JSON.stringify([
       'Adobe Premiere Pro',
       'After Effects',
       'DaVinci Resolve',
@@ -184,19 +182,31 @@ async function testCompleteVideoEditorRegistration() {
       'https://youtube.com/alexvideoedits',
       'https://behance.net/alexjohnson'
     ]),
-    hourly_rate: 75,
-    currency: 'USD',
+    rate_amount: 2500,
 
-    // Step 3: Verification & Documents (Required)
-    phone_number: '+1987654321',
+    // Step 3: Contact & Verification (Required)
+    phone_number: '9876543210',
     id_type: 'passport',
 
     // Step 4: Professional Details (Required)
     short_description: 'Professional video editor with 8+ years of experience in post-production, motion graphics, and color grading for film and television.',
-    availability: 'full_time',
+    availability: 'full-time',
     languages: JSON.stringify([
       'English',
-      'Spanish'
+      'Hindi'
+    ]),
+
+    // Optional Fields
+    experience_level: 'expert',
+    role: 'Senior Video Editor',
+    address: '123 Creative Street, Mumbai, Maharashtra',
+    city: 'Mumbai',
+    country: 'India',
+    pincode: '400001',
+    base_skills: JSON.stringify([
+      'Video Editing',
+      'Motion Graphics',
+      'Color Correction'
     ]),
   };
 
@@ -205,7 +215,7 @@ async function testCompleteVideoEditorRegistration() {
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       videoEditorData,
       {
-        profile_picture: testFiles.profilePicture,
+        profile_photo: testFiles.profilePicture,
         id_document: testFiles.idDocument
       }
     );
@@ -263,34 +273,32 @@ async function testMinimalVideoEditorRegistration() {
   const email = randomEmail('minimal-videoeditor');
 
   const minimalData = {
-    first_name: 'Sarah',
-    last_name: 'Wilson',
+    full_name: 'Sarah Wilson',
     email: email,
     password: 'MinimalEditor123!',
-    skills: JSON.stringify(['Basic Editing']),
+    skill_tags: JSON.stringify(['Basic Editing']),
     superpowers: JSON.stringify(['Fast Learner']),
     portfolio_links: JSON.stringify(['https://example.com/portfolio']),
-    hourly_rate: 25,
-    phone_number: '+1987654321',
+    rate_amount: 1500,
+    phone_number: '9876543210',
     id_type: 'passport',
     short_description: 'Entry level video editor looking to grow.',
-    availability: 'part_time',
+    availability: 'full-time',
     languages: JSON.stringify(['English'])
-  };
-
-  try {
+  };  try {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       minimalData,
-      {} // No files
+      {} // No files - should be rejected since files are required
     );
 
-    const passed = response.statusCode === 201 && response.body.success === true;
+    // Files are required according to frontend specs, so this should fail with 400
+    const passed = response.statusCode === 400 && response.body.success === false;
 
     printTestResult(
       'Minimal video editor registration (no files)',
       passed,
-      passed ? `Video Editor registered: ${email}` : `Expected 201, got ${response.statusCode}`,
+      passed ? 'Correctly rejected registration without required files' : `Expected 400, got ${response.statusCode}`,
       response.body
     );
 
@@ -307,25 +315,22 @@ async function testMinimalVideoEditorRegistration() {
 async function testMissingRequiredFields() {
   printSection('MISSING REQUIRED FIELDS TESTS');
 
-  const requiredFields = ['first_name', 'last_name', 'email', 'password', 'skills', 'superpowers', 'portfolio_links', 'hourly_rate', 'phone_number', 'id_type', 'short_description', 'availability', 'languages'];
+  const requiredFields = ['full_name', 'email', 'password', 'skill_tags', 'superpowers', 'portfolio_links', 'rate_amount', 'phone_number', 'id_type', 'short_description', 'availability', 'languages'];
 
   for (const field of requiredFields) {
     try {
       const videoEditorData = {
-        first_name: 'Test',
-        last_name: 'Editor',
+        full_name: 'Test Editor',
         email: randomEmail('missing-field'),
         password: 'VideoEditor123!',
-        username: 'testeditor',
-        skills: JSON.stringify(['Adobe Premiere Pro']),
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
         superpowers: JSON.stringify(['Fast Turnaround']),
         portfolio_links: JSON.stringify(['https://youtube.com/test']),
-        hourly_rate: 50,
-        currency: 'USD',
-        phone_number: '+1234567890',
+        rate_amount: 2000,
+        phone_number: '9876543210',
         id_type: 'passport',
         short_description: 'Test description',
-        availability: 'full_time',
+        availability: 'full-time',
         languages: JSON.stringify(['English'])
       };
 
@@ -364,11 +369,18 @@ async function testInvalidFieldFormats() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Test',
-        last_name: 'Editor',
+        full_name: 'Test Editor',
         email: 'invalid-email-format',
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
@@ -391,11 +403,18 @@ async function testInvalidFieldFormats() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Test',
-        last_name: 'Editor',
+        full_name: 'Test Editor',
         email: randomEmail('short-password'),
         password: '123',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
@@ -418,11 +437,18 @@ async function testInvalidFieldFormats() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Test',
-        last_name: 'Editor',
+        full_name: 'Test Editor',
         email: randomEmail('invalid-experience'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor',
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English']),
         experience_level: 'invalid_level'
       },
       {}
@@ -446,21 +472,27 @@ async function testInvalidFieldFormats() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Test',
-        last_name: 'Editor',
+        full_name: 'Test Editor',
         email: randomEmail('negative-rate'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor',
-        hourly_rate: -10
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: -10,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 400;
     printTestResult(
-      'Invalid hourly rate (negative)',
+      'Invalid rate amount (negative)',
       passed,
-      passed ? 'Correctly rejected negative hourly rate' : `Expected 400, got ${response.statusCode}`,
+      passed ? 'Correctly rejected negative rate amount' : `Expected 400, got ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
@@ -469,26 +501,32 @@ async function testInvalidFieldFormats() {
     failedTests++;
   }
 
-  // Test invalid hourly rate (too high)
+  // Test invalid rate amount (too high)
   try {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Test',
-        last_name: 'Editor',
+        full_name: 'Test Editor',
         email: randomEmail('high-rate'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor',
-        hourly_rate: 15000
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 15000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 400;
     printTestResult(
-      'Invalid hourly rate (above 10000)',
+      'Invalid rate amount (above 10000)',
       passed,
-      passed ? 'Correctly rejected excessive hourly rate' : `Expected 400, got ${response.statusCode}`,
+      passed ? 'Correctly rejected excessive rate amount' : `Expected 400, got ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
@@ -504,31 +542,40 @@ async function testInvalidFieldFormats() {
 async function testEdgeCaseValues() {
   printSection('EDGE CASE VALUES TESTS');
 
-  // Test extremely long first_name (300 characters)
+  const testFiles = createTestFiles();
+
+  // Test extremely long full_name (300 characters)
   try {
     const longName = 'A'.repeat(300);
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: longName,
-        last_name: 'Editor',
+        full_name: longName,
         email: randomEmail('long-name'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 400 || response.statusCode === 500;
     printTestResult(
-      'Extremely long first_name (300 chars)',
+      'Extremely long full_name (300 chars)',
       passed,
       passed ? 'System appropriately handled extremely long input' : `Unexpected status: ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Extremely long first_name (300 chars)', false, error.message);
+    printTestResult('Extremely long full_name (300 chars)', false, error.message);
     failedTests++;
   }
 
@@ -537,25 +584,32 @@ async function testEdgeCaseValues() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: '',
-        last_name: 'Editor',
-        email: randomEmail('empty-firstname'),
+        full_name: '',
+        email: randomEmail('empty-fullname'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 400;
     printTestResult(
-      'Empty string for first_name',
+      'Empty string for full_name',
       passed,
-      passed ? 'Correctly rejected empty first_name' : `Expected 400, got ${response.statusCode}`,
+      passed ? 'Correctly rejected empty full_name' : `Expected 400, got ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Empty string for first_name', false, error.message);
+    printTestResult('Empty string for full_name', false, error.message);
     failedTests++;
   }
 
@@ -564,25 +618,32 @@ async function testEdgeCaseValues() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: '   ',
-        last_name: 'Editor',
-        email: randomEmail('whitespace-firstname'),
+        full_name: '   ',
+        email: randomEmail('whitespace-fullname'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 400 || response.statusCode === 201;
     printTestResult(
-      'Whitespace-only first_name',
+      'Whitespace-only full_name',
       passed,
-      passed ? (response.statusCode === 400 ? 'Correctly rejected whitespace-only first_name' : 'System accepts whitespace-only names') : `Expected 400 or 201, got ${response.statusCode}`,
+      passed ? (response.statusCode === 400 ? 'Correctly rejected whitespace-only full_name' : 'System accepts whitespace-only names') : `Expected 400 or 201, got ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Whitespace-only first_name', false, error.message);
+    printTestResult('Whitespace-only full_name', false, error.message);
     failedTests++;
   }
 
@@ -591,18 +652,25 @@ async function testEdgeCaseValues() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: "José-María",
-        last_name: "O'Connor",
+        full_name: "José-María O'Connor",
         email: randomEmail('special-chars'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 201 || response.statusCode === 400;
     printTestResult(
-      'Special characters in names (José-María O\'Connor)',
+      'Special characters in full_name (José-María O\'Connor)',
       passed,
       passed ? 'Successfully handled special characters' : `Unexpected status: ${response.statusCode}`,
       response.body
@@ -613,38 +681,40 @@ async function testEdgeCaseValues() {
     failedTests++;
   }
 
-  // Test edge case hourly rate values
+  // Test edge case rate amount values
   try {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Edge',
-        last_name: 'Case',
+        full_name: 'Edge Case',
         email: randomEmail('edge-rate'),
         password: 'VideoEditor123!',
-        skills: JSON.stringify(['Skill1']),
+        skill_tags: JSON.stringify(['Skill1']),
         superpowers: JSON.stringify(['Superpower1']),
         portfolio_links: JSON.stringify(['https://example.com']),
-        hourly_rate: 1, // Minimum allowed
-        phone_number: '+1234567890',
+        rate_amount: 1, // Minimum allowed
+        phone_number: '9876543210',
         id_type: 'passport',
         short_description: 'Description',
-        availability: 'full_time',
+        availability: 'full-time',
         languages: JSON.stringify(['English'])
       },
-      {}
+      {
+        profile_photo: testFiles.profilePicture,
+        id_document: testFiles.idDocument
+      }
     );
 
     const passed = response.statusCode === 201;
     printTestResult(
-      'Edge case hourly rate values (1 to 10000)',
+      'Edge case rate amount values (1 to 10000)',
       passed,
-      passed ? 'Successfully handled edge case hourly rate values' : `Unexpected status: ${response.statusCode}`,
+      passed ? 'Successfully handled edge case rate amount values' : `Unexpected status: ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Edge case hourly rate values (1 to 10000)', false, error.message);
+    printTestResult('Edge case rate amount values (1 to 10000)', false, error.message);
     failedTests++;
   }
 
@@ -654,11 +724,18 @@ async function testEdgeCaseValues() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Long',
-        last_name: 'Title',
+        full_name: 'Long Title',
         email: randomEmail('long-title'),
         password: 'VideoEditor123!',
-        profile_title: longTitle
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: longTitle.substring(0, 500), // Use part of long title as description
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
@@ -693,14 +770,21 @@ async function testInvalidFileUpload() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Invalid',
-        last_name: 'File',
+        full_name: 'Invalid File',
         email: randomEmail('invalid-file'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {
-        profile_picture: invalidFile
+        profile_photo: invalidFile
       }
     );
 
@@ -734,14 +818,21 @@ async function testInvalidFileUpload() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Large',
-        last_name: 'File',
+        full_name: 'Large File',
         email: randomEmail('large-file'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {
-        profile_picture: largeFile
+        profile_photo: largeFile
       }
     );
 
@@ -770,14 +861,21 @@ async function testInvalidFileUpload() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Corrupted',
-        last_name: 'File',
+        full_name: 'Corrupted File',
         email: randomEmail('corrupted-file'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {
-        profile_picture: corruptedFile
+        profile_photo: corruptedFile
       }
     );
 
@@ -805,14 +903,21 @@ async function testInvalidFileUpload() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Multiple',
-        last_name: 'Files',
+        full_name: 'Multiple Files',
         email: randomEmail('multiple-files'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {
-        profile_picture: [invalidFile, invalidFile] // Multiple files for single field
+        profile_photo: [invalidFile, invalidFile] // Multiple files for single field
       }
     );
 
@@ -844,18 +949,25 @@ async function testMaliciousInputs() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: "'; DROP TABLE users; --",
-        last_name: 'Editor',
+        full_name: "'; DROP TABLE users; --",
         email: randomEmail('sql-injection'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 400 || response.statusCode === 201;
     printTestResult(
-      'SQL injection attempt in first_name',
+      'SQL injection attempt in full_name',
       passed,
       passed ? 'Handled SQL injection attempt appropriately' : `Unexpected status: ${response.statusCode}`,
       response.body
@@ -871,18 +983,25 @@ async function testMaliciousInputs() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: '<script>alert("XSS")</script>',
-        last_name: 'Editor',
+        full_name: '<script>alert("XSS")</script>',
         email: randomEmail('xss-attempt'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 400 || response.statusCode === 201;
     printTestResult(
-      'XSS attempt in first_name',
+      'XSS attempt in full_name',
       passed,
       passed ? 'Handled XSS attempt appropriately' : `Unexpected status: ${response.statusCode}`,
       response.body
@@ -898,46 +1017,59 @@ async function testMaliciousInputs() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Test',
-        last_name: 'Editor',
+        full_name: 'Test Editor',
         email: randomEmail('nosql-injection'),
         password: 'VideoEditor123!',
-        profile_title: '{"$ne": null}'
+        skill_tags: JSON.stringify(['{"$ne": null}']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 400 || response.statusCode === 201;
     printTestResult(
-      'NoSQL injection attempt in profile_title',
+      'NoSQL injection attempt in skill_tags',
       passed,
       passed ? 'Handled NoSQL injection attempt appropriately' : `Unexpected status: ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('NoSQL injection attempt in profile_title', false, error.message);
+    printTestResult('NoSQL injection attempt in skill_tags', false, error.message);
     failedTests++;
   }
 
-  // Test JSON injection in skills array
+  // Test JSON injection in skill_tags array
   try {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Test',
-        last_name: 'Editor',
+        full_name: 'Test Editor',
         email: randomEmail('json-injection'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor',
-        skills: '["skill1", {"malicious": "payload"}, "skill2"]'
+        skill_tags: '["skill1", {"malicious": "payload"}, "skill2"]',
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 400 || response.statusCode === 201;
     printTestResult(
-      'JSON injection attempt in skills array',
+      'JSON injection attempt in skill_tags array',
       passed,
       passed ? 'Handled JSON injection attempt appropriately' : `Unexpected status: ${response.statusCode}`,
       response.body
@@ -955,26 +1087,30 @@ async function testMaliciousInputs() {
 async function testBoundaryConditions() {
   printSection('BOUNDARY CONDITION TESTS');
 
+  const testFiles = createTestFiles();
+
   // Test minimum password length (6 characters)
   try {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Min',
-        last_name: 'Password',
+        full_name: 'Min Password',
         email: randomEmail('min-password'),
         password: '123456', // Exactly 6 characters
-        skills: JSON.stringify(['Skill1']),
+        skill_tags: JSON.stringify(['Skill1']),
         superpowers: JSON.stringify(['Superpower1']),
         portfolio_links: JSON.stringify(['https://example.com']),
-        hourly_rate: 50,
-        phone_number: '+1234567890',
+        rate_amount: 50,
+        phone_number: '9876543210',
         id_type: 'passport',
         short_description: 'Description',
-        availability: 'full_time',
+        availability: 'full-time',
         languages: JSON.stringify(['English'])
       },
-      {}
+      {
+        profile_photo: testFiles.profilePicture,
+        id_document: testFiles.idDocument
+      }
     );
 
     const passed = response.statusCode === 201;
@@ -998,11 +1134,18 @@ async function testBoundaryConditions() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Long',
-        last_name: 'Email',
+        full_name: 'Long Email',
         email: longEmail,
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
@@ -1025,20 +1168,27 @@ async function testBoundaryConditions() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: null,
-        last_name: 'Editor',
-        email: randomEmail('null-firstname'),
+        full_name: null,
+        email: randomEmail('null-fullname'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 400;
     printTestResult(
-      'Null value for first_name',
+      'Null value for full_name',
       passed,
-      passed ? 'Correctly rejected null first_name' : `Expected 400, got ${response.statusCode}`,
+      passed ? 'Correctly rejected null full_name' : `Expected 400, got ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
@@ -1047,33 +1197,35 @@ async function testBoundaryConditions() {
     failedTests++;
   }
 
-  // Test minimum hourly rate boundary
+  // Test minimum rate amount boundary
   try {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Boundary',
-        last_name: 'Rate',
+        full_name: 'Boundary Rate',
         email: randomEmail('boundary-rate'),
         password: 'VideoEditor123!',
-        skills: JSON.stringify(['Skill1']),
+        skill_tags: JSON.stringify(['Skill1']),
         superpowers: JSON.stringify(['Superpower1']),
         portfolio_links: JSON.stringify(['https://example.com']),
-        hourly_rate: 1, // Minimum allowed
-        phone_number: '+1234567890',
+        rate_amount: 1, // Minimum allowed
+        phone_number: '9876543210',
         id_type: 'passport',
         short_description: 'Description',
-        availability: 'full_time',
+        availability: 'full-time',
         languages: JSON.stringify(['English'])
       },
-      {}
+      {
+        profile_photo: testFiles.profilePicture,
+        id_document: testFiles.idDocument
+      }
     );
 
     const passed = response.statusCode === 201;
     printTestResult(
-      'Minimum hourly rate boundary (1)',
+      'Minimum rate amount boundary (1)',
       passed,
-      passed ? 'Accepted minimum valid hourly rate' : `Expected 201, got ${response.statusCode}`,
+      passed ? 'Accepted minimum valid rate amount' : `Expected 201, got ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
@@ -1082,33 +1234,35 @@ async function testBoundaryConditions() {
     failedTests++;
   }
 
-  // Test maximum hourly rate boundary
+  // Test maximum rate amount boundary
   try {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Max',
-        last_name: 'Rate',
+        full_name: 'Max Rate',
         email: randomEmail('max-rate'),
         password: 'VideoEditor123!',
-        skills: JSON.stringify(['Skill1']),
+        skill_tags: JSON.stringify(['Skill1']),
         superpowers: JSON.stringify(['Superpower1']),
         portfolio_links: JSON.stringify(['https://example.com']),
-        hourly_rate: 10000, // Maximum allowed
-        phone_number: '+1234567890',
+        rate_amount: 10000, // Maximum allowed
+        phone_number: '9876543210',
         id_type: 'passport',
         short_description: 'Description',
-        availability: 'full_time',
+        availability: 'full-time',
         languages: JSON.stringify(['English'])
       },
-      {}
+      {
+        profile_photo: testFiles.profilePicture,
+        id_document: testFiles.idDocument
+      }
     );
 
     const passed = response.statusCode === 201;
     printTestResult(
-      'Maximum hourly rate boundary (10000)',
+      'Maximum rate amount boundary (10000)',
       passed,
-      passed ? 'Accepted maximum valid hourly rate' : `Expected 201, got ${response.statusCode}`,
+      passed ? 'Accepted maximum valid rate amount' : `Expected 201, got ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
@@ -1122,12 +1276,18 @@ async function testBoundaryConditions() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videoeditor`,
       {
-        first_name: 'Invalid',
-        last_name: 'JSON',
+        full_name: 'Invalid JSON',
         email: randomEmail('invalid-json'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor',
-        portfolio_links: '{"invalid": "json", malformed'
+        skill_tags: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: '{"invalid": "json", malformed',
+        rate_amount: 2000,
+        phone_number: '9876543210',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
@@ -1153,18 +1313,17 @@ async function testDuplicateEmailRegistration(existingEmail) {
   printSection('DUPLICATE EMAIL REGISTRATION TEST');
 
   const duplicateData = {
-    first_name: 'Duplicate',
-    last_name: 'Editor',
+    full_name: 'Duplicate Editor',
     email: existingEmail, // Use existing email
     password: 'DuplicateEditor123!',
-    skills: JSON.stringify(['Skill1']),
+    skill_tags: JSON.stringify(['Skill1']),
     superpowers: JSON.stringify(['Superpower1']),
     portfolio_links: JSON.stringify(['https://example.com']),
-    hourly_rate: 50,
-    phone_number: '+1234567890',
+    rate_amount: 2000,
+    phone_number: '9876543210',
     id_type: 'passport',
     short_description: 'Description',
-    availability: 'full_time',
+    availability: 'full-time',
     languages: JSON.stringify(['English'])
   };
 
@@ -1323,7 +1482,7 @@ async function testVideoEditorProfileVerification(email, password = 'VideoEditor
 
     // Verify that required profile fields are not null
     const requiredProfileFields = [
-      'skills', 'superpowers', 'portfolio_links', 'hourly_rate', 'currency', 'short_description', 'languages', 'availability', 'id_type'
+      'skills', 'superpowers', 'portfolio_links', 'rate_amount', 'currency', 'short_description', 'languages', 'availability', 'id_type'
     ];
 
     let nullProfileFields = [];

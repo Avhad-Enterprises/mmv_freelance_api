@@ -1,20 +1,15 @@
 // Videographer Registration DTO
-import { IsString, IsOptional, IsEmail, IsNumber, IsArray, IsEnum, IsNotEmpty, MinLength, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsNumber, IsArray, IsEnum, IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
+
+const AVAILABILITY_OPTIONS = ['part-time', 'full-time', 'flexible', 'on-demand'] as const;
+const ID_TYPE_OPTIONS = ['passport', 'driving_license', 'national_id'] as const;
 
 export class VideographerRegistrationDto {
   // Step 1: Basic Information (Required)
-  @IsOptional()
-  @IsString()
-  username?: string;
-
   @IsNotEmpty()
   @IsString()
-  first_name: string;
-
-  @IsNotEmpty()
-  @IsString()
-  last_name: string;
+  full_name: string;
 
   @IsNotEmpty()
   @IsEmail()
@@ -22,10 +17,9 @@ export class VideographerRegistrationDto {
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(6)
   password: string;
 
-  // Step 2: Skills & Location (Required)
+  // Step 2: Professional Information (Required)
   @IsNotEmpty()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
@@ -39,7 +33,7 @@ export class VideographerRegistrationDto {
     return Array.isArray(value) ? value : [];
   })
   @IsArray()
-  skills: string[];
+  skill_tags: string[];
 
   @IsNotEmpty()
   @Transform(({ value }) => {
@@ -64,15 +58,9 @@ export class VideographerRegistrationDto {
   @IsString()
   city: string;
 
-  @IsNotEmpty()
-  @Transform(({ value }) => typeof value === 'string' ? parseFloat(value) : value)
-  @IsNumber()
-  latitude: number;
-
-  @IsNotEmpty()
-  @Transform(({ value }) => typeof value === 'string' ? parseFloat(value) : value)
-  @IsNumber()
-  longitude: number;
+  @IsOptional()
+  @IsString()
+  full_address?: string;
 
   @IsNotEmpty()
   @Transform(({ value }) => {
@@ -89,42 +77,50 @@ export class VideographerRegistrationDto {
   @IsArray()
   portfolio_links: string[];
 
-  @IsNotEmpty()
-  @Transform(({ value }) => typeof value === 'string' ? parseFloat(value) : value)
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? value : parsed;
+    }
+    return value;
+  })
   @IsNumber()
-  @Min(1)
-  @Max(10000)
-  hourly_rate: number;
+  rate_amount?: number;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.toUpperCase();
+    }
+    return value;
+  })
   @IsString()
-  currency?: string;
+  rate_currency?: string;
 
   // Step 3: Verification & Documents (Required)
   @IsNotEmpty()
   @IsString()
   phone_number: string;
 
-  @IsOptional()
-  @IsString()
-  profile_picture?: string;
-
   @IsNotEmpty()
   @IsString()
+  @IsEnum(['passport', 'driving_license', 'national_id'], { message: 'ID type must be passport, driving_license, or national_id' })
   id_type: string;
 
-  @IsOptional()
-  @IsString()
-  id_document?: string;
-
-  // Step 4: Professional Details (Required)
   @IsNotEmpty()
-  @IsString()
   short_description: string;
 
   @IsNotEmpty()
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.toLowerCase().replace(/\s+/g, '-');
+    }
+    return value;
+  })
   @IsString()
-  availability: string;
+  availability?: string;
 
   @IsNotEmpty()
   @Transform(({ value }) => {
@@ -140,4 +136,32 @@ export class VideographerRegistrationDto {
   })
   @IsArray()
   languages: string[];
+
+  // Optional Fields
+  @IsOptional()
+  @IsString()
+  @IsEnum(['entry', 'intermediate', 'expert', 'master'])
+  experience_level?: string;
+
+  @IsOptional()
+  @IsString()
+  role?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return value.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [];
+  })
+  @IsArray()
+  base_skills?: string[];
+
+  // Note: File uploads (profile_photo, id_document) are handled separately by multer
+  // and validated in the service layer, not in the DTO
 }

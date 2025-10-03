@@ -84,9 +84,9 @@ export class AuthService {
     }
 
     const [user] = await DB(USERS_TABLE).insert({
-      first_name: data.first_name,
-      last_name: data.last_name,
-      username: data.username || data.email.split('@')[0],
+      first_name: data.full_name.split(' ')[0] || data.full_name,
+      last_name: data.full_name.split(' ').slice(1).join(' ') || '',
+      username: data.email.split('@')[0],
       email: data.email,
       password: hashedPassword,
       phone_number: data.phone_number,
@@ -94,7 +94,7 @@ export class AuthService {
       country: data.country,
       state: data.state,
       city: data.city,
-      pincode: data.pincode,
+      pincode: data.zip_code,
       is_active: true,
     }).returning('*');
 
@@ -103,22 +103,19 @@ export class AuthService {
     await DB('client_profiles').insert({
       user_id: user.user_id,
       company_name: data.company_name,
+      website: data.company_website,
+      company_description: data.company_description,
       industry: data.industry,
       company_size: data.company_size,
-      required_services: Array.isArray(data.required_services) ? JSON.stringify(data.required_services) : data.required_services,
-      required_skills: Array.isArray(data.required_skills) ? JSON.stringify(data.required_skills) : data.required_skills,
-      required_editor_proficiencies: Array.isArray(data.required_editor_proficiencies) ? JSON.stringify(data.required_editor_proficiencies) : data.required_editor_proficiencies,
-      required_videographer_proficiencies: Array.isArray(data.required_videographer_proficiencies) ? JSON.stringify(data.required_videographer_proficiencies) : data.required_videographer_proficiencies,
-      budget_min: data.budget_min,
-      budget_max: data.budget_max,
       address: data.address,
-      tax_id: data.tax_id,
+      project_title: data.project_title,
+      project_description: data.project_description,
+      project_category: data.project_category,
+      project_budget: data.project_budget,
+      project_timeline: data.project_timeline,
+      terms_accepted: data.terms_accepted,
+      privacy_policy_accepted: data.privacy_policy_accepted,
       business_document_url: businessDocumentUrl,
-      work_arrangement: data.work_arrangement,
-      project_frequency: data.project_frequency,
-      hiring_preferences: data.hiring_preferences,
-      expected_start_date: data.expected_start_date,
-      project_duration: data.project_duration,
     });
 
     // Generate token
@@ -146,70 +143,80 @@ export class AuthService {
       throw new HttpException(409, 'Email already registered');
     }
 
+    // Validate required files
+    if (!files || !files.profile_photo || !files.profile_photo[0]) {
+      throw new HttpException(400, 'Profile photo is required');
+    }
+    if (!files || !files.id_document || !files.id_document[0]) {
+      throw new HttpException(400, 'ID document is required');
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     // Handle file uploads
-    let profilePictureUrl = data.profile_picture || null;
+    let profilePictureUrl = null;
     let idDocumentUrl = null;
 
     if (files) {
       try {
-        // Upload profile picture
-        if (files.profile_picture && files.profile_picture[0]) {
-          const profileUpload = await uploadRegistrationFile(
-            files.profile_picture[0],
-            data.email,
-            DocumentType.PROFILE_PHOTO,
-            AccountType.VIDEOGRAPHER
-          );
-          profilePictureUrl = profileUpload.url;
-        }
+        // Upload profile picture (required)
+        const profileUpload = await uploadRegistrationFile(
+          files.profile_photo[0],
+          data.email,
+          DocumentType.PROFILE_PHOTO,
+          AccountType.VIDEOGRAPHER
+        );
+        profilePictureUrl = profileUpload.url;
 
-        // Upload ID document
-        if (files.id_document && files.id_document[0]) {
-          const idUpload = await uploadRegistrationFile(
-            files.id_document[0],
-            data.email,
-            DocumentType.ID_DOCUMENT,
-            AccountType.VIDEOGRAPHER
-          );
-          idDocumentUrl = idUpload.url;
-        }
+        // Upload ID document (required)
+        const idUpload = await uploadRegistrationFile(
+          files.id_document[0],
+          data.email,
+          DocumentType.ID_DOCUMENT,
+          AccountType.VIDEOGRAPHER
+        );
+        idDocumentUrl = idUpload.url;
       } catch (error) {
         throw new HttpException(400, `File upload failed: ${error.message}`);
       }
     }
 
     const [user] = await DB(USERS_TABLE).insert({
-      first_name: data.first_name,
-      last_name: data.last_name,
-      username: data.username || data.email.split('@')[0],
+      first_name: data.full_name.split(' ')[0] || data.full_name,
+      last_name: data.full_name.split(' ').slice(1).join(' ') || '',
+      username: data.email.split('@')[0],
       email: data.email,
       password: hashedPassword,
       phone_number: data.phone_number,
       profile_picture: profilePictureUrl,
       city: data.city,
       country: data.country,
-      latitude: data.latitude,
-      longitude: data.longitude,
       is_active: true,
     }).returning('*');
 
     await assignRole(user.user_id, 'VIDEOGRAPHER');
 
+    // Clean up any existing freelancer profile for this user (for test cleanup or re-registration)
+    await DB('freelancer_profiles').where({ user_id: user.user_id }).del();
+
     const [freelancerProfile] = await DB('freelancer_profiles').insert({
       user_id: user.user_id,
-      profile_title: `${user.first_name} ${user.last_name}`,
-      skills: Array.isArray(data.skills) ? JSON.stringify(data.skills) : data.skills,
+      profile_title: data.full_name,
+      skills: Array.isArray(data.skill_tags) ? JSON.stringify(data.skill_tags) : data.skill_tags,
+      skill_tags: Array.isArray(data.skill_tags) ? JSON.stringify(data.skill_tags) : data.skill_tags,
       superpowers: Array.isArray(data.superpowers) ? JSON.stringify(data.superpowers) : data.superpowers,
       portfolio_links: Array.isArray(data.portfolio_links) ? JSON.stringify(data.portfolio_links) : data.portfolio_links,
-      hourly_rate: data.hourly_rate,
-      currency: data.currency || 'INR',
+      rate_amount: data.rate_amount || 0,
+      currency: data.rate_currency || 'INR',
       short_description: data.short_description,
       languages: Array.isArray(data.languages) ? JSON.stringify(data.languages) : data.languages,
-      availability: data.availability,
+      availability: data.availability || 'full-time',
       id_type: data.id_type,
       id_document_url: idDocumentUrl,
+      experience_level: data.experience_level,
+      role: data.role,
+      base_skills: Array.isArray(data.base_skills) ? JSON.stringify(data.base_skills) : data.base_skills,
+      address: data.full_address || '',
     }).returning('*');
 
     // Clean up any existing videographer profile for this freelancer (for test cleanup)
@@ -226,8 +233,7 @@ export class AuthService {
       user: {
         user_id: user.user_id,
         email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
+        full_name: data.full_name,
         user_type: 'VIDEOGRAPHER',
         profile_picture: profilePictureUrl,
       },
@@ -244,66 +250,81 @@ export class AuthService {
       throw new HttpException(409, 'Email already registered');
     }
 
+    // Validate required files
+    if (!files || !files.profile_photo || !files.profile_photo[0]) {
+      throw new HttpException(400, 'Profile photo is required');
+    }
+    if (!files || !files.id_document || !files.id_document[0]) {
+      throw new HttpException(400, 'ID document is required');
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     // Handle file uploads
-    let profilePictureUrl = data.profile_picture || null;
+    let profilePictureUrl = null;
     let idDocumentUrl = null;
 
     if (files) {
       try {
-        // Upload profile picture
-        if (files.profile_picture && files.profile_picture[0]) {
-          const profileUpload = await uploadRegistrationFile(
-            files.profile_picture[0],
-            data.email,
-            DocumentType.PROFILE_PHOTO,
-            AccountType.VIDEOEDITOR
-          );
-          profilePictureUrl = profileUpload.url;
-        }
+        // Upload profile picture (required)
+        const profileUpload = await uploadRegistrationFile(
+          files.profile_photo[0],
+          data.email,
+          DocumentType.PROFILE_PHOTO,
+          AccountType.VIDEOEDITOR
+        );
+        profilePictureUrl = profileUpload.url;
 
-        // Upload ID document
-        if (files.id_document && files.id_document[0]) {
-          const idUpload = await uploadRegistrationFile(
-            files.id_document[0],
-            data.email,
-            DocumentType.ID_DOCUMENT,
-            AccountType.VIDEOEDITOR
-          );
-          idDocumentUrl = idUpload.url;
-        }
+        // Upload ID document (required)
+        const idUpload = await uploadRegistrationFile(
+          files.id_document[0],
+          data.email,
+          DocumentType.ID_DOCUMENT,
+          AccountType.VIDEOEDITOR
+        );
+        idDocumentUrl = idUpload.url;
       } catch (error) {
         throw new HttpException(400, `File upload failed: ${error.message}`);
       }
     }
 
     const [user] = await DB(USERS_TABLE).insert({
-      first_name: data.first_name,
-      last_name: data.last_name,
-      username: data.username || data.email.split('@')[0],
+      first_name: data.full_name.split(' ')[0] || data.full_name,
+      last_name: data.full_name.split(' ').slice(1).join(' ') || '',
+      username: data.email.split('@')[0],
       email: data.email,
       password: hashedPassword,
       phone_number: data.phone_number,
       profile_picture: profilePictureUrl,
+      country: data.country,
+      city: data.city,
+      pincode: data.pincode,
       is_active: true,
     }).returning('*');
 
     await assignRole(user.user_id, 'VIDEO_EDITOR');
 
+    // Clean up any existing freelancer profile for this user (for test cleanup or re-registration)
+    await DB('freelancer_profiles').where({ user_id: user.user_id }).del();
+
     const [freelancerProfile] = await DB('freelancer_profiles').insert({
       user_id: user.user_id,
-      profile_title: `${user.first_name} ${user.last_name}`,
-      skills: Array.isArray(data.skills) ? JSON.stringify(data.skills) : data.skills,
+      profile_title: data.full_name,
+      skills: Array.isArray(data.skill_tags) ? JSON.stringify(data.skill_tags) : data.skill_tags,
+      skill_tags: Array.isArray(data.skill_tags) ? JSON.stringify(data.skill_tags) : data.skill_tags,
       superpowers: Array.isArray(data.superpowers) ? JSON.stringify(data.superpowers) : data.superpowers,
       portfolio_links: Array.isArray(data.portfolio_links) ? JSON.stringify(data.portfolio_links) : data.portfolio_links,
-      hourly_rate: data.hourly_rate,
-      currency: data.currency || 'INR',
+      rate_amount: data.rate_amount,
+      currency: 'INR',
       short_description: data.short_description,
       languages: Array.isArray(data.languages) ? JSON.stringify(data.languages) : data.languages,
       availability: data.availability,
       id_type: data.id_type,
       id_document_url: idDocumentUrl,
+      experience_level: data.experience_level,
+      role: data.role,
+      base_skills: Array.isArray(data.base_skills) ? JSON.stringify(data.base_skills) : data.base_skills,
+      address: data.address,
     }).returning('*');
 
     // Clean up any existing videoeditor profile for this freelancer (for test cleanup)
@@ -320,8 +341,7 @@ export class AuthService {
       user: {
         user_id: user.user_id,
         email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
+        full_name: data.full_name,
         user_type: 'VIDEO_EDITOR',
         profile_picture: profilePictureUrl,
       },
