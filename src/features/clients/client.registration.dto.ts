@@ -21,8 +21,8 @@ export class ClientRegistrationDto {
   @IsOptional()
   company_website?: string;
 
-  @IsNotEmpty()
-  company_description: string;
+  @IsOptional()
+  company_description?: string;
 
   @IsNotEmpty()
   @IsEnum(['film', 'ad_agency', 'events', 'youtube', 'corporate', 'other'])
@@ -48,27 +48,35 @@ export class ClientRegistrationDto {
   @IsNotEmpty()
   address: string;
 
-  @IsNotEmpty()
-  zip_code: string;
+  @IsOptional()
+  zip_code?: string;
 
   // Step 4: Project Information (Required)
-  @IsNotEmpty()
-  project_title: string;
+  @IsOptional()
+  project_title?: string;
 
-  @IsNotEmpty()
-  project_description: string;
+  @IsOptional()
+  project_description?: string;
 
-  @IsNotEmpty()
-  project_category: string;
+  @IsOptional()
+  project_category?: string;
 
-  @IsNotEmpty()
-  project_budget: number;
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? value : parsed;
+    }
+    return value;
+  })
+  @IsNumber()
+  project_budget?: number;
 
-  @IsNotEmpty()
-  project_timeline: string;
+  @IsOptional()
+  project_timeline?: string;
 
   // Step 5: Additional Information (Required)
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       return value === 'true' || value === '1';
@@ -76,9 +84,9 @@ export class ClientRegistrationDto {
     return Boolean(value);
   })
   @IsBoolean()
-  terms_accepted: boolean;
+  terms_accepted?: boolean;
 
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       return value === 'true' || value === '1';
@@ -86,7 +94,7 @@ export class ClientRegistrationDto {
     return Boolean(value);
   })
   @IsBoolean()
-  privacy_policy_accepted: boolean;
+  privacy_policy_accepted?: boolean;
 
   // Optional file uploads
   @IsOptional()
