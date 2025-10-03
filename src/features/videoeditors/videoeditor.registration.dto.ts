@@ -1,20 +1,15 @@
 // Video Editor Registration DTO
-import { IsString, IsOptional, IsEmail, IsNumber, IsArray, IsEnum, IsNotEmpty, MinLength, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsNumber, IsArray, IsEnum, IsNotEmpty, IsBoolean } from 'class-validator';
 import { Transform } from 'class-transformer';
+
+const AVAILABILITY_OPTIONS = ['part-time', 'full-time', 'flexible', 'on-demand'] as const;
+const ID_TYPE_OPTIONS = ['passport', 'driving_license', 'national_id'] as const;
 
 export class VideoEditorRegistrationDto {
   // Step 1: Basic Information (Required)
-  @IsOptional()
-  @IsString()
-  username?: string;
-
   @IsNotEmpty()
   @IsString()
-  first_name: string;
-
-  @IsNotEmpty()
-  @IsString()
-  last_name: string;
+  full_name: string;
 
   @IsNotEmpty()
   @IsEmail()
@@ -22,7 +17,6 @@ export class VideoEditorRegistrationDto {
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(6)
   password: string;
 
   // Step 2: Skills & Portfolio (Required)
@@ -38,7 +32,8 @@ export class VideoEditorRegistrationDto {
     }
     return Array.isArray(value) ? value : [];
   })
-  skills: string[];
+  @IsArray()
+  skill_tags: string[];
 
   @IsNotEmpty()
   @Transform(({ value }) => {
@@ -52,6 +47,7 @@ export class VideoEditorRegistrationDto {
     }
     return Array.isArray(value) ? value : [];
   })
+  @IsArray()
   superpowers: string[];
 
   @IsNotEmpty()
@@ -66,43 +62,27 @@ export class VideoEditorRegistrationDto {
     }
     return Array.isArray(value) ? value : [];
   })
+  @IsArray()
   portfolio_links: string[];
 
   @IsNotEmpty()
-  @Transform(({ value }) => typeof value === 'string' ? parseFloat(value) : value)
-  @IsNumber()
-  @Min(1)
-  @Max(10000)
-  hourly_rate: number;
+  rate_amount: number;
 
-  @IsOptional()
-  @IsString()
-  currency?: string;
-
-  // Step 3: Verification & Documents (Required)
+  // Step 3: Contact & Verification (Required)
   @IsNotEmpty()
   @IsString()
   phone_number: string;
 
-  @IsOptional()
-  @IsString()
-  profile_picture?: string;
-
   @IsNotEmpty()
   @IsString()
+  @IsEnum(ID_TYPE_OPTIONS, { message: 'ID type must be passport, driving_license, or national_id' })
   id_type: string;
 
-  @IsOptional()
-  @IsString()
-  id_document?: string;
-
-  // Step 4: Professional Details (Required)
   @IsNotEmpty()
-  @IsString()
   short_description: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsEnum(AVAILABILITY_OPTIONS)
   availability: string;
 
   @IsNotEmpty()
@@ -117,5 +97,50 @@ export class VideoEditorRegistrationDto {
     }
     return Array.isArray(value) ? value : [];
   })
+  @IsArray()
   languages: string[];
+
+  // Optional Fields
+  @IsOptional()
+  @IsString()
+  @IsEnum(['entry', 'intermediate', 'expert', 'master'])
+  experience_level?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsString()
+  pincode?: string;
+
+  @IsOptional()
+  @IsString()
+  role?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return value.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [];
+  })
+  @IsArray()
+  base_skills?: string[];
+
+  // Note: File uploads (profile_photo, id_document) are handled separately by multer
+  // and validated in the service layer, not in the DTO
 }

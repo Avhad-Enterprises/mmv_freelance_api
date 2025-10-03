@@ -45,22 +45,24 @@ export const migrate = async (dropFirst = false) => {
       .inTable('users')
       .onDelete('CASCADE');
 
-    // Company Information
+        // Company Information
     table.string('company_name', 255).notNullable();
-    table.string('industry', 50).nullable().comment('film, ad_agency, events, youtube, corporate, other');
     table.string('website', 255).nullable().comment('Company website URL');
+    table.text('company_description').nullable().comment('Company description');
+    table.string('industry', 50).nullable().comment('film, ad_agency, events, youtube, corporate, other');
     table.string('social_links', 255).nullable().comment('Social media links');
     table.string('company_size', 50).nullable().comment('1-10, 11-50, 51-200, 200+');
 
-    // Requirements & Services
-    table.jsonb('required_services').defaultTo('[]').comment('Array of required services');
-    table.jsonb('required_skills').defaultTo('[]').comment('Array of required skills');
-    table.jsonb('required_editor_proficiencies').defaultTo('[]').comment('Editor proficiency requirements');
-    table.jsonb('required_videographer_proficiencies').defaultTo('[]').comment('Videographer proficiency requirements');
+    // Project Information
+    table.string('project_title', 255).nullable().comment('Current project title');
+    table.text('project_description').nullable().comment('Project description');
+    table.string('project_category', 100).nullable().comment('Project category');
+    table.decimal('project_budget', 12, 2).nullable().comment('Project budget');
+    table.string('project_timeline', 100).nullable().comment('Project timeline');
 
-    // Budget
-    table.decimal('budget_min', 12, 2).nullable();
-    table.decimal('budget_max', 12, 2).nullable();
+    // Terms and Privacy
+    table.boolean('terms_accepted').defaultTo(false).comment('Terms and conditions accepted');
+    table.boolean('privacy_policy_accepted').defaultTo(false).comment('Privacy policy accepted');
 
     // Business Details
     table.string('address', 255).nullable().comment('Business address');

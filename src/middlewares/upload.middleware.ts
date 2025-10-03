@@ -8,8 +8,8 @@ const storage = multer.memoryStorage();
 
 // File filter for allowed file types
 const fileFilter = (req: Request, file: MulterFile, cb: Function) => {
-  // Allow images for profile pictures
-  if (file.fieldname === 'profile_picture') {
+  // Allow images for profile pictures (both profile_picture and profile_photo for different user types)
+  if (file.fieldname === 'profile_picture' || file.fieldname === 'profile_photo') {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
@@ -41,7 +41,8 @@ const upload = multer({
 
 // Registration upload middleware
 export const registrationUpload = upload.fields([
-  { name: 'profile_picture', maxCount: 1 },
+  { name: 'profile_picture', maxCount: 1 }, // For clients and videographers
+  { name: 'profile_photo', maxCount: 1 },   // For video editors
   { name: 'id_document', maxCount: 1 },
   { name: 'business_document', maxCount: 1 }, // Only for clients
   // Note: business_documents support kept for backward compatibility

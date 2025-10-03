@@ -160,36 +160,36 @@ async function testCompleteClientRegistration() {
   const email = randomEmail('complete-client');
   
   const clientData = {
-    // Required user fields
-    first_name: 'John',
-    last_name: 'Doe',
+    // Step 1: Basic Information (Required)
+    full_name: 'John Doe',
     email: email,
     password: 'SecurePassword123!',
     
-    // Optional user fields
-    phone_number: '1234567890',
-    
-    // Required client fields
+    // Step 2: Company Information (Required)
     company_name: 'Innovative Tech Solutions Inc.',
+    company_website: 'https://innovativetech.com',
+    company_description: 'A leading technology solutions provider specializing in digital marketing and content creation.',
     industry: 'corporate',
     company_size: '51-200',
-    required_services: JSON.stringify(['videography', 'video_editing']),
-    required_skills: JSON.stringify(['premiere_pro', 'after_effects']),
-    required_editor_proficiencies: JSON.stringify(['beginner', 'intermediate']),
-    required_videographer_proficiencies: JSON.stringify(['wedding', 'corporate']),
-    budget_min: 5000,
-    budget_max: 25000,
-    address: '123 Business Street',
     country: 'United States',
     state: 'California',
     city: 'San Francisco',
-    pincode: '94105',
-    tax_id: '12-3456789',
-    work_arrangement: 'remote',
-    project_frequency: 'ongoing',
-    hiring_preferences: 'individuals',
-    expected_start_date: '2024-02-01',
-    project_duration: '1_3_months',
+    
+    // Step 3: Contact Information (Required)
+    phone_number: '1234567890',
+    address: '123 Business Street',
+    zip_code: '94105',
+    
+    // Step 4: Project Information (Required)
+    project_title: 'Corporate Product Launch Video',
+    project_description: 'We need a high-quality promotional video for our new software product launch, including interviews, product demos, and cinematic sequences.',
+    project_category: 'corporate',
+    project_budget: 15000,
+    project_timeline: '2-3 months',
+    
+    // Step 5: Additional Information (Required)
+    terms_accepted: true,
+    privacy_policy_accepted: true,
   };
 
   try {
@@ -256,30 +256,35 @@ async function testMinimalClientRegistration() {
   const email = randomEmail('minimal-client');
   
   const minimalData = {
-    first_name: 'Jane',
-    last_name: 'Smith',
+    // Step 1: Basic Information (Required)
+    full_name: 'Jane Smith',
     email: email,
     password: 'MinimalPass123!',
-    phone_number: '0987654321',
+    
+    // Step 2: Company Information (Required)
     company_name: 'Small Business LLC',
-    industry: 'other',
+    company_description: 'A small business focused on digital marketing.',
+    industry: 'corporate',
     company_size: '1-10',
-    required_services: JSON.stringify(['videography']),
-    required_skills: JSON.stringify(['camera_operation']),
-    required_editor_proficiencies: JSON.stringify(['beginner']),
-    required_videographer_proficiencies: JSON.stringify(['event']),
-    budget_min: 1000,
-    budget_max: 5000,
-    address: '456 Main St',
     country: 'United States',
     state: 'New York',
     city: 'New York',
-    pincode: '10001',
-    work_arrangement: 'on_site',
-    project_frequency: 'one_time',
-    hiring_preferences: 'agencies',
-    expected_start_date: '2024-03-01',
-    project_duration: '1_3_months',
+    
+    // Step 3: Contact Information (Required)
+    phone_number: '0987654321',
+    address: '456 Main St',
+    zip_code: '10001',
+    
+    // Step 4: Project Information (Required)
+    project_title: 'Website Video Content',
+    project_description: 'Need promotional videos for our new website launch.',
+    project_category: 'corporate',
+    project_budget: 3000,
+    project_timeline: '1-2 months',
+    
+    // Step 5: Additional Information (Required)
+    terms_accepted: true,
+    privacy_policy_accepted: true,
   };
 
   try {
@@ -311,91 +316,44 @@ async function testMinimalClientRegistration() {
 async function testMissingRequiredFields() {
   printSection('MISSING REQUIRED FIELDS TESTS');
   
-  // Test missing first_name
+  // Test missing full_name
   try {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/client`,
       {
-        last_name: 'Doe',
-        email: randomEmail('missing-firstname'),
+        email: randomEmail('missing-fullname'),
         password: 'Password123!',
         company_name: 'Test Company',
+        company_description: 'Test company description',
         industry: 'corporate',
         company_size: '11-50',
-        required_services: JSON.stringify(['videography']),
-        required_skills: JSON.stringify(['camera_operation']),
-        required_editor_proficiencies: JSON.stringify(['beginner']),
-        required_videographer_proficiencies: JSON.stringify(['event']),
-        budget_min: 1000,
-        budget_max: 5000,
-        address: '123 Test St',
         country: 'United States',
         state: 'California',
         city: 'Los Angeles',
-        pincode: '90210',
-        work_arrangement: 'remote',
-        project_frequency: 'ongoing',
-        hiring_preferences: 'individuals',
-        expected_start_date: '2024-02-01',
-        project_duration: '1_3_months',
+        phone_number: '1234567890',
+        address: '123 Test St',
+        zip_code: '90210',
+        project_title: 'Test Project',
+        project_description: 'Test project description',
+        project_category: 'corporate',
+        project_budget: 5000,
+        project_timeline: '1 month',
+        terms_accepted: true,
+        privacy_policy_accepted: true,
       },
       {}
     );
     
     const passed = response.statusCode === 400;
     printTestResult(
-      'Missing first_name field',
+      'Missing full_name field',
       passed,
-      passed ? 'Correctly rejected missing first_name' : `Expected 400, got ${response.statusCode}`,
+      passed ? 'Correctly rejected missing full_name' : `Expected 400, got ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Missing first_name field', false, error.message);
-    failedTests++;
-  }
-
-  // Test missing last_name
-  try {
-    const response = await makeMultipartRequest(
-      `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/client`,
-      {
-        first_name: 'John',
-        email: randomEmail('missing-lastname'),
-        password: 'Password123!',
-        company_name: 'Test Company',
-        industry: 'corporate',
-        company_size: '11-50',
-        required_services: JSON.stringify(['videography']),
-        required_skills: JSON.stringify(['camera_operation']),
-        required_editor_proficiencies: JSON.stringify(['beginner']),
-        required_videographer_proficiencies: JSON.stringify(['event']),
-        budget_min: 1000,
-        budget_max: 5000,
-        address: '123 Test St',
-        country: 'United States',
-        state: 'California',
-        city: 'Los Angeles',
-        pincode: '90210',
-        work_arrangement: 'remote',
-        project_frequency: 'ongoing',
-        hiring_preferences: 'individuals',
-        expected_start_date: '2024-02-01',
-        project_duration: '1_3_months',
-      },
-      {}
-    );
-    
-    const passed = response.statusCode === 400;
-    printTestResult(
-      'Missing last_name field',
-      passed,
-      passed ? 'Correctly rejected missing last_name' : `Expected 400, got ${response.statusCode}`,
-      response.body
-    );
-    passed ? passedTests++ : failedTests++;
-  } catch (error) {
-    printTestResult('Missing last_name field', false, error.message);
+    printTestResult('Missing full_name field', false, error.message);
     failedTests++;
   }
 
@@ -404,28 +362,25 @@ async function testMissingRequiredFields() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/client`,
       {
-        first_name: 'John',
-        last_name: 'Doe',
+        full_name: 'John Doe',
         password: 'Password123!',
         company_name: 'Test Company',
+        company_description: 'Test company description',
         industry: 'corporate',
         company_size: '11-50',
-        required_services: JSON.stringify(['videography']),
-        required_skills: JSON.stringify(['camera_operation']),
-        required_editor_proficiencies: JSON.stringify(['beginner']),
-        required_videographer_proficiencies: JSON.stringify(['event']),
-        budget_min: 1000,
-        budget_max: 5000,
-        address: '123 Test St',
         country: 'United States',
         state: 'California',
         city: 'Los Angeles',
-        pincode: '90210',
-        work_arrangement: 'remote',
-        project_frequency: 'ongoing',
-        hiring_preferences: 'individuals',
-        expected_start_date: '2024-02-01',
-        project_duration: '1_3_months',
+        phone_number: '1234567890',
+        address: '123 Test St',
+        zip_code: '90210',
+        project_title: 'Test Project',
+        project_description: 'Test project description',
+        project_category: 'corporate',
+        project_budget: 5000,
+        project_timeline: '1 month',
+        terms_accepted: true,
+        privacy_policy_accepted: true,
       },
       {}
     );
@@ -448,28 +403,25 @@ async function testMissingRequiredFields() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/client`,
       {
-        first_name: 'John',
-        last_name: 'Doe',
+        full_name: 'John Doe',
         email: randomEmail('missing-password'),
         company_name: 'Test Company',
+        company_description: 'Test company description',
         industry: 'corporate',
         company_size: '11-50',
-        required_services: JSON.stringify(['videography']),
-        required_skills: JSON.stringify(['camera_operation']),
-        required_editor_proficiencies: JSON.stringify(['beginner']),
-        required_videographer_proficiencies: JSON.stringify(['event']),
-        budget_min: 1000,
-        budget_max: 5000,
-        address: '123 Test St',
         country: 'United States',
         state: 'California',
         city: 'Los Angeles',
-        pincode: '90210',
-        work_arrangement: 'remote',
-        project_frequency: 'ongoing',
-        hiring_preferences: 'individuals',
-        expected_start_date: '2024-02-01',
-        project_duration: '1_3_months',
+        phone_number: '1234567890',
+        address: '123 Test St',
+        zip_code: '90210',
+        project_title: 'Test Project',
+        project_description: 'Test project description',
+        project_category: 'corporate',
+        project_budget: 5000,
+        project_timeline: '1 month',
+        terms_accepted: true,
+        privacy_policy_accepted: true,
       },
       {}
     );
@@ -492,10 +444,25 @@ async function testMissingRequiredFields() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/client`,
       {
-        first_name: 'John',
-        last_name: 'Doe',
+        full_name: 'John Doe',
         email: randomEmail('missing-company'),
-        password: 'Password123!'
+        password: 'Password123!',
+        company_description: 'Test company description',
+        industry: 'corporate',
+        company_size: '11-50',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        phone_number: '1234567890',
+        address: '123 Test St',
+        zip_code: '90210',
+        project_title: 'Test Project',
+        project_description: 'Test project description',
+        project_category: 'corporate',
+        project_budget: 5000,
+        project_timeline: '1 month',
+        terms_accepted: true,
+        privacy_policy_accepted: true,
       },
       {}
     );
@@ -525,29 +492,26 @@ async function testInvalidFieldFormats() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/client`,
       {
-        first_name: 'John',
-        last_name: 'Doe',
+        full_name: 'John Doe',
         email: 'invalid-email-format',
         password: 'Password123!',
         company_name: 'Test Company',
+        company_description: 'Test company description',
         industry: 'corporate',
         company_size: '11-50',
-        required_services: JSON.stringify(['videography']),
-        required_skills: JSON.stringify(['camera_operation']),
-        required_editor_proficiencies: JSON.stringify(['beginner']),
-        required_videographer_proficiencies: JSON.stringify(['event']),
-        budget_min: 1000,
-        budget_max: 5000,
-        address: '123 Test St',
         country: 'United States',
         state: 'California',
         city: 'Los Angeles',
-        pincode: '90210',
-        work_arrangement: 'remote',
-        project_frequency: 'ongoing',
-        hiring_preferences: 'individuals',
-        expected_start_date: '2024-02-01',
-        project_duration: '1_3_months',
+        phone_number: '1234567890',
+        address: '123 Test St',
+        zip_code: '90210',
+        project_title: 'Test Project',
+        project_description: 'Test project description',
+        project_category: 'corporate',
+        project_budget: 5000,
+        project_timeline: '1 month',
+        terms_accepted: true,
+        privacy_policy_accepted: true,
       },
       {}
     );
@@ -741,30 +705,35 @@ async function testEdgeCaseValues() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/client`,
       {
-        first_name: 'José-María',
-        last_name: "O'Connor",
+        // Step 1: Basic Information (Required)
+        full_name: 'José-María O\'Connor',
         email: randomEmail('special-chars'),
         password: 'Password123!',
-        phone_number: '1234567890',
+        
+        // Step 2: Company Information (Required)
         company_name: 'Test Company',
+        company_description: 'A test company with special characters.',
         industry: 'corporate',
         company_size: '11-50',
-        required_services: JSON.stringify(['videography']),
-        required_skills: JSON.stringify(['camera_operation']),
-        required_editor_proficiencies: JSON.stringify(['beginner']),
-        required_videographer_proficiencies: JSON.stringify(['event']),
-        budget_min: 1000,
-        budget_max: 5000,
-        address: '123 Test St',
         country: 'United States',
         state: 'California',
         city: 'Los Angeles',
-        pincode: '90210',
-        work_arrangement: 'remote',
-        project_frequency: 'ongoing',
-        hiring_preferences: 'individuals',
-        expected_start_date: '2024-02-01',
-        project_duration: '1_3_months',
+        
+        // Step 3: Contact Information (Required)
+        phone_number: '1234567890',
+        address: '123 Test St',
+        zip_code: '90210',
+        
+        // Step 4: Project Information (Required)
+        project_title: 'Special Project',
+        project_description: 'A project with special characters in the name.',
+        project_category: 'corporate',
+        project_budget: 2500,
+        project_timeline: '1 month',
+        
+        // Step 5: Additional Information (Required)
+        terms_accepted: true,
+        privacy_policy_accepted: true,
       },
       {}
     );
@@ -787,30 +756,35 @@ async function testEdgeCaseValues() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/client`,
       {
-        first_name: 'John',
-        last_name: 'Doe',
+        // Step 1: Basic Information (Required)
+        full_name: 'John Doe',
         email: randomEmail('budget-test'),
         password: 'Password123!',
-        phone_number: '1234567890',
+        
+        // Step 2: Company Information (Required)
         company_name: 'Test Company',
+        company_description: 'A test company for budget edge cases.',
         industry: 'corporate',
         company_size: '11-50',
-        required_services: JSON.stringify(['videography']),
-        required_skills: JSON.stringify(['camera_operation']),
-        required_editor_proficiencies: JSON.stringify(['beginner']),
-        required_videographer_proficiencies: JSON.stringify(['event']),
-        budget_min: 0,
-        budget_max: 999999,
-        address: '123 Test St',
         country: 'United States',
         state: 'California',
         city: 'Los Angeles',
-        pincode: '90210',
-        work_arrangement: 'remote',
-        project_frequency: 'ongoing',
-        hiring_preferences: 'individuals',
-        expected_start_date: '2024-02-01',
-        project_duration: '1_3_months',
+        
+        // Step 3: Contact Information (Required)
+        phone_number: '1234567890',
+        address: '123 Test St',
+        zip_code: '90210',
+        
+        // Step 4: Project Information (Required)
+        project_title: 'Budget Test Project',
+        project_description: 'Testing edge case budget values.',
+        project_category: 'corporate',
+        project_budget: 50000,
+        project_timeline: '2 months',
+        
+        // Step 5: Additional Information (Required)
+        terms_accepted: true,
+        privacy_policy_accepted: true,
       },
       {}
     );
@@ -836,30 +810,35 @@ async function testDuplicateEmailRegistration(existingEmail) {
   printSection('DUPLICATE EMAIL REGISTRATION TEST');
   
   const duplicateData = {
-    first_name: 'Duplicate',
-    last_name: 'User',
+    // Step 1: Basic Information (Required)
+    full_name: 'Duplicate User',
     email: existingEmail, // Use existing email
     password: 'DuplicatePass123!',
-    phone_number: '1234567890',
+    
+    // Step 2: Company Information (Required)
     company_name: 'Duplicate Company',
+    company_description: 'A duplicate company for testing.',
     industry: 'corporate',
     company_size: '11-50',
-    required_services: JSON.stringify(['videography']),
-    required_skills: JSON.stringify(['camera_operation']),
-    required_editor_proficiencies: JSON.stringify(['beginner']),
-    required_videographer_proficiencies: JSON.stringify(['event']),
-    budget_min: 1000,
-    budget_max: 5000,
-    address: '123 Test St',
     country: 'United States',
     state: 'California',
     city: 'Los Angeles',
-    pincode: '90210',
-    work_arrangement: 'remote',
-    project_frequency: 'ongoing',
-    hiring_preferences: 'individuals',
-    expected_start_date: '2024-02-01',
-    project_duration: '1_3_months',
+    
+    // Step 3: Contact Information (Required)
+    phone_number: '1234567890',
+    address: '123 Test St',
+    zip_code: '90210',
+    
+    // Step 4: Project Information (Required)
+    project_title: 'Duplicate Project',
+    project_description: 'Testing duplicate email registration.',
+    project_category: 'corporate',
+    project_budget: 4000,
+    project_timeline: '2 months',
+    
+    // Step 5: Additional Information (Required)
+    terms_accepted: true,
+    privacy_policy_accepted: true,
   };
 
   try {
@@ -1129,30 +1108,35 @@ async function testBoundaryConditions() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/client`,
       {
-        first_name: 'John',
-        last_name: 'Doe',
+        // Step 1: Basic Information (Required)
+        full_name: 'John Doe',
         email: randomEmail('min-password'),
         password: 'Pass12',
-        phone_number: '1234567890',
+        
+        // Step 2: Company Information (Required)
         company_name: 'Test Company',
+        company_description: 'A test company for minimum password.',
         industry: 'corporate',
         company_size: '11-50',
-        required_services: JSON.stringify(['videography']),
-        required_skills: JSON.stringify(['camera_operation']),
-        required_editor_proficiencies: JSON.stringify(['beginner']),
-        required_videographer_proficiencies: JSON.stringify(['event']),
-        budget_min: 1000,
-        budget_max: 5000,
-        address: '123 Test St',
         country: 'United States',
         state: 'California',
         city: 'Los Angeles',
-        pincode: '90210',
-        work_arrangement: 'remote',
-        project_frequency: 'ongoing',
-        hiring_preferences: 'individuals',
-        expected_start_date: '2024-02-01',
-        project_duration: '1_3_months',
+        
+        // Step 3: Contact Information (Required)
+        phone_number: '1234567890',
+        address: '123 Test St',
+        zip_code: '90210',
+        
+        // Step 4: Project Information (Required)
+        project_title: 'Password Test Project',
+        project_description: 'Testing minimum password length.',
+        project_category: 'corporate',
+        project_budget: 2000,
+        project_timeline: '1 month',
+        
+        // Step 5: Additional Information (Required)
+        terms_accepted: true,
+        privacy_policy_accepted: true,
       },
       {}
     );

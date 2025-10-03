@@ -158,14 +158,12 @@ async function testCompleteVideographerRegistration() {
   
   const videographerData = {
     // Step 1: Basic Information (Required)
-    username: randomUsername('maria'),
-    first_name: 'Maria',
-    last_name: 'Rodriguez',
+    full_name: 'Maria Rodriguez',
     email: email,
     password: 'Videographer123!',
 
-    // Step 2: Skills & Location (Required)
-    skills: JSON.stringify([
+    // Step 2: Professional Information (Required)
+    skill_tags: JSON.stringify([
       'Cinematography',
       'Video Production',
       'Drone Operation',
@@ -177,25 +175,33 @@ async function testCompleteVideographerRegistration() {
     ]),
     country: 'United States',
     city: 'Miami',
-    latitude: 25.7617,
-    longitude: -80.1918,
+    full_address: '123 Ocean Drive, Miami Beach, FL 33139, United States',
     portfolio_links: JSON.stringify([
       'https://vimeo.com/mariarodriguez',
       'https://youtube.com/mariavideography'
     ]),
-    hourly_rate: 85,
-    currency: 'USD',
+    rate_amount: 85,
+    rate_currency: 'USD',
 
     // Step 3: Verification & Documents (Required)
-    phone_number: '+1555123456',
+    phone_number: '5551234567',
     id_type: 'passport',
 
-    // Step 4: Professional Details (Required)
+    // Step 4: Additional Information (Required)
     short_description: 'Award-winning videographer with 10+ years of experience in capturing life\'s most precious moments.',
-    availability: 'full_time',
+    availability: 'full-time',
     languages: JSON.stringify([
       'English',
       'Spanish'
+    ]),
+
+    // Optional Fields
+    experience_level: 'expert',
+    role: 'Senior Videographer',
+    base_skills: JSON.stringify([
+      'Camera Operation',
+      'Video Editing',
+      'Lighting Setup'
     ]),
   };
 
@@ -204,7 +210,7 @@ async function testCompleteVideographerRegistration() {
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videographer`,
       videographerData,
       {
-        profile_picture: testFiles.profilePicture,
+        profile_photo: testFiles.profilePicture,
         id_document: testFiles.idDocument
       }
     );
@@ -262,22 +268,28 @@ async function testMinimalVideographerRegistration() {
   const email = randomEmail('minimal-videographer');
   
   const minimalData = {
-    first_name: 'James',
-    last_name: 'Carter',
+    // Step 1: Basic Information (Required)
+    full_name: 'James Carter',
     email: email,
     password: 'MinimalVideographer123!',
-    skills: JSON.stringify(['Video Production', 'Event Videography']),
+
+    // Step 2: Professional Information (Required)
+    skill_tags: JSON.stringify(['Video Production', 'Event Videography']),
     superpowers: JSON.stringify(['Quick Turnaround']),
     country: 'United States',
     city: 'Los Angeles',
-    latitude: 34.0522,
-    longitude: -118.2437,
+    full_address: '456 Main Street, Los Angeles, CA 90210',
     portfolio_links: JSON.stringify(['https://youtube.com/jamescarter']),
-    hourly_rate: 45,
-    phone_number: '+1555987654',
+    rate_amount: 45,
+    rate_currency: 'USD',
+
+    // Step 3: Verification & Documents (Required)
+    phone_number: '5559876543',
     id_type: 'passport',
+
+    // Step 4: Additional Information (Required)
     short_description: 'Freelance videographer specializing in event coverage.',
-    availability: 'part_time',
+    availability: 'part-time',
     languages: JSON.stringify(['English'])
   };
 
@@ -285,15 +297,16 @@ async function testMinimalVideographerRegistration() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videographer`,
       minimalData,
-      {} // No files
+      {} // No files - should be rejected since files are required
     );
     
-    const passed = response.statusCode === 201 && response.body.success === true;
+    // Files are required according to frontend specs, so this should fail with 400
+    const passed = response.statusCode === 400 && response.body.success === false;
     
     printTestResult(
       'Minimal videographer registration (no files)',
       passed,
-      passed ? `Videographer registered: ${email}` : `Expected 201, got ${response.statusCode}`,
+      passed ? 'Correctly rejected registration without required files' : `Expected 400, got ${response.statusCode}`,
       response.body
     );
     
@@ -311,22 +324,28 @@ async function testDuplicateEmailRegistration(existingEmail) {
   printSection('DUPLICATE EMAIL REGISTRATION TEST');
   
   const duplicateData = {
-    first_name: 'Duplicate',
-    last_name: 'Videographer',
+    // Step 1: Basic Information (Required)
+    full_name: 'Duplicate Videographer',
     email: existingEmail, // Use existing email
     password: 'DuplicateVideographer123!',
-    skills: JSON.stringify(['Video Production']),
+
+    // Step 2: Professional Information (Required)
+    skill_tags: JSON.stringify(['Video Production']),
     superpowers: JSON.stringify(['Quality Work']),
     country: 'United States',
     city: 'New York',
-    latitude: 40.7128,
-    longitude: -74.0060,
+    full_address: '789 Duplicate Street, New York, NY',
     portfolio_links: JSON.stringify(['https://example.com']),
-    hourly_rate: 50,
-    phone_number: '+1555111111',
+    rate_amount: 50,
+    rate_currency: 'USD',
+
+    // Step 3: Verification & Documents (Required)
+    phone_number: '5551111111',
     id_type: 'passport',
+
+    // Step 4: Additional Information (Required)
     short_description: 'Duplicate videographer test.',
-    availability: 'full_time',
+    availability: 'full-time',
     languages: JSON.stringify(['English'])
   };
 
@@ -441,31 +460,41 @@ async function testInvalidFieldFormats() {
     failedTests++;
   }
 
-  // Test invalid hourly rate (negative)
+  // Test invalid rate amount (negative)
   try {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videographer`,
       {
-        first_name: 'Test',
-        last_name: 'Videographer',
-        email: randomEmail('negative-rate'),
+        full_name: 'Invalid Rate',
+        email: randomEmail('invalid-rate'),
         password: 'Videographer123!',
-        profile_title: 'Test Videographer',
-        hourly_rate: -10
+        skill_tags: JSON.stringify(['Skill1']),
+        superpowers: JSON.stringify(['Superpower1']),
+        country: 'United States',
+        city: 'Test City',
+        full_address: '123 Test Street',
+        portfolio_links: JSON.stringify(['https://example.com']),
+        rate_amount: -10,
+        rate_currency: 'USD',
+        phone_number: '5551234567',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
 
     const passed = response.statusCode === 400;
     printTestResult(
-      'Invalid hourly rate (negative)',
+      'Invalid rate amount (negative)',
       passed,
-      passed ? 'Correctly rejected negative hourly rate' : `Expected 400, got ${response.statusCode}`,
+      passed ? 'Correctly rejected negative rate amount' : `Expected 400, got ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Invalid hourly rate (negative)', false, error.message);
+    printTestResult('Invalid rate amount (negative)', false, error.message);
     failedTests++;
   }
 
@@ -505,30 +534,36 @@ async function testMissingRequiredFields() {
   printSection('MISSING REQUIRED FIELDS TESTS');
 
   const requiredFields = [
-    'first_name', 'last_name', 'email', 'password', 'skills', 'superpowers',
-    'country', 'city', 'latitude', 'longitude', 'portfolio_links', 'hourly_rate',
+    'full_name', 'email', 'password', 'skill_tags', 'superpowers',
+    'country', 'city', 'full_address', 'portfolio_links', 'rate_amount', 'rate_currency',
     'phone_number', 'id_type', 'short_description', 'availability', 'languages'
   ];
 
   for (const field of requiredFields) {
     try {
       const videographerData = {
-        first_name: 'Test',
-        last_name: 'Videographer',
+        // Step 1: Basic Information (Required)
+        full_name: 'Test Videographer',
         email: randomEmail('missing-field'),
         password: 'Videographer123!',
-        skills: JSON.stringify(['Skill1']),
+
+        // Step 2: Professional Information (Required)
+        skill_tags: JSON.stringify(['Skill1']),
         superpowers: JSON.stringify(['Superpower1']),
         country: 'United States',
         city: 'Test City',
-        latitude: 40.7128,
-        longitude: -74.0060,
+        full_address: '123 Test Street, Test City, State',
         portfolio_links: JSON.stringify(['https://example.com']),
-        hourly_rate: 50,
-        phone_number: '+1555111111',
+        rate_amount: 50,
+        rate_currency: 'USD',
+
+        // Step 3: Verification & Documents (Required)
+        phone_number: '5551111111',
         id_type: 'passport',
+
+        // Step 4: Additional Information (Required)
         short_description: 'Test description',
-        availability: 'full_time',
+        availability: 'full-time',
         languages: JSON.stringify(['English'])
       };
 
@@ -557,30 +592,29 @@ async function testMissingRequiredFields() {
 }
 
 /**
- * Test skills array parsing
+ * Test skill tags array parsing
  */
 async function testSkillsArrayParsing() {
-  printSection('SKILLS ARRAY PARSING TEST');
+  printSection('SKILL TAGS ARRAY PARSING TEST');
   
   const email = randomEmail('skills-test-vg');
   
   const skillsData = {
-    first_name: 'Skills',
-    last_name: 'Test',
+    full_name: 'Skills Test User',
     email: email,
     password: 'SkillsTest123!',
-    skills: JSON.stringify(['Cinematography', 'Video Editing', 'Drone Operation']), // JSON array
+    skill_tags: JSON.stringify(['Cinematography', 'Video Editing', 'Drone Operation']), // JSON array
     superpowers: JSON.stringify(['Superpower1']),
     country: 'United States',
     city: 'Test City',
-    latitude: 40.7128,
-    longitude: -74.0060,
+    full_address: '123 Test Street, Test City, United States',
     portfolio_links: JSON.stringify(['https://example.com']),
-    hourly_rate: 50,
+    rate_amount: 50,
+    rate_currency: 'USD',
     phone_number: '+1555111111',
     id_type: 'passport',
-    short_description: 'Test description',
-    availability: 'full_time',
+    short_description: 'Test description for skills parsing',
+    availability: 'full-time',
     languages: JSON.stringify(['English'])
   };
 
@@ -588,21 +622,24 @@ async function testSkillsArrayParsing() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videographer`,
       skillsData,
-      {}
+      {
+        profile_picture: testFiles.profilePicture,
+        id_document: testFiles.idDocument
+      }
     );
     
     const passed = response.statusCode === 201 && response.body.success === true;
     
     printTestResult(
-      'Skills array parsing from string',
+      'Skill tags array parsing from string',
       passed,
-      passed ? 'Successfully parsed comma-separated skills' : `Expected 201, got ${response.statusCode}`,
+      passed ? 'Successfully parsed skill tags array' : `Expected 201, got ${response.statusCode}`,
       response.body
     );
     
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Skills array parsing from string', false, error.message);
+    printTestResult('Skill tags array parsing from string', false, error.message);
     failedTests++;
   }
 }
@@ -722,42 +759,44 @@ async function testEdgeCaseValues() {
     failedTests++;
   }
 
-  // Test edge case hourly rate values
+  // Test edge case rate values
   try {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videographer`,
       {
-        first_name: 'Edge',
-        last_name: 'Case',
+        full_name: 'Edge Case',
         email: randomEmail('edge-rate'),
         password: 'Videographer123!',
-        skills: JSON.stringify(['Skill1']),
+        skill_tags: JSON.stringify(['Skill1']),
         superpowers: JSON.stringify(['Superpower1']),
         country: 'United States',
         city: 'Test City',
-        latitude: 40.7128,
-        longitude: -74.0060,
+        full_address: '123 Test Street, Test City, United States',
         portfolio_links: JSON.stringify(['https://example.com']),
-        hourly_rate: 1, // Minimum allowed
+        rate_amount: 1, // Minimum allowed
+        rate_currency: 'USD',
         phone_number: '+1555111111',
         id_type: 'passport',
-        short_description: 'Test description',
-        availability: 'full_time',
+        short_description: 'Test description for edge case',
+        availability: 'full-time',
         languages: JSON.stringify(['English'])
       },
-      {}
+      {
+        profile_picture: testFiles.profilePicture,
+        id_document: testFiles.idDocument
+      }
     );
 
     const passed = response.statusCode === 201;
     printTestResult(
-      'Edge case hourly rate values (1 to 10000)',
+      'Edge case rate values (1 to 10000)',
       passed,
-      passed ? 'Successfully handled edge case hourly rate values' : `Unexpected status: ${response.statusCode}`,
+      passed ? 'Successfully handled edge case rate values' : `Unexpected status: ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Edge case hourly rate values (1 to 10000)', false, error.message);
+    printTestResult('Edge case rate values (1 to 10000)', false, error.message);
     failedTests++;
   }
 
@@ -767,13 +806,27 @@ async function testEdgeCaseValues() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videographer`,
       {
-        first_name: 'Long',
-        last_name: 'Title',
+        full_name: 'Long Title User',
         email: randomEmail('long-title'),
         password: 'Videographer123!',
-        profile_title: longTitle
+        skill_tags: JSON.stringify(['Skill1']),
+        superpowers: JSON.stringify(['Superpower1']),
+        country: 'United States',
+        city: 'Test City',
+        full_address: '123 Test Street, Test City, United States',
+        portfolio_links: JSON.stringify(['https://example.com']),
+        rate_amount: 50,
+        rate_currency: 'USD',
+        phone_number: '+1555111111',
+        id_type: 'passport',
+        short_description: longTitle, // Test with long description
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
-      {}
+      {
+        profile_picture: testFiles.profilePicture,
+        id_document: testFiles.idDocument
+      }
     );
 
     const passed = response.statusCode === 201 || response.statusCode === 400 || response.statusCode === 500;
@@ -1033,25 +1086,27 @@ async function testBoundaryConditions() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videographer`,
       {
-        first_name: 'Min',
-        last_name: 'Password',
+        full_name: 'Min Password User',
         email: randomEmail('min-password'),
         password: '123456', // Exactly 6 characters
-        skills: JSON.stringify(['Skill1']),
+        skill_tags: JSON.stringify(['Skill1']),
         superpowers: JSON.stringify(['Superpower1']),
         country: 'United States',
         city: 'Test City',
-        latitude: 40.7128,
-        longitude: -74.0060,
+        full_address: '123 Test Street, Test City, United States',
         portfolio_links: JSON.stringify(['https://example.com']),
-        hourly_rate: 50,
+        rate_amount: 50,
+        rate_currency: 'USD',
         phone_number: '+1555111111',
         id_type: 'passport',
-        short_description: 'Test description',
-        availability: 'full_time',
+        short_description: 'Test description for minimum password',
+        availability: 'full-time',
         languages: JSON.stringify(['English'])
       },
-      {}
+      {
+        profile_picture: testFiles.profilePicture,
+        id_document: testFiles.idDocument
+      }
     );
 
     const passed = response.statusCode === 201;
@@ -1075,13 +1130,27 @@ async function testBoundaryConditions() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videographer`,
       {
-        first_name: 'Long',
-        last_name: 'Email',
+        full_name: 'Long Email User',
         email: longEmail,
         password: 'Videographer123!',
-        profile_title: 'Test Videographer'
+        skill_tags: JSON.stringify(['Skill1']),
+        superpowers: JSON.stringify(['Superpower1']),
+        country: 'United States',
+        city: 'Test City',
+        full_address: '123 Test Street, Test City, United States',
+        portfolio_links: JSON.stringify(['https://example.com']),
+        rate_amount: 50,
+        rate_currency: 'USD',
+        phone_number: '+1555111111',
+        id_type: 'passport',
+        short_description: 'Test description for long email',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
-      {}
+      {
+        profile_picture: testFiles.profilePicture,
+        id_document: testFiles.idDocument
+      }
     );
 
     const passed = response.statusCode === 400 || response.statusCode === 201 || response.statusCode === 409;
@@ -1102,20 +1171,34 @@ async function testBoundaryConditions() {
     const response = await makeMultipartRequest(
       `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/videographer`,
       {
-        first_name: null,
-        last_name: 'Videographer',
-        email: randomEmail('null-firstname'),
+        full_name: null,
+        email: randomEmail('null-fullname'),
         password: 'Videographer123!',
-        profile_title: 'Test Videographer'
+        skill_tags: JSON.stringify(['Skill1']),
+        superpowers: JSON.stringify(['Superpower1']),
+        country: 'United States',
+        city: 'Test City',
+        full_address: '123 Test Street, Test City, United States',
+        portfolio_links: JSON.stringify(['https://example.com']),
+        rate_amount: 50,
+        rate_currency: 'USD',
+        phone_number: '+1555111111',
+        id_type: 'passport',
+        short_description: 'Test description for null test',
+        availability: 'full-time',
+        languages: JSON.stringify(['English'])
       },
-      {}
+      {
+        profile_picture: testFiles.profilePicture,
+        id_document: testFiles.idDocument
+      }
     );
 
     const passed = response.statusCode === 400;
     printTestResult(
-      'Null value for first_name',
+      'Null value for full_name',
       passed,
-      passed ? 'Correctly rejected null first_name' : `Expected 400, got ${response.statusCode}`,
+      passed ? 'Correctly rejected null full_name' : `Expected 400, got ${response.statusCode}`,
       response.body
     );
     passed ? passedTests++ : failedTests++;
@@ -1348,7 +1431,7 @@ async function testVideographerProfileVerification(email, password = 'Videograph
 
     // Verify that key profile fields are not null
     const requiredProfileFields = [
-      'profile_title', 'skills', 'hourly_rate', 'portfolio_links', 'short_description'
+      'profile_title', 'skills', 'rate_amount', 'portfolio_links', 'short_description'
     ];
 
     let nullProfileFields = [];
