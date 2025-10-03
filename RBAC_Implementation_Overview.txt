@@ -1,0 +1,95 @@
+## Role-Based Access Control (RBAC) Implementation Overview
+
+Here's a concise explanation of how role-based access is implemented in your backend, covering user registration, role assignment, and permission management.
+
+### **Database Schemas**
+
+#### `database/role.schema.ts`
+- Defines the `role` table with fields: `role_id`, `name`, `label`, `description`, `is_active`
+- Predefined roles: CLIENT, VIDEOGRAPHER, VIDEO_EDITOR, ADMIN, SUPER_ADMIN
+- Used for storing role definitions
+
+#### `database/permission.schema.ts`
+- Defines the `permission` table with fields: `permission_id`, `name`, `label`, `module`, `description`, `is_critical`
+- Permissions are granular actions like `projects.view`, `users.create`, `payments.process`
+- Organized by modules (users, projects, payments, etc.)
+
+#### `database/role_permission.schema.ts`
+- Junction table linking roles to permissions via `role_id` and `permission_id`
+- Many-to-many relationship between roles and permissions
+
+#### `database/user_role.schema.ts`
+- Junction table linking users to roles via `user_id` and `role_id`
+- Users can have multiple roles
+
+### **Seeding Scripts**
+
+#### `scripts/seed-roles.ts`
+- Seeds predefined roles into the database
+- Roles: CLIENT (business clients), VIDEOGRAPHER (video shooters), VIDEO_EDITOR (video editors), ADMIN, SUPER_ADMIN
+
+#### `scripts/seed-permissions.ts`
+- Seeds 100+ granular permissions organized by modules:
+  - User management: `users.view`, `users.create`, `users.update`, `users.delete`
+  - Projects: `projects.view`, `projects.create`, `projects.apply`, `projects.hire`
+  - Payments: `payments.view`, `payments.process`
+  - Reviews, support, profiles, etc.
+
+#### `scripts/seed-role-permissions.ts` & `scripts/assign-role-permissions.ts`
+- Assign specific permissions to each role:
+  - **CLIENT**: Can view/create/manage own projects, view payments, create reviews/support tickets
+  - **VIDEOGRAPHER**: Can view/apply to projects, view payments, create reviews/support
+  - **VIDEO_EDITOR**: Similar to videographer but for editing projects
+  - **ADMIN/SUPER_ADMIN**: Full platform access
+
+### **User Registration & Role Assignment**
+
+#### `src/features/auth/auth.service.ts`
+- **Registration Process**: When users register via specific endpoints (`/auth/register/client`, `/auth/register/videographer`, `/auth/register/videoeditor`), roles are automatically assigned:
+  - Client registration → `assignRole(user.user_id, 'CLIENT')`
+  - Videographer registration → `assignRole(user.user_id, 'VIDEOGRAPHER')`
+  - Video Editor registration → `assignRole(user.user_id, 'VIDEO_EDITOR')`
+- **Login Response**: Returns user roles array in JWT token and response data
+
+#### `src/utils/rbac/role-checker.ts`
+- Core RBAC utility functions:
+  - `getUserRoles()`: Get all roles for a user
+  - `getUserPermissions()`: Get all permissions through user's roles
+  - `hasRole()`, `hasPermission()`: Check specific access
+  - `assignRole()`, `removeRole()`: Manage user roles
+
+### **Access Control Middlewares**
+
+#### `src/middlewares/role.middleware.ts`
+- `requireRole(...roles)`: Checks if user has ANY of the specified roles
+- `requireAllRoles(...roles)`: Checks if user has ALL specified roles
+- Usage: `requireRole('CLIENT', 'ADMIN')` on routes
+
+#### `src/middlewares/permission.middleware.ts`
+- `requirePermission(...permissions)`: Checks if user has ANY of the specified permissions
+- `requireAllPermissions(...permissions)`: Checks if user has ALL specified permissions
+- Usage: `requirePermission('projects.create', 'projects.update')` on routes
+
+### **API Endpoints**
+
+#### `src/features/role/role.routes.ts` & `role.controller.ts`
+- `GET /role/getrole`: Get all roles
+- `POST /role/insertrole`: Create new role
+- `PUT /role/updaterole/:id`: Update role
+- `POST /role/insertpermission`: Assign permission to role
+- `GET /role/getpermission`: Get permissions for role
+
+#### `src/features/permission/permission.routes.ts` & `permission.controller.ts`
+- `GET /permission/getpermission`: Get all permissions
+- `POST /permission/insertpermission`: Create new permission
+- `PUT /permission/updatepermissionid/:id`: Update permission
+
+### **How It Works in Practice**
+
+1. **Registration**: User chooses account type (client/videographer/videoeditor) → specific role assigned automatically
+2. **Login**: System fetches user's roles from `user_roles` table → includes in JWT token
+3. **Route Protection**: Middlewares check roles/permissions before allowing access
+4. **Permission Checking**: Routes use `requirePermission('specific.action')` to control access
+5. **Dynamic Access**: Permissions are checked at runtime through role-permission mappings
+
+This implementation provides flexible, scalable RBAC where roles are assigned at registration based on user type, and permissions are granular controls that can be managed independently of roles.

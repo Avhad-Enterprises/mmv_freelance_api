@@ -1,6 +1,5 @@
 import { Router } from "express";
 import Route from "../../interfaces/route.interface";
-import { requireRole } from '../../middlewares/role.middleware';
 import validationMiddleware from "../../middlewares/validation.middleware";
 import UploadToAWSController from "./upload.controller";
 import { uploadtoawsDto } from "./upload.dto";
@@ -15,11 +14,7 @@ class uploadtoaws implements Route {
     }
 
     private initializeRoutes() {
-        this.router.post(`${this.path}/uploadtoaws`,
-            requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users can upload files
-            validationMiddleware(uploadtoawsDto, 'body', false, []),
-            this.uploadawscontroller.insertfiletoaws
-        );
+        this.router.post(`${this.path}/uploadtoaws`, validationMiddleware(uploadtoawsDto, 'body', false, []), this.uploadawscontroller.insertfiletoaws);
     }
 }
 

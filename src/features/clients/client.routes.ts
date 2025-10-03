@@ -2,7 +2,6 @@
 import { Router } from 'express';
 import { ClientController } from './client.controller';
 import { requireRole } from '../../middlewares/role.middleware';
-import { requirePermission } from '../../middlewares/permission.middleware';
 import validationMiddleware from '../../middlewares/validation.middleware';
 import { ClientUpdateDto } from './client.update.dto';
 import Route from '../../interfaces/route.interface';
@@ -66,12 +65,11 @@ export class ClientRoutes implements Route {
 
     /**
      * Update current client's profile
-     * Requires: CLIENT role + profile.update permission
+     * Requires: CLIENT role
      */
     this.router.patch(
       `${this.path}/profile`,
       requireRole('CLIENT'),
-      requirePermission('profile.update'),
       validationMiddleware(ClientUpdateDto, 'body', true, []),
       this.clientController.updateProfile
     );
@@ -98,12 +96,11 @@ export class ClientRoutes implements Route {
 
     /**
      * Delete client account (soft delete)
-     * Requires: CLIENT role + users.delete permission
+     * Requires: CLIENT role
      */
     this.router.delete(
       `${this.path}/profile`,
       requireRole('CLIENT'),
-      requirePermission('users.delete'),
       this.clientController.deleteAccount
     );
 
@@ -111,12 +108,11 @@ export class ClientRoutes implements Route {
 
     /**
      * Get client by ID
-     * Requires: ADMIN or SUPER_ADMIN role + users.view permission
+     * Requires: ADMIN or SUPER_ADMIN role
      */
     this.router.get(
       `${this.path}/:id`,
       requireRole('ADMIN', 'SUPER_ADMIN'),
-      requirePermission('users.view'),
       this.clientController.getClientById
     );
   }
