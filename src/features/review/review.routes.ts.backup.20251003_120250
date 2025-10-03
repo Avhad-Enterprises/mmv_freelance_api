@@ -3,7 +3,6 @@ import validationMiddleware from '../../middlewares/validation.middleware';
 import ReviewsController from './review.controller';
 import { ReviewDto } from './review.dto';
 import Route from '../../interfaces/routes.interface';
-import { requireRole } from '../../middlewares/role.middleware';
 
 class ReviewRoute implements Route {
   public path = '/reviews';
@@ -18,7 +17,6 @@ class ReviewRoute implements Route {
     // Submit a review (POST)
     this.router.post(
       `${this.path}/create`,
-      requireRole('CLIENT'), // Only clients can create reviews
       validationMiddleware(ReviewDto, 'body', false, ['create']),
       this.reviewsController.createReview
     );
@@ -26,14 +24,14 @@ class ReviewRoute implements Route {
     // Get reviews received by a freelancer (POST)
     this.router.post(
       `${this.path}/getreviews`,
-      requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All users can read reviews
       this.reviewsController.getReviews
     );
+
+   
 
     // Soft delete a review (DELETE)
     this.router.delete(
       `${this.path}/delete`,
-      requireRole('CLIENT', 'ADMIN', 'SUPER_ADMIN'), // Clients and admins can delete reviews
       this.reviewsController.deleteReview
     );
   }
