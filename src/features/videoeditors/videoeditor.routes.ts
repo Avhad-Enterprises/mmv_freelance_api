@@ -2,7 +2,6 @@
 import { Router } from 'express';
 import { VideoEditorController } from './videoeditor.controller';
 import { requireRole } from '../../middlewares/role.middleware';
-import { requirePermission } from '../../middlewares/permission.middleware';
 import validationMiddleware from '../../middlewares/validation.middleware';
 import { FreelancerUpdateDto } from '../freelancers/freelancer.update.dto';
 import Route from '../../interfaces/route.interface';
@@ -110,12 +109,11 @@ export class VideoEditorRoutes implements Route {
 
     /**
      * Update current video editor's profile
-     * Requires: VIDEO_EDITOR role + profile.update permission
+     * Requires: VIDEO_EDITOR role
      */
     this.router.patch(
       `${this.path}/profile`,
       requireRole('VIDEO_EDITOR'),
-      requirePermission('profile.update'),
       validationMiddleware(FreelancerUpdateDto, 'body', true, []),
       this.videoEditorController.updateProfile
     );
@@ -132,12 +130,11 @@ export class VideoEditorRoutes implements Route {
 
     /**
      * Delete video editor account (soft delete)
-     * Requires: VIDEO_EDITOR role + users.delete permission
+     * Requires: VIDEO_EDITOR role
      */
     this.router.delete(
       `${this.path}/profile`,
       requireRole('VIDEO_EDITOR'),
-      requirePermission('users.delete'),
       this.videoEditorController.deleteAccount
     );
 

@@ -2,7 +2,6 @@
 import { Router } from 'express';
 import { VideographerController } from './videographer.controller';
 import { requireRole } from '../../middlewares/role.middleware';
-import { requirePermission } from '../../middlewares/permission.middleware';
 import validationMiddleware from '../../middlewares/validation.middleware';
 import { FreelancerUpdateDto } from '../freelancers/freelancer.update.dto';
 import Route from '../../interfaces/route.interface';
@@ -29,6 +28,7 @@ export class VideographerRoutes implements Route {
      */
     this.router.get(
       `${this.path}`,
+      requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users
       this.videographerController.getAllVideographers
     );
 
@@ -38,6 +38,7 @@ export class VideographerRoutes implements Route {
      */
     this.router.get(
       `${this.path}/top-rated`,
+      requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users
       this.videographerController.getTopRated
     );
 
@@ -101,12 +102,11 @@ export class VideographerRoutes implements Route {
 
     /**
      * Update current videographer's profile
-     * Requires: VIDEOGRAPHER role + profile.update permission
+     * Requires: VIDEOGRAPHER role
      */
     this.router.patch(
       `${this.path}/profile`,
       requireRole('VIDEOGRAPHER'),
-      requirePermission('profile.update'),
       validationMiddleware(FreelancerUpdateDto, 'body', true, []),
       this.videographerController.updateProfile
     );
@@ -123,12 +123,11 @@ export class VideographerRoutes implements Route {
 
     /**
      * Delete videographer account (soft delete)
-     * Requires: VIDEOGRAPHER role + users.delete permission
+     * Requires: VIDEOGRAPHER role
      */
     this.router.delete(
       `${this.path}/profile`,
       requireRole('VIDEOGRAPHER'),
-      requirePermission('users.delete'),
       this.videographerController.deleteAccount
     );
 

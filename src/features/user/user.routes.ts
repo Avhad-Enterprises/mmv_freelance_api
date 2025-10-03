@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { UserController } from './user.controller';
 import { requireRole } from '../../middlewares/role.middleware';
-import { requirePermission } from '../../middlewares/permission.middleware';
+// import { requirePermission } from '../../middlewares/permission.middleware'; // DISABLED: Using only role-based access
 import validationMiddleware from '../../middlewares/validation.middleware';
 import { 
   UserUpdateDto, 
@@ -10,6 +10,7 @@ import {
   PasswordResetRequestDto, 
   PasswordResetDto 
 } from './user.update.dto';
+import { CreateUserDto, AssignRoleDto, UpdateUserDto } from './user.admin.dto';
 import Route from '../../interfaces/route.interface';
 
 /**
@@ -62,22 +63,22 @@ export class UserRoutes implements Route {
 
     /**
      * Update basic user info
-     * Requires: Authentication + profile.update permission
+     * Requires: Authentication (any user can update their own profile)
      */
     this.router.patch(
       `${this.path}/me`,
-      requirePermission('profile.update'),
+      // requirePermission('profile.update'), // DISABLED: Using only role-based access
       validationMiddleware(UserUpdateDto, 'body', true, []),
       this.userController.updateBasicInfo
     );
 
     /**
      * Delete own account (soft delete)
-     * Requires: Authentication + users.delete permission
+     * Requires: Authentication (any user can delete their own account)
      */
     this.router.delete(
       `${this.path}/me`,
-      requirePermission('users.delete'),
+      // requirePermission('users.delete'), // DISABLED: Using only role-based access
       this.userController.deleteAccount
     );
 
@@ -135,46 +136,141 @@ export class UserRoutes implements Route {
 
     /**
      * Get user by ID
-     * Requires: ADMIN or SUPER_ADMIN + users.view permission
+     * Requires: ADMIN or SUPER_ADMIN role
      */
     this.router.get(
       `${this.path}/:id`,
       requireRole('ADMIN', 'SUPER_ADMIN'),
-      requirePermission('users.view'),
+      // requirePermission('users.view'), // DISABLED: Using only role-based access
       this.userController.getUserById
     );
 
     /**
      * Get user with profile by ID
-     * Requires: ADMIN or SUPER_ADMIN + users.view permission
+     * Requires: ADMIN or SUPER_ADMIN role
      */
     this.router.get(
       `${this.path}/:id/profile`,
       requireRole('ADMIN', 'SUPER_ADMIN'),
-      requirePermission('users.view'),
+      // requirePermission('users.view'), // DISABLED: Using only role-based access
       this.userController.getUserWithProfileById
     );
 
     /**
      * Ban user
-     * Requires: ADMIN or SUPER_ADMIN + users.ban permission
+     * Requires: ADMIN or SUPER_ADMIN role
      */
     this.router.post(
       `${this.path}/:id/ban`,
       requireRole('ADMIN', 'SUPER_ADMIN'),
-      requirePermission('users.ban'),
+      // requirePermission('users.ban'), // DISABLED: Using only role-based access
       this.userController.banUser
     );
 
     /**
      * Unban user
-     * Requires: ADMIN or SUPER_ADMIN + users.ban permission
+     * Requires: ADMIN or SUPER_ADMIN role
      */
     this.router.post(
       `${this.path}/:id/unban`,
       requireRole('ADMIN', 'SUPER_ADMIN'),
-      requirePermission('users.ban'),
+      // requirePermission('users.ban'), // DISABLED: Using only role-based access
       this.userController.unbanUser
+    );
+
+    // User Management (Super Admin)
+
+    /**
+     * Get all users with pagination
+     * Requires: SUPER_ADMIN role
+     */
+    this.router.get(
+      `${this.path}`,
+      requireRole('SUPER_ADMIN'),
+      // requirePermission('users.view'), // DISABLED: Using only role-based access
+      this.userController.getAllUsers
+    );
+
+    /**
+     * Create new user (any type)
+     * Requires: SUPER_ADMIN role
+     */
+    this.router.post(
+      `${this.path}`,
+      requireRole('SUPER_ADMIN'),
+      // requirePermission('users.create'), // DISABLED: Using only role-based access
+      validationMiddleware(CreateUserDto, 'body', false, []),
+      this.userController.createUser
+    );
+
+    /**
+     * Update user by ID
+     * Requires: SUPER_ADMIN role
+     */
+    this.router.put(
+      `${this.path}/:id`,
+      requireRole('SUPER_ADMIN'),
+      // requirePermission('users.update'), // DISABLED: Using only role-based access
+      validationMiddleware(UpdateUserDto, 'body', true, []),
+      this.userController.updateUserById
+    );
+
+    /**
+     * Delete user permanently
+     * Requires: SUPER_ADMIN role
+     */
+    this.router.delete(
+      `${this.path}/:id`,
+      requireRole('SUPER_ADMIN'),
+      // requirePermission('users.delete'), // DISABLED: Using only role-based access
+      this.userController.deleteUserById
+    );
+
+    // Role Management
+
+    /**
+     * Get user's roles
+     * Requires: ADMIN or SUPER_ADMIN role
+     */
+    this.router.get(
+      `${this.path}/:id/roles`,
+      requireRole('ADMIN', 'SUPER_ADMIN'),
+      // requirePermission('admin.roles'), // DISABLED: Using only role-based access
+      this.userController.getUserRoles
+    );
+
+    /**
+     * Assign role to user
+     * Requires: SUPER_ADMIN role
+     */
+    this.router.post(
+      `${this.path}/:id/roles`,
+      requireRole('SUPER_ADMIN'),
+      // requirePermission('admin.roles'), // DISABLED: Using only role-based access
+      validationMiddleware(AssignRoleDto, 'body', false, []),
+      this.userController.assignRoleToUser
+    );
+
+    /**
+     * Remove role from user
+     * Requires: SUPER_ADMIN role
+     */
+    this.router.delete(
+      `${this.path}/:id/roles/:roleId`,
+      requireRole('SUPER_ADMIN'),
+      // requirePermission('admin.roles'), // DISABLED: Using only role-based access
+      this.userController.removeRoleFromUser
+    );
+
+    /**
+     * Get user's permissions
+     * Requires: ADMIN or SUPER_ADMIN role
+     */
+    this.router.get(
+      `${this.path}/:id/permissions`,
+      requireRole('ADMIN', 'SUPER_ADMIN'),
+      // requirePermission('admin.roles'), // DISABLED: Using only role-based access
+      this.userController.getUserPermissions
     );
   }
 }
