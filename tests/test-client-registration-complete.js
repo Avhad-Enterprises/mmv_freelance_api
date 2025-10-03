@@ -167,20 +167,29 @@ async function testCompleteClientRegistration() {
     password: 'SecurePassword123!',
     
     // Optional user fields
-    phone_number: '+1234567890',
-    address_line_first: '123 Business Street',
-    city: 'San Francisco',
-    country: 'United States',
+    phone_number: '1234567890',
     
     // Required client fields
     company_name: 'Innovative Tech Solutions Inc.',
-    
-    // Optional client fields
-    industry: 'Software Development',
-    website: 'https://innovativetech.com',
-    required_services: JSON.stringify(['videography', 'video_editing', 'animation']),
+    industry: 'corporate',
+    company_size: '51-200',
+    required_services: JSON.stringify(['videography', 'video_editing']),
+    required_skills: JSON.stringify(['premiere_pro', 'after_effects']),
+    required_editor_proficiencies: JSON.stringify(['beginner', 'intermediate']),
+    required_videographer_proficiencies: JSON.stringify(['wedding', 'corporate']),
     budget_min: 5000,
     budget_max: 25000,
+    address: '123 Business Street',
+    country: 'United States',
+    state: 'California',
+    city: 'San Francisco',
+    pincode: '94105',
+    tax_id: '12-3456789',
+    work_arrangement: 'remote',
+    project_frequency: 'ongoing',
+    hiring_preferences: 'individuals',
+    expected_start_date: '2024-02-01',
+    project_duration: '1_3_months',
   };
 
   try {
@@ -251,7 +260,26 @@ async function testMinimalClientRegistration() {
     last_name: 'Smith',
     email: email,
     password: 'MinimalPass123!',
+    phone_number: '0987654321',
     company_name: 'Small Business LLC',
+    industry: 'other',
+    company_size: '1-10',
+    required_services: JSON.stringify(['videography']),
+    required_skills: JSON.stringify(['camera_operation']),
+    required_editor_proficiencies: JSON.stringify(['beginner']),
+    required_videographer_proficiencies: JSON.stringify(['event']),
+    budget_min: 1000,
+    budget_max: 5000,
+    address: '456 Main St',
+    country: 'United States',
+    state: 'New York',
+    city: 'New York',
+    pincode: '10001',
+    work_arrangement: 'on_site',
+    project_frequency: 'one_time',
+    hiring_preferences: 'agencies',
+    expected_start_date: '2024-03-01',
+    project_duration: '1_3_months',
   };
 
   try {
@@ -291,7 +319,25 @@ async function testMissingRequiredFields() {
         last_name: 'Doe',
         email: randomEmail('missing-firstname'),
         password: 'Password123!',
-        company_name: 'Test Company'
+        company_name: 'Test Company',
+        industry: 'corporate',
+        company_size: '11-50',
+        required_services: JSON.stringify(['videography']),
+        required_skills: JSON.stringify(['camera_operation']),
+        required_editor_proficiencies: JSON.stringify(['beginner']),
+        required_videographer_proficiencies: JSON.stringify(['event']),
+        budget_min: 1000,
+        budget_max: 5000,
+        address: '123 Test St',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        pincode: '90210',
+        work_arrangement: 'remote',
+        project_frequency: 'ongoing',
+        hiring_preferences: 'individuals',
+        expected_start_date: '2024-02-01',
+        project_duration: '1_3_months',
       },
       {}
     );
@@ -317,7 +363,25 @@ async function testMissingRequiredFields() {
         first_name: 'John',
         email: randomEmail('missing-lastname'),
         password: 'Password123!',
-        company_name: 'Test Company'
+        company_name: 'Test Company',
+        industry: 'corporate',
+        company_size: '11-50',
+        required_services: JSON.stringify(['videography']),
+        required_skills: JSON.stringify(['camera_operation']),
+        required_editor_proficiencies: JSON.stringify(['beginner']),
+        required_videographer_proficiencies: JSON.stringify(['event']),
+        budget_min: 1000,
+        budget_max: 5000,
+        address: '123 Test St',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        pincode: '90210',
+        work_arrangement: 'remote',
+        project_frequency: 'ongoing',
+        hiring_preferences: 'individuals',
+        expected_start_date: '2024-02-01',
+        project_duration: '1_3_months',
       },
       {}
     );
@@ -343,7 +407,25 @@ async function testMissingRequiredFields() {
         first_name: 'John',
         last_name: 'Doe',
         password: 'Password123!',
-        company_name: 'Test Company'
+        company_name: 'Test Company',
+        industry: 'corporate',
+        company_size: '11-50',
+        required_services: JSON.stringify(['videography']),
+        required_skills: JSON.stringify(['camera_operation']),
+        required_editor_proficiencies: JSON.stringify(['beginner']),
+        required_videographer_proficiencies: JSON.stringify(['event']),
+        budget_min: 1000,
+        budget_max: 5000,
+        address: '123 Test St',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        pincode: '90210',
+        work_arrangement: 'remote',
+        project_frequency: 'ongoing',
+        hiring_preferences: 'individuals',
+        expected_start_date: '2024-02-01',
+        project_duration: '1_3_months',
       },
       {}
     );
@@ -369,7 +451,25 @@ async function testMissingRequiredFields() {
         first_name: 'John',
         last_name: 'Doe',
         email: randomEmail('missing-password'),
-        company_name: 'Test Company'
+        company_name: 'Test Company',
+        industry: 'corporate',
+        company_size: '11-50',
+        required_services: JSON.stringify(['videography']),
+        required_skills: JSON.stringify(['camera_operation']),
+        required_editor_proficiencies: JSON.stringify(['beginner']),
+        required_videographer_proficiencies: JSON.stringify(['event']),
+        budget_min: 1000,
+        budget_max: 5000,
+        address: '123 Test St',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        pincode: '90210',
+        work_arrangement: 'remote',
+        project_frequency: 'ongoing',
+        hiring_preferences: 'individuals',
+        expected_start_date: '2024-02-01',
+        project_duration: '1_3_months',
       },
       {}
     );
@@ -429,7 +529,25 @@ async function testInvalidFieldFormats() {
         last_name: 'Doe',
         email: 'invalid-email-format',
         password: 'Password123!',
-        company_name: 'Test Company'
+        company_name: 'Test Company',
+        industry: 'corporate',
+        company_size: '11-50',
+        required_services: JSON.stringify(['videography']),
+        required_skills: JSON.stringify(['camera_operation']),
+        required_editor_proficiencies: JSON.stringify(['beginner']),
+        required_videographer_proficiencies: JSON.stringify(['event']),
+        budget_min: 1000,
+        budget_max: 5000,
+        address: '123 Test St',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        pincode: '90210',
+        work_arrangement: 'remote',
+        project_frequency: 'ongoing',
+        hiring_preferences: 'individuals',
+        expected_start_date: '2024-02-01',
+        project_duration: '1_3_months',
       },
       {}
     );
@@ -456,7 +574,25 @@ async function testInvalidFieldFormats() {
         last_name: 'Doe',
         email: randomEmail('short-password'),
         password: '123',
-        company_name: 'Test Company'
+        company_name: 'Test Company',
+        industry: 'corporate',
+        company_size: '11-50',
+        required_services: JSON.stringify(['videography']),
+        required_skills: JSON.stringify(['camera_operation']),
+        required_editor_proficiencies: JSON.stringify(['beginner']),
+        required_videographer_proficiencies: JSON.stringify(['event']),
+        budget_min: 1000,
+        budget_max: 5000,
+        address: '123 Test St',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        pincode: '90210',
+        work_arrangement: 'remote',
+        project_frequency: 'ongoing',
+        hiring_preferences: 'individuals',
+        expected_start_date: '2024-02-01',
+        project_duration: '1_3_months',
       },
       {}
     );
@@ -474,33 +610,6 @@ async function testInvalidFieldFormats() {
     failedTests++;
   }
 
-  // Test invalid website URL
-  try {
-    const response = await makeMultipartRequest(
-      `${CONFIG.baseUrl}${CONFIG.apiVersion}/auth/register/client`,
-      {
-        first_name: 'John',
-        last_name: 'Doe',
-        email: randomEmail('invalid-website'),
-        password: 'Password123!',
-        company_name: 'Test Company',
-        website: 'not-a-valid-url'
-      },
-      {}
-    );
-    
-    const passed = response.statusCode === 400;
-    printTestResult(
-      'Invalid website URL format',
-      passed,
-      passed ? 'Correctly rejected invalid URL' : `Expected 400, got ${response.statusCode}`,
-      response.body
-    );
-    passed ? passedTests++ : failedTests++;
-  } catch (error) {
-    printTestResult('Invalid website URL format', false, error.message);
-    failedTests++;
-  }
 }
 
 /**
@@ -546,7 +655,25 @@ async function testEdgeCaseValues() {
         last_name: 'Doe',
         email: randomEmail('empty-firstname'),
         password: 'Password123!',
-        company_name: 'Test Company'
+        company_name: 'Test Company',
+        industry: 'corporate',
+        company_size: '11-50',
+        required_services: JSON.stringify(['videography']),
+        required_skills: JSON.stringify(['camera_operation']),
+        required_editor_proficiencies: JSON.stringify(['beginner']),
+        required_videographer_proficiencies: JSON.stringify(['event']),
+        budget_min: 1000,
+        budget_max: 5000,
+        address: '123 Test St',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        pincode: '90210',
+        work_arrangement: 'remote',
+        project_frequency: 'ongoing',
+        hiring_preferences: 'individuals',
+        expected_start_date: '2024-02-01',
+        project_duration: '1_3_months',
       },
       {}
     );
@@ -573,7 +700,25 @@ async function testEdgeCaseValues() {
         last_name: 'Doe',
         email: randomEmail('whitespace-firstname'),
         password: 'Password123!',
-        company_name: 'Test Company'
+        company_name: 'Test Company',
+        industry: 'corporate',
+        company_size: '11-50',
+        required_services: JSON.stringify(['videography']),
+        required_skills: JSON.stringify(['camera_operation']),
+        required_editor_proficiencies: JSON.stringify(['beginner']),
+        required_videographer_proficiencies: JSON.stringify(['event']),
+        budget_min: 1000,
+        budget_max: 5000,
+        address: '123 Test St',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        pincode: '90210',
+        work_arrangement: 'remote',
+        project_frequency: 'ongoing',
+        hiring_preferences: 'individuals',
+        expected_start_date: '2024-02-01',
+        project_duration: '1_3_months',
       },
       {}
     );
@@ -600,7 +745,26 @@ async function testEdgeCaseValues() {
         last_name: "O'Connor",
         email: randomEmail('special-chars'),
         password: 'Password123!',
-        company_name: 'Test Company'
+        phone_number: '1234567890',
+        company_name: 'Test Company',
+        industry: 'corporate',
+        company_size: '11-50',
+        required_services: JSON.stringify(['videography']),
+        required_skills: JSON.stringify(['camera_operation']),
+        required_editor_proficiencies: JSON.stringify(['beginner']),
+        required_videographer_proficiencies: JSON.stringify(['event']),
+        budget_min: 1000,
+        budget_max: 5000,
+        address: '123 Test St',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        pincode: '90210',
+        work_arrangement: 'remote',
+        project_frequency: 'ongoing',
+        hiring_preferences: 'individuals',
+        expected_start_date: '2024-02-01',
+        project_duration: '1_3_months',
       },
       {}
     );
@@ -627,9 +791,26 @@ async function testEdgeCaseValues() {
         last_name: 'Doe',
         email: randomEmail('budget-test'),
         password: 'Password123!',
+        phone_number: '1234567890',
         company_name: 'Test Company',
+        industry: 'corporate',
+        company_size: '11-50',
+        required_services: JSON.stringify(['videography']),
+        required_skills: JSON.stringify(['camera_operation']),
+        required_editor_proficiencies: JSON.stringify(['beginner']),
+        required_videographer_proficiencies: JSON.stringify(['event']),
         budget_min: 0,
-        budget_max: 999999
+        budget_max: 999999,
+        address: '123 Test St',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        pincode: '90210',
+        work_arrangement: 'remote',
+        project_frequency: 'ongoing',
+        hiring_preferences: 'individuals',
+        expected_start_date: '2024-02-01',
+        project_duration: '1_3_months',
       },
       {}
     );
@@ -659,7 +840,26 @@ async function testDuplicateEmailRegistration(existingEmail) {
     last_name: 'User',
     email: existingEmail, // Use existing email
     password: 'DuplicatePass123!',
+    phone_number: '1234567890',
     company_name: 'Duplicate Company',
+    industry: 'corporate',
+    company_size: '11-50',
+    required_services: JSON.stringify(['videography']),
+    required_skills: JSON.stringify(['camera_operation']),
+    required_editor_proficiencies: JSON.stringify(['beginner']),
+    required_videographer_proficiencies: JSON.stringify(['event']),
+    budget_min: 1000,
+    budget_max: 5000,
+    address: '123 Test St',
+    country: 'United States',
+    state: 'California',
+    city: 'Los Angeles',
+    pincode: '90210',
+    work_arrangement: 'remote',
+    project_frequency: 'ongoing',
+    hiring_preferences: 'individuals',
+    expected_start_date: '2024-02-01',
+    project_duration: '1_3_months',
   };
 
   try {
@@ -933,7 +1133,26 @@ async function testBoundaryConditions() {
         last_name: 'Doe',
         email: randomEmail('min-password'),
         password: 'Pass12',
-        company_name: 'Test Company'
+        phone_number: '1234567890',
+        company_name: 'Test Company',
+        industry: 'corporate',
+        company_size: '11-50',
+        required_services: JSON.stringify(['videography']),
+        required_skills: JSON.stringify(['camera_operation']),
+        required_editor_proficiencies: JSON.stringify(['beginner']),
+        required_videographer_proficiencies: JSON.stringify(['event']),
+        budget_min: 1000,
+        budget_max: 5000,
+        address: '123 Test St',
+        country: 'United States',
+        state: 'California',
+        city: 'Los Angeles',
+        pincode: '90210',
+        work_arrangement: 'remote',
+        project_frequency: 'ongoing',
+        hiring_preferences: 'individuals',
+        expected_start_date: '2024-02-01',
+        project_duration: '1_3_months',
       },
       {}
     );

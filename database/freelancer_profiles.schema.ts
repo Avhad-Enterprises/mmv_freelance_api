@@ -46,8 +46,10 @@ export const migrate = async (dropFirst = false) => {
         .inTable('users')
         .onDelete('CASCADE');
 
-      // Professional Info
-      table.string('profile_title', 255).notNullable();
+  // Professional Info
+  // profile_title is optional during initial registration - make it nullable so
+  // the backend doesn't require the frontend to send it.
+  table.string('profile_title', 255).nullable();
       table.text('short_description').nullable();
       table.string('experience_level', 50).nullable().comment('entry, intermediate, expert, master');
 
@@ -66,6 +68,7 @@ export const migrate = async (dropFirst = false) => {
 
       // Pricing & Availability
       table.decimal('hourly_rate', 10, 2).nullable();
+      table.string('currency', 3).defaultTo('INR').comment('Currency code: INR, USD, EUR');
       table.string('availability', 50).nullable().comment('full_time, part_time, flexible, on_demand');
       table.string('work_type', 50).nullable().comment('remote, on_site, hybrid');
       table.string('hours_per_week', 50).nullable().comment('less_than_20, 20_30, 30_40, more_than_40');
