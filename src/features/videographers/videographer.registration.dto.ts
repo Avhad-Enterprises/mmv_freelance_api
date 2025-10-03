@@ -3,6 +3,11 @@ import { IsString, IsOptional, IsEmail, IsNumber, IsArray, IsEnum, IsNotEmpty, M
 import { Transform } from 'class-transformer';
 
 export class VideographerRegistrationDto {
+  // Step 1: Basic Information (Required)
+  @IsOptional()
+  @IsString()
+  username?: string;
+
   @IsNotEmpty()
   @IsString()
   first_name: string;
@@ -20,22 +25,13 @@ export class VideographerRegistrationDto {
   @MinLength(6)
   password: string;
 
-  @IsOptional()
-  @IsString()
-  phone_number?: string;
-
-  @IsOptional()
-  @IsString()
-  profile_picture?: string;
-
-  @IsString()
-  profile_title: string;
-
-  @IsOptional()
+  // Step 2: Skills & Location (Required)
+  @IsNotEmpty()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       try {
-        return JSON.parse(value);
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
       } catch {
         return value.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
       }
@@ -43,33 +39,105 @@ export class VideographerRegistrationDto {
     return Array.isArray(value) ? value : [];
   })
   @IsArray()
-  skills?: string[];
+  skills: string[];
 
-  @IsOptional()
-  @IsEnum(['entry', 'intermediate', 'expert', 'master'])
-  experience_level?: string;
+  @IsNotEmpty()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return value.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [];
+  })
+  @IsArray()
+  superpowers: string[];
 
-  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
+  country: string;
+
+  @IsNotEmpty()
+  @IsString()
+  city: string;
+
+  @IsNotEmpty()
+  @Transform(({ value }) => typeof value === 'string' ? parseFloat(value) : value)
+  @IsNumber()
+  latitude: number;
+
+  @IsNotEmpty()
+  @Transform(({ value }) => typeof value === 'string' ? parseFloat(value) : value)
+  @IsNumber()
+  longitude: number;
+
+  @IsNotEmpty()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return value.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [];
+  })
+  @IsArray()
+  portfolio_links: string[];
+
+  @IsNotEmpty()
   @Transform(({ value }) => typeof value === 'string' ? parseFloat(value) : value)
   @IsNumber()
   @Min(1)
   @Max(10000)
-  hourly_rate?: number;
+  hourly_rate: number;
 
   @IsOptional()
-  @Transform(({ value }) => typeof value === 'string' ? JSON.parse(value) : value)
+  @IsString()
+  currency?: string;
+
+  // Step 3: Verification & Documents (Required)
+  @IsNotEmpty()
+  @IsString()
+  phone_number: string;
+
+  @IsOptional()
+  @IsString()
+  profile_picture?: string;
+
+  @IsNotEmpty()
+  @IsString()
+  id_type: string;
+
+  @IsOptional()
+  @IsString()
+  id_document?: string;
+
+  // Step 4: Professional Details (Required)
+  @IsNotEmpty()
+  @IsString()
+  short_description: string;
+
+  @IsNotEmpty()
+  @IsString()
+  availability: string;
+
+  @IsNotEmpty()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return value.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      }
+    }
+    return Array.isArray(value) ? value : [];
+  })
   @IsArray()
-  portfolio_links?: string[];
-
-  @IsOptional()
-  @IsString()
-  short_description?: string;
-
-  @IsOptional()
-  @IsString()
-  city?: string;
-
-  @IsOptional()
-  @IsString()
-  country?: string;
+  languages: string[];
 }

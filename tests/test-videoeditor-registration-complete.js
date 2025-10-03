@@ -157,21 +157,14 @@ async function testCompleteVideoEditorRegistration() {
   const email = randomEmail('complete-videoeditor');
 
   const videoEditorData = {
-    // Required user fields
+    // Step 1: Basic Information (Required)
+    username: randomUsername('alexjohnson'),
     first_name: 'Alex',
     last_name: 'Johnson',
     email: email,
     password: 'VideoEditor123!',
 
-    // Optional user fields
-    phone_number: '+1987654321',
-    city: 'Los Angeles',
-    country: 'United States',
-
-    // Required video editor fields
-    profile_title: 'Professional Video Editor & Motion Graphics Designer',
-
-    // Optional video editor fields
+    // Step 2: Skills & Portfolio (Required)
     skills: JSON.stringify([
       'Adobe Premiere Pro',
       'After Effects',
@@ -181,14 +174,30 @@ async function testCompleteVideoEditorRegistration() {
       'Color Grading',
       'Audio Editing'
     ]),
-    experience_level: 'expert',
-    hourly_rate: 75,
+    superpowers: JSON.stringify([
+      'Lightning Fast Turnaround',
+      'Award-Winning Visual Style',
+      'Multi-Platform Expertise'
+    ]),
     portfolio_links: JSON.stringify([
       'https://vimeo.com/alexjohnson',
       'https://youtube.com/alexvideoedits',
       'https://behance.net/alexjohnson'
     ]),
-    short_description: 'Professional video editor with 8+ years of experience in creating engaging content for brands, documentaries, and social media. Specialized in motion graphics, color grading, and storytelling through visual narrative.',
+    hourly_rate: 75,
+    currency: 'USD',
+
+    // Step 3: Verification & Documents (Required)
+    phone_number: '+1987654321',
+    id_type: 'passport',
+
+    // Step 4: Professional Details (Required)
+    short_description: 'Professional video editor with 8+ years of experience in post-production, motion graphics, and color grading for film and television.',
+    availability: 'full_time',
+    languages: JSON.stringify([
+      'English',
+      'Spanish'
+    ]),
   };
 
   try {
@@ -258,9 +267,15 @@ async function testMinimalVideoEditorRegistration() {
     last_name: 'Wilson',
     email: email,
     password: 'MinimalEditor123!',
-    profile_title: 'Entry Level Video Editor',
-    experience_level: 'entry',
+    skills: JSON.stringify(['Basic Editing']),
+    superpowers: JSON.stringify(['Fast Learner']),
+    portfolio_links: JSON.stringify(['https://example.com/portfolio']),
     hourly_rate: 25,
+    phone_number: '+1987654321',
+    id_type: 'passport',
+    short_description: 'Entry level video editor looking to grow.',
+    availability: 'part_time',
+    languages: JSON.stringify(['English'])
   };
 
   try {
@@ -292,7 +307,7 @@ async function testMinimalVideoEditorRegistration() {
 async function testMissingRequiredFields() {
   printSection('MISSING REQUIRED FIELDS TESTS');
 
-  const requiredFields = ['first_name', 'last_name', 'email', 'password', 'profile_title'];
+  const requiredFields = ['first_name', 'last_name', 'email', 'password', 'skills', 'superpowers', 'portfolio_links', 'hourly_rate', 'phone_number', 'id_type', 'short_description', 'availability', 'languages'];
 
   for (const field of requiredFields) {
     try {
@@ -301,7 +316,17 @@ async function testMissingRequiredFields() {
         last_name: 'Editor',
         email: randomEmail('missing-field'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor'
+        username: 'testeditor',
+        skills: JSON.stringify(['Adobe Premiere Pro']),
+        superpowers: JSON.stringify(['Fast Turnaround']),
+        portfolio_links: JSON.stringify(['https://youtube.com/test']),
+        hourly_rate: 50,
+        currency: 'USD',
+        phone_number: '+1234567890',
+        id_type: 'passport',
+        short_description: 'Test description',
+        availability: 'full_time',
+        languages: JSON.stringify(['English'])
       };
 
       // Remove the required field
@@ -597,8 +622,15 @@ async function testEdgeCaseValues() {
         last_name: 'Case',
         email: randomEmail('edge-rate'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor',
-        hourly_rate: 1 // Minimum allowed
+        skills: JSON.stringify(['Skill1']),
+        superpowers: JSON.stringify(['Superpower1']),
+        portfolio_links: JSON.stringify(['https://example.com']),
+        hourly_rate: 1, // Minimum allowed
+        phone_number: '+1234567890',
+        id_type: 'passport',
+        short_description: 'Description',
+        availability: 'full_time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
@@ -932,7 +964,15 @@ async function testBoundaryConditions() {
         last_name: 'Password',
         email: randomEmail('min-password'),
         password: '123456', // Exactly 6 characters
-        profile_title: 'Video Editor'
+        skills: JSON.stringify(['Skill1']),
+        superpowers: JSON.stringify(['Superpower1']),
+        portfolio_links: JSON.stringify(['https://example.com']),
+        hourly_rate: 50,
+        phone_number: '+1234567890',
+        id_type: 'passport',
+        short_description: 'Description',
+        availability: 'full_time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
@@ -1016,8 +1056,15 @@ async function testBoundaryConditions() {
         last_name: 'Rate',
         email: randomEmail('boundary-rate'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor',
-        hourly_rate: 1 // Minimum allowed
+        skills: JSON.stringify(['Skill1']),
+        superpowers: JSON.stringify(['Superpower1']),
+        portfolio_links: JSON.stringify(['https://example.com']),
+        hourly_rate: 1, // Minimum allowed
+        phone_number: '+1234567890',
+        id_type: 'passport',
+        short_description: 'Description',
+        availability: 'full_time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
@@ -1044,8 +1091,15 @@ async function testBoundaryConditions() {
         last_name: 'Rate',
         email: randomEmail('max-rate'),
         password: 'VideoEditor123!',
-        profile_title: 'Video Editor',
-        hourly_rate: 10000 // Maximum allowed
+        skills: JSON.stringify(['Skill1']),
+        superpowers: JSON.stringify(['Superpower1']),
+        portfolio_links: JSON.stringify(['https://example.com']),
+        hourly_rate: 10000, // Maximum allowed
+        phone_number: '+1234567890',
+        id_type: 'passport',
+        short_description: 'Description',
+        availability: 'full_time',
+        languages: JSON.stringify(['English'])
       },
       {}
     );
@@ -1103,7 +1157,15 @@ async function testDuplicateEmailRegistration(existingEmail) {
     last_name: 'Editor',
     email: existingEmail, // Use existing email
     password: 'DuplicateEditor123!',
-    profile_title: 'Duplicate Video Editor',
+    skills: JSON.stringify(['Skill1']),
+    superpowers: JSON.stringify(['Superpower1']),
+    portfolio_links: JSON.stringify(['https://example.com']),
+    hourly_rate: 50,
+    phone_number: '+1234567890',
+    id_type: 'passport',
+    short_description: 'Description',
+    availability: 'full_time',
+    languages: JSON.stringify(['English'])
   };
 
   try {
@@ -1196,6 +1258,122 @@ function cleanupTestFiles() {
 }
 
 /**
+ * Test profile fetching to verify data persistence after registration
+ */
+async function testVideoEditorProfileVerification(email, password = 'VideoEditor123!') {
+  printSection('Profile Data Verification Test');
+
+  try {
+    console.log(`🔍 Attempting to login with email: ${email}`);
+
+    // First login to get token
+    const loginResponse = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: email,
+      password: password
+    });
+
+    if (loginResponse.statusCode !== 200 || !loginResponse.body?.success) {
+      console.log('❌ Login response:', JSON.stringify(loginResponse, null, 2));
+      printTestResult('Profile Verification - Login', false, `Failed to login for profile verification: ${loginResponse.body?.message || 'Unknown error'}`);
+      failedTests++;
+      return;
+    }
+
+    const token = loginResponse.body.data.token;
+    const loggedInUser = loginResponse.body.data.user;
+    console.log('✅ Login successful');
+    console.log('   Logged in user ID:', loggedInUser.user_id, 'Email:', loggedInUser.email);
+
+    // Now fetch profile using /users/me endpoint
+    console.log('🔍 Fetching profile with token...');
+    const profileResponse = await fetch(`${CONFIG.baseUrl}${CONFIG.apiVersion}/users/me`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!profileResponse.ok) {
+        const errorText = await profileResponse.text();
+        console.log('❌ Profile fetch failed with text:', errorText);
+        printTestResult('Profile Verification - Fetch Profile', false, `Failed to fetch profile: ${profileResponse.status} ${profileResponse.statusText}`);
+        failedTests++;
+        return;
+    }
+
+    const profileData = await profileResponse.json();
+    console.log('✅ Profile fetched successfully');
+
+    // The response structure is { success: true, data: { user, profile, userType } }
+    const userData = profileData.data.user;
+    const profileInfo = profileData.data.profile;
+
+    // Verify that required user fields are not null
+    const requiredUserFields = [
+      'user_id', 'first_name', 'last_name', 'username', 'email', 'phone_number'
+    ];
+
+    let nullUserFields = [];
+    requiredUserFields.forEach(field => {
+      if (userData[field] === null || userData[field] === undefined) {
+        nullUserFields.push(field);
+      }
+    });
+
+    // Verify that required profile fields are not null
+    const requiredProfileFields = [
+      'skills', 'superpowers', 'portfolio_links', 'hourly_rate', 'currency', 'short_description', 'languages', 'availability', 'id_type'
+    ];
+
+    let nullProfileFields = [];
+    requiredProfileFields.forEach(field => {
+      if (profileInfo[field] === null || profileInfo[field] === undefined) {
+        nullProfileFields.push(field);
+      }
+    });
+
+    const allNullFields = [...nullUserFields.map(f => `user.${f}`), ...nullProfileFields.map(f => `profile.${f}`)];
+
+    if (allNullFields.length > 0) {
+      printTestResult('Profile Verification - Data Persistence', false,
+        `The following fields are null/undefined: ${allNullFields.join(', ')}`);
+      console.log('📋 Profile Data:', JSON.stringify(profileData.data, null, 2));
+      failedTests++;
+    } else {
+      printTestResult('Profile Verification - Data Persistence', true,
+        'All profile fields contain data as expected');
+      console.log('✅ Profile data verified successfully!');
+      console.log('\n📋 ===== COMPLETE USER DATA FROM DATABASE =====');
+      console.log('🔹 USER TABLE DATA:');
+      Object.keys(userData).forEach(key => {
+        console.log(`   ${key}: ${userData[key]}`);
+      });
+      console.log('\n🔹 FREELANCER PROFILE DATA:');
+      Object.keys(profileInfo).forEach(key => {
+        if (key !== 'videoeditor') {
+          console.log(`   ${key}: ${typeof profileInfo[key] === 'object' ? JSON.stringify(profileInfo[key]) : profileInfo[key]}`);
+        }
+      });
+      console.log('\n🔹 VIDEO EDITOR SPECIFIC DATA:');
+      if (profileInfo.videoeditor) {
+        Object.keys(profileInfo.videoeditor).forEach(key => {
+          console.log(`   ${key}: ${profileInfo.videoeditor[key]}`);
+        });
+      }
+      console.log('\n🔹 USER TYPE:', profileData.data.userType);
+      console.log('===============================================\n');
+      passedTests++;
+    }
+
+  } catch (error) {
+    console.log('❌ Unexpected error:', error);
+    printTestResult('Profile Verification', false, `Unexpected error: ${error.message}`);
+    failedTests++;
+  }
+}
+
+/**
  * Run all video editor registration tests
  */
 async function runCompleteVideoEditorTests() {
@@ -1223,6 +1401,9 @@ async function runCompleteVideoEditorTests() {
 
       // Test login with registered user
       await testVideoEditorLogin(registrationData.user.email);
+
+      // Test profile fetching to verify data persistence
+      await testVideoEditorProfileVerification(registrationData.user.email);
     }
 
     // Test invalid file uploads

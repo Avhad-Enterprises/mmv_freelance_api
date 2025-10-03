@@ -86,14 +86,15 @@ export class AuthService {
     const [user] = await DB(USERS_TABLE).insert({
       first_name: data.first_name,
       last_name: data.last_name,
-      username: data.email.split('@')[0],
+      username: data.username || data.email.split('@')[0],
       email: data.email,
       password: hashedPassword,
       phone_number: data.phone_number,
       profile_picture: profilePictureUrl,
-      address_line_first: data.address_line_first,
-      city: data.city,
       country: data.country,
+      state: data.state,
+      city: data.city,
+      pincode: data.pincode,
       is_active: true,
     }).returning('*');
 
@@ -103,12 +104,21 @@ export class AuthService {
       user_id: user.user_id,
       company_name: data.company_name,
       industry: data.industry,
-      website: data.website,
-      required_services: JSON.stringify(data.required_services || []),
+      company_size: data.company_size,
+      required_services: Array.isArray(data.required_services) ? JSON.stringify(data.required_services) : data.required_services,
+      required_skills: Array.isArray(data.required_skills) ? JSON.stringify(data.required_skills) : data.required_skills,
+      required_editor_proficiencies: Array.isArray(data.required_editor_proficiencies) ? JSON.stringify(data.required_editor_proficiencies) : data.required_editor_proficiencies,
+      required_videographer_proficiencies: Array.isArray(data.required_videographer_proficiencies) ? JSON.stringify(data.required_videographer_proficiencies) : data.required_videographer_proficiencies,
       budget_min: data.budget_min,
       budget_max: data.budget_max,
-      id_document_url: idDocumentUrl,
+      address: data.address,
+      tax_id: data.tax_id,
       business_document_url: businessDocumentUrl,
+      work_arrangement: data.work_arrangement,
+      project_frequency: data.project_frequency,
+      hiring_preferences: data.hiring_preferences,
+      expected_start_date: data.expected_start_date,
+      project_duration: data.project_duration,
     });
 
     // Generate token
@@ -173,13 +183,15 @@ export class AuthService {
     const [user] = await DB(USERS_TABLE).insert({
       first_name: data.first_name,
       last_name: data.last_name,
-      username: data.email.split('@')[0],
+      username: data.username || data.email.split('@')[0],
       email: data.email,
       password: hashedPassword,
       phone_number: data.phone_number,
       profile_picture: profilePictureUrl,
       city: data.city,
       country: data.country,
+      latitude: data.latitude,
+      longitude: data.longitude,
       is_active: true,
     }).returning('*');
 
@@ -187,14 +199,21 @@ export class AuthService {
 
     const [freelancerProfile] = await DB('freelancer_profiles').insert({
       user_id: user.user_id,
-      profile_title: data.profile_title,
-      skills: JSON.stringify(data.skills || []),
-      experience_level: data.experience_level,
+      profile_title: `${user.first_name} ${user.last_name}`,
+      skills: Array.isArray(data.skills) ? JSON.stringify(data.skills) : data.skills,
+      superpowers: Array.isArray(data.superpowers) ? JSON.stringify(data.superpowers) : data.superpowers,
+      portfolio_links: Array.isArray(data.portfolio_links) ? JSON.stringify(data.portfolio_links) : data.portfolio_links,
       hourly_rate: data.hourly_rate,
-      portfolio_links: JSON.stringify(data.portfolio_links || []),
+      currency: data.currency || 'INR',
       short_description: data.short_description,
+      languages: Array.isArray(data.languages) ? JSON.stringify(data.languages) : data.languages,
+      availability: data.availability,
+      id_type: data.id_type,
       id_document_url: idDocumentUrl,
     }).returning('*');
+
+    // Clean up any existing videographer profile for this freelancer (for test cleanup)
+    await DB('videographer_profiles').where({ profile_id: freelancerProfile.profile_id }).del();
 
     await DB('videographer_profiles').insert({
       profile_id: freelancerProfile.profile_id,
@@ -262,13 +281,11 @@ export class AuthService {
     const [user] = await DB(USERS_TABLE).insert({
       first_name: data.first_name,
       last_name: data.last_name,
-      username: data.email.split('@')[0],
+      username: data.username || data.email.split('@')[0],
       email: data.email,
       password: hashedPassword,
       phone_number: data.phone_number,
       profile_picture: profilePictureUrl,
-      city: data.city,
-      country: data.country,
       is_active: true,
     }).returning('*');
 
@@ -276,14 +293,21 @@ export class AuthService {
 
     const [freelancerProfile] = await DB('freelancer_profiles').insert({
       user_id: user.user_id,
-      profile_title: data.profile_title,
-      skills: JSON.stringify(data.skills || []),
-      experience_level: data.experience_level,
+      profile_title: `${user.first_name} ${user.last_name}`,
+      skills: Array.isArray(data.skills) ? JSON.stringify(data.skills) : data.skills,
+      superpowers: Array.isArray(data.superpowers) ? JSON.stringify(data.superpowers) : data.superpowers,
+      portfolio_links: Array.isArray(data.portfolio_links) ? JSON.stringify(data.portfolio_links) : data.portfolio_links,
       hourly_rate: data.hourly_rate,
-      portfolio_links: JSON.stringify(data.portfolio_links || []),
+      currency: data.currency || 'INR',
       short_description: data.short_description,
+      languages: Array.isArray(data.languages) ? JSON.stringify(data.languages) : data.languages,
+      availability: data.availability,
+      id_type: data.id_type,
       id_document_url: idDocumentUrl,
     }).returning('*');
+
+    // Clean up any existing videoeditor profile for this freelancer (for test cleanup)
+    await DB('videoeditor_profiles').where({ profile_id: freelancerProfile.profile_id }).del();
 
     await DB('videoeditor_profiles').insert({
       profile_id: freelancerProfile.profile_id,
