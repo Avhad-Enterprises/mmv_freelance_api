@@ -11,6 +11,47 @@ import DB from './index.schema';
 
 export const ROLE = 'role';
 
+// ========== ROLE DEFINITIONS ==========
+interface RoleData {
+  name: string;
+  label: string;
+  description: string;
+  is_active: boolean;
+}
+
+const predefinedRoles: RoleData[] = [
+  {
+    name: 'CLIENT',
+    label: 'Client',
+    description: 'Business or individual hiring freelancers',
+    is_active: true,
+  },
+  {
+    name: 'VIDEOGRAPHER',
+    label: 'Videographer',
+    description: 'Video shooting professional',
+    is_active: true,
+  },
+  {
+    name: 'VIDEO_EDITOR',
+    label: 'Video Editor',
+    description: 'Video editing professional',
+    is_active: true,
+  },
+  {
+    name: 'ADMIN',
+    label: 'Administrator',
+    description: 'Platform administrator with management access',
+    is_active: true,
+  },
+  {
+    name: 'SUPER_ADMIN',
+    label: 'Super Administrator',
+    description: 'Full platform access with all permissions',
+    is_active: true,
+  },
+];
+
 export const seed = async (dropFirst = false) => {
     try {
         if (dropFirst) {
@@ -33,6 +74,10 @@ export const seed = async (dropFirst = false) => {
                 table.timestamp('created_at').defaultTo(DB.fn.now());
                 table.timestamp('updated_at').defaultTo(DB.fn.now());
             });
+
+            console.log('Inserting role data...');
+            await DB(ROLE).insert(predefinedRoles);
+            console.log(`Inserted ${predefinedRoles.length} roles`);
 
             console.log('Finished Seeding Tables');
             console.log('Creating Triggers');
