@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
+import { requireRole } from '../../middlewares/role.middleware';
 import validationMiddleware from '../../middlewares/validation.middleware';
 import categoryController from './category.controller';
 import { CategoryDto } from './category.dto';

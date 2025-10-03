@@ -25,6 +25,19 @@ const TEST_FILES = [
   'test-videographer-routes.js',
   'test-videoeditor-routes.js',
   'test-file-upload.js',
+  'test-client-registration.js',
+  'test-frontend-upload.js',
+  'test-login.js',
+  'test-rbac-complete.js',
+  'test-register.js',
+  'test-registration-upload.ts',
+  'test-role-based-access.js',
+  'test-s3-upload.ts',
+  'test-client-registration-complete.js',
+  'test-registration-suite.js',
+  'test-utils.js',
+  'test-videoeditor-registration-complete.js',
+  'test-videographer-registration-complete.js',
 ];
 
 // Test results
@@ -43,7 +56,11 @@ function runTestFile(testFile) {
     console.log(`${COLORS.blue}${'='.repeat(80)}${COLORS.reset}\n`);
     
     const testPath = path.join(__dirname, testFile);
-    const child = spawn('node', [testPath], {
+    const isTypeScript = testFile.endsWith('.ts');
+    const command = isTypeScript ? 'npx' : 'node';
+    const args = isTypeScript ? ['ts-node', testPath] : [testPath];
+    
+    const child = spawn(command, args, {
       stdio: 'inherit',
       env: { ...process.env },
     });

@@ -1,6 +1,5 @@
 import { Router } from "express";
 import Route from "../../interfaces/route.interface";
-import { requireRole } from '../../middlewares/role.middleware';
 
 import validationMiddleware from "../../middlewares/validation.middleware";
 import TagsController from "./tag.controller";

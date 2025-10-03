@@ -339,4 +339,203 @@ export class UserController {
       next(error);
     }
   };
+
+  // Super Admin User Management Methods
+
+  /**
+   * Get all users with pagination
+   * GET /api/v1/users
+   */
+  public getAllUsers = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string;
+      const role = req.query.role as string;
+
+      const result = await this.userService.getAllUsers({ page, limit, search, role });
+      
+      res.status(200).json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Create new user (any type)
+   * POST /api/v1/users
+   */
+  public createUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userData = req.body;
+      const result = await this.userService.createUser(userData);
+      
+      res.status(201).json({
+        success: true,
+        message: 'User created successfully',
+        data: result
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Update user by ID
+   * PUT /api/v1/users/:id
+   */
+  public updateUserById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const result = await this.userService.updateUserById(userId, updateData);
+      
+      res.status(200).json({
+        success: true,
+        message: 'User updated successfully',
+        data: result
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Delete user permanently
+   * DELETE /api/v1/users/:id
+   */
+  public deleteUserById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      await this.userService.deleteUserById(userId);
+      
+      res.status(200).json({
+        success: true,
+        message: 'User deleted successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Role Management Methods
+
+  /**
+   * Get user's roles
+   * GET /api/v1/users/:id/roles
+   */
+  public getUserRoles = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      const roles = await this.userService.getUserRoles(userId);
+      
+      res.status(200).json({
+        success: true,
+        data: roles
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Assign role to user
+   * POST /api/v1/users/:id/roles
+   */
+  public assignRoleToUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { roleName } = req.body;
+      
+      if (!roleName) {
+        throw new HttpException(400, 'Role name is required');
+      }
+      
+      await this.userService.assignRoleToUser(userId, roleName);
+      
+      res.status(200).json({
+        success: true,
+        message: `Role "${roleName}" assigned to user successfully`
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Remove role from user
+   * DELETE /api/v1/users/:id/roles/:roleId
+   */
+  public removeRoleFromUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      const roleId = parseInt(req.params.roleId);
+      
+      await this.userService.removeRoleFromUser(userId, roleId);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Role removed from user successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Get user's permissions
+   * GET /api/v1/users/:id/permissions
+   */
+  public getUserPermissions = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      const permissions = await this.userService.getUserPermissions(userId);
+      
+      res.status(200).json({
+        success: true,
+        data: permissions
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
