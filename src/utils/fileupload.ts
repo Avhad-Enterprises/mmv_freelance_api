@@ -62,8 +62,11 @@ export const s3 = new S3Client({
     secretAccessKey: process.env.AWS_SECRET_KEY,
   },
   region: process.env.AWS_REGION,
-  endpoint: process.env.AWS_ENDPOINT,
-  forcePathStyle: true, // Supabase documentation recommends true for S3 compatibility
+  // If AWS_ENDPOINT is provided we assume an S3-compatible custom endpoint (eg. Supabase, MinIO)
+  // and enable path-style requests. For real AWS S3 leave AWS_ENDPOINT empty and use virtual-hosted style.
+  ...(process.env.AWS_ENDPOINT
+    ? { endpoint: process.env.AWS_ENDPOINT, forcePathStyle: true }
+    : { forcePathStyle: false }),
 });
 
 // Upload a single file (exportable for services)
