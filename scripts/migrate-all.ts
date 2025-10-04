@@ -113,7 +113,10 @@ const migrateAll = async (dropFirst = false, verbose = false) => {
     let migratedCount = 0;
     let skippedCount = 0;
     
-    for (const schemaFile of MIGRATION_ORDER) {
+    // Use reverse order for dropping to handle dependencies
+    const migrationOrder = dropFirst ? [...MIGRATION_ORDER].reverse() : MIGRATION_ORDER;
+    
+    for (const schemaFile of migrationOrder) {
       const schemaName = schemaFile.replace('.schema.ts', '');
       const schemaPath = path.join(DATABASE_DIR, schemaFile);
       
