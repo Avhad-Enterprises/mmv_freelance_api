@@ -419,9 +419,13 @@ class UserService {
 
     // Apply role filter
     if (role) {
-      query = query.having(DB.raw(`
-        json_agg(r.name) @> ?::jsonb
-      `, [`["${role}"]`]));
+      query = query.whereExists(function() {
+        this.select('*')
+          .from(T.USER_ROLES)
+          .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
+          .whereRaw(`${T.USER_ROLES}.user_id = ${T.USERS_TABLE}.user_id`)
+          .where(`${T.ROLE}.name`, role);
+      });
     }
 
     // Get total count
@@ -436,6 +440,17 @@ class UserService {
           .orWhere(`${T.USERS_TABLE}.last_name`, 'ilike', `%${search}%`)
           .orWhere(`${T.USERS_TABLE}.email`, 'ilike', `%${search}%`)
           .orWhere(`${T.USERS_TABLE}.username`, 'ilike', `%${search}%`);
+      });
+    }
+
+    // Apply role filter to count query
+    if (role) {
+      countQuery.whereExists(function() {
+        this.select('*')
+          .from(T.USER_ROLES)
+          .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
+          .whereRaw(`${T.USER_ROLES}.user_id = ${T.USERS_TABLE}.user_id`)
+          .where(`${T.ROLE}.name`, role);
       });
     }
 
