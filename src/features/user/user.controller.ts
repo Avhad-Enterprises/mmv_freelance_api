@@ -138,27 +138,29 @@ export class UserController {
   ): Promise<void> => {
     try {
       const { email }: PasswordResetRequestDto = req.body;
-      
+
       const user = await this.userService.getUserByEmail(email);
-      if (!user) {
-        throw new HttpException(404, 'User not found');
+
+      // Always return success for security reasons (prevent email enumeration)
+      // Only generate token if user exists
+      if (user) {
+        // Generate reset token (expires in 1 hour)
+        const crypto = require('crypto');
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+
+        await this.userService.saveResetToken(user.user_id, resetToken, expiresAt);
+
+        // TODO: Send email with reset link
+        // await sendPasswordResetEmail(email, resetToken);
       }
-
-      // Generate reset token (expires in 1 hour)
-      const crypto = require('crypto');
-      const resetToken = crypto.randomBytes(32).toString('hex');
-      const expiresAt = new Date(Date.now() + 3600000); // 1 hour
-
-      await this.userService.saveResetToken(user.user_id, resetToken, expiresAt);
-
-      // TODO: Send email with reset link
-      // await sendPasswordResetEmail(email, resetToken);
 
       res.status(200).json({
         success: true,
-        message: 'Password reset link sent to email',
+        message: 'If the email exists, a password reset link has been sent',
         // For development only - remove in production
-        resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined
+        resetToken: user && process.env.NODE_ENV === 'development' ?
+          'Token generated but not exposed for security' : undefined
       });
     } catch (error) {
       next(error);
