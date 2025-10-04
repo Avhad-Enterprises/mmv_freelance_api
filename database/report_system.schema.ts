@@ -15,7 +15,7 @@ export const seed = async (dropFirst = false) => {
     try {
         if (dropFirst) {
             console.log('Dropping Tables');
-            await DB.schema.dropTable(REPORT_TABLE);
+            await DB.schema.dropTableIfExists(REPORT_TABLE);
             console.log('Dropped Tables');
         }
         console.log('Seeding Tables');
