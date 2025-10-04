@@ -25,6 +25,10 @@ npm install
 cp .env.example .env
 # Configure your .env file with database, AWS, Firebase, and Razorpay credentials
 
+# Configure Email Service
+# Follow EMAIL_SETUP_GUIDE.md for Gmail SMTP setup
+# Required: EMAIL_USER and EMAIL_PASSWORD environment variables
+
 # Build project
 npm run build
 

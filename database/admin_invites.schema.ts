@@ -9,48 +9,68 @@
 //
 import DB from './index.schema';
 
-export const INVITATION_TABLE = 'invitation ';
+export const INVITATION_TABLE = 'invitation';
 
 export const seed = async (dropFirst = false) => {
     try {
         if (dropFirst) {
             console.log('Dropping Tables');
-            await DB.schema.dropTableIfExists(INVITATION_TABLE);
+            await DB.raw(`DROP TABLE IF EXISTS "${INVITATION_TABLE}" CASCADE`);
             console.log('Dropped Tables');
         }
         console.log('Seeding Tables');
-        // await DB.raw("set search_path to public")
-        await DB.schema.createTable(INVITATION_TABLE, table => {
-            table.increments('invitation_id').primary();
-            table.string('full_name').notNullable();
-            table.string('email').notNullable();
-            table.text('token_hash').nullable();
-            table.enum('status', ['pending', 'accepted', 'revoked', 'expired'])
-                .notNullable()
-                .defaultTo('pending');
-            table.string('account_type').notNullable().defaultTo('admin');
-            table.string('role').nullable();
-            table.boolean('is_used').defaultTo(false);
-            table.integer('invited_by').nullable();
-            table.timestamp('expires_at').notNullable();
-            table.timestamp("created_at").defaultTo(DB.fn.now());
-            table.timestamp('used_at').nullable();
-            table.jsonb('payload').nullable();
-            table.string("password").nullable();
-            table.timestamp('updated_at').defaultTo(DB.fn.now());
-        });
 
+        // Check if table exists
+        const tableExists = await DB.schema.hasTable(INVITATION_TABLE);
 
-        console.log('Finished Seeding Tables');
-        console.log('Creating Triggers');
-        await DB.raw(`
-          CREATE TRIGGER update_timestamp
-          BEFORE UPDATE
-          ON ${INVITATION_TABLE}
-          FOR EACH ROW
-          EXECUTE PROCEDURE update_timestamp();
-        `);
-        console.log('Finished Creating Triggers');
+        if (!tableExists) {
+            await DB.schema.createTable(INVITATION_TABLE, table => {
+                table.increments('invitation_id').primary();
+
+                // Invitee details
+                table.string('first_name', 255).notNullable();
+                table.string('last_name', 255).notNullable();
+                table.string('email', 255).unique().notNullable();
+
+                // Invitation details
+                table.text('invite_token').notNullable();
+                table.enum('status', ['pending', 'accepted', 'revoked', 'expired'])
+                    .notNullable()
+                    .defaultTo('pending');
+
+                // Role assignment (will be assigned when user accepts invite)
+                table.string('assigned_role', 50).nullable(); // References role.name
+
+                // Security
+                table.string('password', 255).nullable(); // Temporary password for invite
+
+                // Relationships
+                table.integer('invited_by').notNullable()
+                    .references('user_id').inTable('users').onDelete('CASCADE');
+
+                // Timestamps
+                table.timestamp('expires_at').notNullable();
+                table.timestamp('accepted_at').nullable();
+                table.timestamp('created_at').defaultTo(DB.fn.now());
+                table.timestamp('updated_at').defaultTo(DB.fn.now());
+
+                // Audit
+                table.boolean('is_deleted').defaultTo(false);
+            });
+
+            console.log('Finished Seeding Tables');
+            console.log('Creating Triggers');
+            await DB.raw(`
+              CREATE TRIGGER update_timestamp
+              BEFORE UPDATE
+              ON ${INVITATION_TABLE}
+              FOR EACH ROW
+              EXECUTE PROCEDURE update_timestamp();
+            `);
+            console.log('Finished Creating Triggers');
+        } else {
+            console.log('Table already exists, skipping creation');
+        }
     } catch (error) {
         console.log(error);
     }
@@ -58,8 +78,13 @@ export const seed = async (dropFirst = false) => {
 
 // Migration function for schema-based migrations
 export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
+    // For schema-based migrations, respect the dropFirst parameter
+    await seed(dropFirst);
 };
 
-// Version: 1.0.0 - Admin invites table for team member invitations
+// Version: 2.0.0 - Updated admin invites schema to match user/role patterns
+// - Added proper foreign key constraints
+// - Split full_name into first_name/last_name
+// - Added table existence checks
+// - Improved field naming and constraints
+// - Added proper relationships

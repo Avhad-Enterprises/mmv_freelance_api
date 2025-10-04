@@ -22,6 +22,7 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/users/password-reset',
       '/auth/register',
       '/auth/login',
+      '/admin/invites/accept', // Public route for accepting invitations
       '/health',
       '/projectsTask/getallprojectlisting',
       '/applications/my-applications',
