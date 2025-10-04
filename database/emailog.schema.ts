@@ -17,28 +17,35 @@ export const seed = async (dropFirst = false) => {
       await DB.schema.dropTableIfExists(EMAIL_LOG_TABLE);
     }
 
-    await DB.schema.createTable(EMAIL_LOG_TABLE, (table) => {
-      table.increments('id').primary(); // Unique log ID
-      table
-        .integer('ticket_id')
-        .unsigned()
-        .notNullable()
-        .references('id')
-        .inTable('support_tickets')
-        .onDelete('CASCADE');
+    // Check if table exists
+    const tableExists = await DB.schema.hasTable(EMAIL_LOG_TABLE);
+    
+    if (!tableExists) {
+      await DB.schema.createTable(EMAIL_LOG_TABLE, (table) => {
+        table.increments('id').primary(); // Unique log ID
+        table
+          .integer('ticket_id')
+          .unsigned()
+          .notNullable()
+          .references('id')
+          .inTable('support_tickets')
+          .onDelete('CASCADE');
 
-      table.string('to_email').notNullable(); // Recipient email address
+        table.string('to_email').notNullable(); // Recipient email address
 
-      table.string('subject').notNullable(); // Email subject
+        table.string('subject').notNullable(); // Email subject
 
-      table.text('body').notNullable(); // Full email body
+        table.text('body').notNullable(); // Full email body
 
-      table.enu('status', ['sent', 'failed']).notNullable(); // Email status
+        table.enu('status', ['sent', 'failed']).notNullable(); // Email status
 
-      table.timestamp('sent_at').defaultTo(DB.fn.now()); // Timestamp when sent
-    });
+        table.timestamp('sent_at').defaultTo(DB.fn.now()); // Timestamp when sent
+      });
 
-    console.log('Email logs table created.');
+      console.log('Email logs table created.');
+    } else {
+      console.log('Email logs table already exists, skipping creation');
+    }
   } catch (error) {
     console.error('Error creating email logs table:', error);
   }
