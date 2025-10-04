@@ -6,6 +6,7 @@ import validationMiddleware from '../../middlewares/validation.middleware';
 import { ClientRegistrationDto } from '../clients/client.registration.dto';
 import { VideographerRegistrationDto } from '../videographers/videographer.registration.dto';
 import { VideoEditorRegistrationDto } from '../videoeditors/videoeditor.registration.dto';
+import { LoginDto } from './login.dto';
 // import { registrationRateLimit, authRateLimit } from '../../middlewares/rate-limit.middleware';
 import { SecurityMiddleware } from '../../middlewares/security.middleware';
 import { registrationUpload } from '../../middlewares/upload.middleware';
@@ -55,6 +56,7 @@ export class AuthRoutes implements Route {
       `${this.path}/login`,
       // authRateLimit, // Disabled for testing
       SecurityMiddleware.essential,
+      validationMiddleware(LoginDto, 'body', false, []),
       this.authController.login
     );
   }

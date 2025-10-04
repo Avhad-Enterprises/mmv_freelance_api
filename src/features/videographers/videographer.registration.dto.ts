@@ -111,7 +111,6 @@ export class VideographerRegistrationDto {
   @IsNotEmpty()
   short_description: string;
 
-  @IsNotEmpty()
   @IsOptional()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
