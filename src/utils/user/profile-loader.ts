@@ -52,7 +52,7 @@ export const loadUserProfile = async (userId: number): Promise<UserWithProfile> 
         .first();
       profile = { ...freelancerProfile, videoeditor: editorProfile };
     }
-  } else if (roles.includes('ADMIN')) {
+  } else if (roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')) {
     userType = 'ADMIN';
     profile = await DB('admin_profiles').where({ user_id: userId }).first();
   }
