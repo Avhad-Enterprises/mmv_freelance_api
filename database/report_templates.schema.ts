@@ -19,34 +19,42 @@ export const seed = async (dropFirst = false) => {
             console.log('Dropped Tables');
         }
         console.log('Seeding Tables');
-        // await DB.raw("set search_path to public")
-        await DB.schema.createTable(REPORT_TEMPLATES, table => {
-            table.increments('id').primary(); //id
-            table.string('report_module',50).notNullable();
-            table.string('title',100).nullable();
-            table.jsonb('filters').nullable();
-            table.jsonb('metrics').nullable();
-            table.string('group_by',50).nullable();
-            table.string('visual_type',30).nullable();
-            table.integer('created_by').notNullable();
-            table.boolean('is_active').defaultTo(true);
-            table.timestamp("created_at").defaultTo(DB.fn.now());
-            table.timestamp("updated_at").defaultTo(DB.fn.now());
-            table.boolean('is_deleted').defaultTo(false);
-            table.string("email").unique();
+        
+        // Check if table exists
+        const tableExists = await DB.schema.hasTable(REPORT_TEMPLATES);
+        
+        if (!tableExists) {
+            // await DB.raw("set search_path to public")
+            await DB.schema.createTable(REPORT_TEMPLATES, table => {
+                table.increments('id').primary(); //id
+                table.string('report_module',50).notNullable();
+                table.string('title',100).nullable();
+                table.jsonb('filters').nullable();
+                table.jsonb('metrics').nullable();
+                table.string('group_by',50).nullable();
+                table.string('visual_type',30).nullable();
+                table.integer('created_by').notNullable();
+                table.boolean('is_active').defaultTo(true);
+                table.timestamp("created_at").defaultTo(DB.fn.now());
+                table.timestamp("updated_at").defaultTo(DB.fn.now());
+                table.boolean('is_deleted').defaultTo(false);
+                table.string("email").unique();
 
-        });
+            });
 
-        console.log('Finished Seeding Tables');
-        console.log('Creating Triggers');
-        await DB.raw(`
-          CREATE TRIGGER update_timestamp
-          BEFORE UPDATE
-          ON ${REPORT_TEMPLATES}
-          FOR EACH ROW
-          EXECUTE PROCEDURE update_timestamp();
-        `);
-        console.log('Finished Creating Triggers');
+            console.log('Finished Seeding Tables');
+            console.log('Creating Triggers');
+            await DB.raw(`
+              CREATE TRIGGER update_timestamp
+              BEFORE UPDATE
+              ON ${REPORT_TEMPLATES}
+              FOR EACH ROW
+              EXECUTE PROCEDURE update_timestamp();
+            `);
+            console.log('Finished Creating Triggers');
+        } else {
+            console.log('Table already exists, skipping creation');
+        }
     } catch (error) {
         console.log(error);
     }
@@ -54,8 +62,8 @@ export const seed = async (dropFirst = false) => {
 
 // Migration function for schema-based migrations
 export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
+    // For schema-based migrations, respect the dropFirst parameter
+    await seed(dropFirst);
 };
 
 // Version: 1.0.0 - Report templates table for customizable report configurations
