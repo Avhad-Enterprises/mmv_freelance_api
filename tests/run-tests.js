@@ -6,9 +6,9 @@
  * This script runs both login and registration test suites
  * 
  * Usage: 
- *   node scripts/run-tests.js           # Run all tests
- *   node scripts/run-tests.js login     # Run only login tests
- *   node scripts/run-tests.js register  # Run only registration tests
+ *   node tests/run-tests.js           # Run all tests
+ *   node tests/run-tests.js login     # Run only login tests
+ *   node tests/run-tests.js register  # Run only registration tests
  */
 
 const { spawn } = require('child_process');
@@ -125,9 +125,9 @@ async function runAllTests() {
 // Usage information
 function showUsage() {
   console.log('Usage:');
-  console.log('  node scripts/run-tests.js           # Run all tests');
-  console.log('  node scripts/run-tests.js login     # Run only login tests');
-  console.log('  node scripts/run-tests.js register  # Run only registration tests');
+  console.log('  node tests/run-tests.js           # Run all tests');
+  console.log('  node tests/run-tests.js login     # Run only login tests');
+  console.log('  node tests/run-tests.js register  # Run only registration tests');
   console.log('');
   console.log('Available test suites:');
   Object.keys(SCRIPTS).forEach(script => {

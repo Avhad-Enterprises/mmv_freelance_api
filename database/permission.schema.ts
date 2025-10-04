@@ -331,7 +331,7 @@ export const seed = async (dropFirst = false) => {
     try {
         if (dropFirst) {
             console.log('Dropping Tables');
-            await DB.schema.dropTableIfExists(PERMISSION);
+            await DB.raw(`DROP TABLE IF EXISTS "${PERMISSION}" CASCADE`);
             console.log('Dropped Tables');
         }
         console.log('Seeding Tables');
