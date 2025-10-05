@@ -22,6 +22,24 @@ export class ClientRegistrationDto {
   company_website?: string;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      // If it's a string starting with http, treat it as a plain string
+      if (value.startsWith('http') || value.startsWith('https')) {
+        return value;
+      }
+      // Try to parse as JSON, but if it fails, return the string
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  social_links?: any;
+
+  @IsOptional()
   company_description?: string;
 
   @IsNotEmpty()
@@ -51,7 +69,26 @@ export class ClientRegistrationDto {
   @IsOptional()
   zip_code?: string;
 
-  // Step 4: Project Information (Required)
+  @IsOptional()
+  latitude?: number;
+
+  @IsOptional()
+  longitude?: number;
+
+  // Step 4: Work Preferences (Optional)
+  @IsOptional()
+  @IsEnum(['remote', 'on_site', 'hybrid'])
+  work_arrangement?: string;
+
+  @IsOptional()
+  @IsEnum(['one_time', 'occasional', 'ongoing'])
+  project_frequency?: string;
+
+  @IsOptional()
+  @IsEnum(['individuals', 'agencies', 'both'])
+  hiring_preferences?: string;
+
+  // Step 5: Project Information (Optional)
   @IsOptional()
   project_title?: string;
 
@@ -75,7 +112,7 @@ export class ClientRegistrationDto {
   @IsOptional()
   project_timeline?: string;
 
-  // Step 5: Additional Information (Required)
+  // Step 6: Additional Information (Required)
   @IsOptional()
   @Transform(({ value }) => {
     if (typeof value === 'string') {

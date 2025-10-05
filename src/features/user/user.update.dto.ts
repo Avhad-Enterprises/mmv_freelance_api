@@ -98,6 +98,13 @@ export class UserUpdateDto {
   @IsOptional()
   @IsString()
   hiring_preferences?: string;
+
+  @IsOptional()
+  @IsString()
+  website?: string;
+
+  @IsOptional()
+  social_links?: any;
 }
 
 /**

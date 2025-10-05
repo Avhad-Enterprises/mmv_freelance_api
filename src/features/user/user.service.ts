@@ -112,7 +112,7 @@ class UserService {
     const isClient = userRoles.some(role => role.name === 'CLIENT');
 
     // Separate client-specific fields from user table fields
-    const clientFields = ['work_arrangement', 'project_frequency', 'hiring_preferences'];
+    const clientFields = ['work_arrangement', 'project_frequency', 'hiring_preferences', 'website', 'social_links'];
     const clientData: any = {};
     const userData: any = { ...data };
 

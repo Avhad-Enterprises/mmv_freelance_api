@@ -74,11 +74,20 @@ export class ClientUpdateDto {
   @IsOptional()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
-      return JSON.parse(value);
+      // If it's a string starting with http, treat it as a plain string
+      if (value.startsWith('http') || value.startsWith('https')) {
+        return value;
+      }
+      // Try to parse as JSON, but if it fails, return the string
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
     }
     return value;
   })
-  social_links?: object;
+  social_links?: any;
 
   @IsOptional()
   @IsEnum(['1-10', '11-50', '51-200', '201-500', '500+'])
