@@ -85,6 +85,19 @@ export class UserUpdateDto {
   @IsOptional()
   @IsBoolean()
   email_notifications?: boolean;
+
+  // Client-specific fields (will be stored in client_profiles table)
+  @IsOptional()
+  @IsString()
+  work_arrangement?: string;
+
+  @IsOptional()
+  @IsString()
+  project_frequency?: string;
+
+  @IsOptional()
+  @IsString()
+  hiring_preferences?: string;
 }
 
 /**

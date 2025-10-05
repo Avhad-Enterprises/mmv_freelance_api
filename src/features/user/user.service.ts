@@ -96,7 +96,7 @@ class UserService {
   }
 
   /**
-   * Update user basic info (fields in users table only)
+   * Update user basic info (fields in users table and profile tables)
    */
   public async updateBasicInfo(user_id: number, data: Partial<Users>): Promise<Users> {
     const user = await DB(T.USERS_TABLE)
@@ -107,20 +107,54 @@ class UserService {
       throw new HttpException(404, "User not found");
     }
 
-    // Hash password if provided
-    if (data.password) {
-      data.password = await bcrypt.hash(data.password, 10);
+    // Get user roles to determine which profile table to update
+    const userRoles = await this.getUserRoles(user_id);
+    const isClient = userRoles.some(role => role.name === 'CLIENT');
+
+    // Separate client-specific fields from user table fields
+    const clientFields = ['work_arrangement', 'project_frequency', 'hiring_preferences'];
+    const clientData: any = {};
+    const userData: any = { ...data };
+
+    if (isClient) {
+      clientFields.forEach(field => {
+        if (userData[field] !== undefined) {
+          clientData[field] = userData[field];
+          delete userData[field];
+        }
+      });
+
+      // Update client profile if there are client-specific fields
+      if (Object.keys(clientData).length > 0) {
+        await DB(T.CLIENT_PROFILES)
+          .where({ user_id })
+          .update({
+            ...clientData,
+            updated_at: DB.fn.now()
+          });
+      }
     }
 
-    const updated = await DB(T.USERS_TABLE)
-      .where({ user_id })
-      .update({ 
-        ...data, 
-        updated_at: DB.fn.now() 
-      })
-      .returning("*");
+    // Hash password if provided
+    if (userData.password) {
+      userData.password = await bcrypt.hash(userData.password, 10);
+    }
 
-    return updated[0];
+    // Update users table with remaining fields
+    if (Object.keys(userData).length > 0) {
+      const updated = await DB(T.USERS_TABLE)
+        .where({ user_id })
+        .update({ 
+          ...userData, 
+          updated_at: DB.fn.now() 
+        })
+        .returning("*");
+
+      return updated[0];
+    }
+
+    // If only profile fields were updated, return the original user
+    return user;
   }
 
   /**
