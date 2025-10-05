@@ -116,11 +116,21 @@ export class VideoEditorRegistrationDto {
 
   @IsOptional()
   @IsString()
+  state?: string;
+
+  @IsOptional()
+  @IsString()
   country?: string;
 
   @IsOptional()
   @IsString()
   pincode?: string;
+
+  @IsOptional()
+  latitude?: number;
+
+  @IsOptional()
+  longitude?: number;
 
   @IsOptional()
   @IsString()

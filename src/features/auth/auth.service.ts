@@ -94,7 +94,9 @@ export class AuthService {
       country: data.country,
       state: data.state,
       city: data.city,
-      pincode: data.zip_code || '000000',
+      pincode: data.zip_code || data.pincode || null,
+      latitude: data.latitude || null,
+      longitude: data.longitude || null,
       is_active: true,
     }).returning('*');
 
@@ -104,6 +106,7 @@ export class AuthService {
       user_id: user.user_id,
       company_name: data.company_name,
       website: data.company_website,
+      social_links: data.social_links,
       company_description: data.company_description || 'No description provided',
       industry: data.industry,
       company_size: data.company_size,
@@ -113,6 +116,9 @@ export class AuthService {
       project_category: data.project_category || 'General',
       project_budget: data.project_budget || 0,
       project_timeline: data.project_timeline || 'Not specified',
+      work_arrangement: data.work_arrangement || null,
+      project_frequency: data.project_frequency || null,
+      hiring_preferences: data.hiring_preferences || null,
       terms_accepted: data.terms_accepted || false,
       privacy_policy_accepted: data.privacy_policy_accepted || false,
       business_document_url: businessDocumentUrl,
@@ -190,7 +196,11 @@ export class AuthService {
       phone_number: data.phone_number,
       profile_picture: profilePictureUrl,
       city: data.city,
+      state: data.state || null,
       country: data.country,
+      pincode: data.pincode || null,
+      latitude: data.latitude || null,
+      longitude: data.longitude || null,
       is_active: true,
     }).returning('*');
 
@@ -297,8 +307,11 @@ export class AuthService {
       phone_number: data.phone_number,
       profile_picture: profilePictureUrl,
       country: data.country,
+      state: data.state || null,
       city: data.city,
-      pincode: data.pincode,
+      pincode: data.pincode || null,
+      latitude: data.latitude || null,
+      longitude: data.longitude || null,
       is_active: true,
     }).returning('*');
 

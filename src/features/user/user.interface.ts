@@ -31,7 +31,7 @@ export interface Users {
   company_name?: string;
   industry?: string;
   website?: string;
-  social_links?: string;
+  social_links?: any;
   company_size?: string;
   required_services?: string[] | string;
   required_skills?: string[] | string;
