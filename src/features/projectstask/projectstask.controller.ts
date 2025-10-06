@@ -29,7 +29,7 @@ class projectstaskcontroller {
 
   public getbytaskid = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = (req.body as any).projects_task_id;
+      const raw = req.params.id;
       const idNum: number = typeof raw === 'string'
         ? parseInt(raw, 10)
         : raw;
@@ -77,24 +77,16 @@ class projectstaskcontroller {
 
   public delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = (req.body as any).projects_task_id;
+      const raw = req.params.id;
       const idNum: number = typeof raw === 'string' ? parseInt(raw, 10) : raw;
 
       if (isNaN(idNum)) {
-        res.status(400).json({ error: '  "projects_task_id" must be a number' });
+        res.status(400).json({ error: 'projects_task_id must be a number' });
         return;
       }
 
-      // Clone body and exclude code_id
-      const fieldsToUpdate = req.body;
-
-      if (Object.keys(fieldsToUpdate).length === 0) {
-        res.status(400).json({ error: 'No update data provided' });
-        return;
-      }
-
-      const updated = await this.ProjectstaskService.softDelete(idNum, fieldsToUpdate);
-      res.status(200).json({ data: updated, message: 'projects_task updated' });
+      const deleted = await this.ProjectstaskService.softDelete(idNum, { is_deleted: true });
+      res.status(200).json({ data: deleted, message: 'projects_task deleted successfully' });
     } catch (error) {
       next(error);
     }

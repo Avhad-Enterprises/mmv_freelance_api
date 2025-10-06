@@ -24,7 +24,7 @@ class projectstaskRoute implements Route {
          this.projectstaskcontroller.insert
       );
 
-      this.router.post(`${this.path}/getprojects_taskbyid`,
+      this.router.get(`${this.path}/getprojects_taskbyid/:id`,
          requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // Multiple roles can view
          this.projectstaskcontroller.getbytaskid
       );
@@ -34,10 +34,9 @@ class projectstaskRoute implements Route {
          this.projectstaskcontroller.update
       );
 
-      this.router.post(`${this.path}/delete`,
+      this.router.delete(`${this.path}/delete/:id`,
          requireRole('CLIENT'), // Only clients can delete their projects
-         validationMiddleware(ProjectsTaskDto, 'body', true, []),
-         (req, res, next) => this.projectstaskcontroller.delete(req, res, next)
+         this.projectstaskcontroller.delete
       );
 
       this.router.get(`${this.path}/countactiveprojects_task`,
