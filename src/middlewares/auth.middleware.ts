@@ -25,6 +25,7 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/admin/invites/accept', // Public route for accepting invitations
       '/health',
       '/projectsTask/getallprojectlisting',
+      '/freelancers/getfreelancers',
       '/applications/my-applications',
       '/applications/count/',
       '/category/getallcategorys',

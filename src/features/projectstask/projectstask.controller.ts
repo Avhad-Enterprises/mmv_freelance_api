@@ -1,4 +1,3 @@
-
 import { NextFunction, Request, Response } from 'express';
 import { ProjectsTaskDto } from './projectstask.dto';
 import { IProjectTask } from './projectstask.interface';
@@ -347,6 +346,14 @@ class projectstaskcontroller {
     }
   };
 
+  public getallprojectlistingPublic = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const projects = await this.ProjectstaskService.getAllProjectslistingPublic();
+      res.status(200).json({ data: projects, success: true });
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 export default projectstaskcontroller;

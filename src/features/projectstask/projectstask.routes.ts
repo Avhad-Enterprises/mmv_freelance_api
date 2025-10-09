@@ -123,8 +123,11 @@ class projectstaskRoute implements Route {
       );
 
       this.router.get(`${this.path}/getallprojectlisting`,
-         requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users
          this.projectstaskcontroller.getallprojectlisting
+      );
+
+      this.router.get(`${this.path}/getallprojectlisting-public`,
+         this.projectstaskcontroller.getallprojectlistingPublic
       );
    }
 }

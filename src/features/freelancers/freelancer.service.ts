@@ -94,6 +94,50 @@ class FreelancerService extends UserService {
   }
 
   /**
+   * Get all freelancers (public-safe version without email and phone)
+   */
+  public async getAllFreelancersPublic(): Promise<any[]> {
+    const freelancers = await DB(T.USERS_TABLE)
+      .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
+      .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
+      .join(T.FREELANCER_PROFILES, `${T.USERS_TABLE}.user_id`, `${T.FREELANCER_PROFILES}.user_id`)
+      .whereIn(`${T.ROLE}.name`, ['VIDEOGRAPHER', 'VIDEO_EDITOR'])
+      .where(`${T.USERS_TABLE}.is_active`, true)
+      .where(`${T.USERS_TABLE}.is_banned`, false)
+      .select(
+        // User fields (excluding sensitive data)
+        `${T.USERS_TABLE}.user_id`,
+        `${T.USERS_TABLE}.first_name`,
+        `${T.USERS_TABLE}.last_name`,
+        `${T.USERS_TABLE}.username`,
+        `${T.USERS_TABLE}.profile_picture`,
+        `${T.USERS_TABLE}.bio`,
+        `${T.USERS_TABLE}.timezone`,
+        `${T.USERS_TABLE}.address_line_first`,
+        `${T.USERS_TABLE}.address_line_second`,
+        `${T.USERS_TABLE}.city`,
+        `${T.USERS_TABLE}.state`,
+        `${T.USERS_TABLE}.country`,
+        `${T.USERS_TABLE}.pincode`,
+        `${T.USERS_TABLE}.latitude`,
+        `${T.USERS_TABLE}.longitude`,
+        `${T.USERS_TABLE}.is_active`,
+        `${T.USERS_TABLE}.is_banned`,
+        `${T.USERS_TABLE}.is_deleted`,
+        `${T.USERS_TABLE}.email_notifications`,
+        `${T.USERS_TABLE}.created_at`,
+        `${T.USERS_TABLE}.updated_at`,
+        // Freelancer profile fields
+        `${T.FREELANCER_PROFILES}.*`,
+        // Role name
+        `${T.ROLE}.name as role_name`
+      )
+      .orderBy(`${T.USERS_TABLE}.created_at`, "desc");
+
+    return freelancers;
+  }
+
+  /**
    * Search freelancers by skill
    */
   public async searchBySkill(skill: string): Promise<any[]> {
