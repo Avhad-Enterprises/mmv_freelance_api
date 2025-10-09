@@ -48,6 +48,7 @@ import ReportTemplatesRoute from './features/report-templates/report-templates.r
 import AdminInvitesRoutes from './features/admin-invites/admin-invites.routes';
 
 import validateEnv from './utils/validation/validateEnv';
+import { FreelancerRoutes } from './features/freelancers/freelancer.routes';
 // Validate .env variables
 validateEnv();
 
@@ -59,7 +60,8 @@ const app = new App([
     new ClientRoutes(),
     new VideographerRoutes(),
     new VideoEditorRoutes(),
-    
+    new FreelancerRoutes(),
+
     // RBAC routes
     new roleRoute(),
     new permissionRoute(),
