@@ -61,8 +61,9 @@ class AppliedProjectsService {
                 'users.first_name',
                 'users.last_name',
                 'users.profile_picture',
-                'users.skill',
-                'users.experience'
+                'users.email',
+                'users.bio'
+               
             );
         return projects;
     }
