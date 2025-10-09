@@ -20,7 +20,7 @@ export class FreelancerRoutes implements Route {
 
     private initializeRoutes() {
 
-        //Get all freelancers
+        //Get all freelancers (public endpoint for homepage)
 
         this.router.get(
             `${this.path}/getfreelancers`,
@@ -28,5 +28,10 @@ export class FreelancerRoutes implements Route {
             this.freelancerController.getAllFreelancers
         );
 
+        //Get all freelancers (public-safe version without email/phone)
+        this.router.get(
+            `${this.path}/getfreelancers-public`,
+            this.freelancerController.getAllFreelancersPublic
+        );
     }
 }
