@@ -47,7 +47,7 @@ export const seed = async (dropFirst = false) => {
                 table.text('preferred_video_style').notNullable();
                 table.string('sample_project_file').nullable();
                 table.jsonb('project_files').nullable();
-                table.boolean('show_all_files').defaultTo(false);
+                table.jsonb('show_all_files').defaultTo(DB.raw("'[]'::jsonb"));
                 table.string('url').notNullable();
                 table.string('meta_title').notNullable();
                 table.text('meta_description').notNullable();
