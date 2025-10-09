@@ -27,7 +27,7 @@ export class VideoEditorRoutes implements Route {
      * Requires: Authentication
      */
     this.router.get(
-      `${this.path}`,
+      `${this.path}/getvideoeditors`,
       this.videoEditorController.getAllVideoEditors
     );
 

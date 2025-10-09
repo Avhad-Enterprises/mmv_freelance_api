@@ -19,7 +19,7 @@ class projectstaskRoute implements Route {
 
       //projectstask section  , validationMiddleware(ProjectsTaskDto, 'body', false, [])
       this.router.post(`${this.path}/insertprojects_task`,
-         requireRole('CLIENT'), // Only clients can create projects
+         requireRole('CLIENT', 'ADMIN', 'SUPER_ADMIN'), // Only clients can create projects
          validationMiddleware(ProjectsTaskDto, 'body', false, []),
          this.projectstaskcontroller.insert
       );
@@ -30,12 +30,12 @@ class projectstaskRoute implements Route {
       );
 
       this.router.put(`${this.path}/updateprojects_taskbyid`,
-         requireRole('CLIENT'), // Only clients can update their projects
+         requireRole('CLIENT','ADMIN', 'SUPER_ADMIN'), // Only clients can update their projects
          this.projectstaskcontroller.update
       );
 
       this.router.delete(`${this.path}/delete/:id`,
-         requireRole('CLIENT'), // Only clients can delete their projects
+         requireRole('CLIENT','ADMIN', 'SUPER_ADMIN'), // Only clients can delete their projects
          this.projectstaskcontroller.delete
       );
 
