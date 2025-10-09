@@ -28,5 +28,10 @@ export class FreelancerRoutes implements Route {
             this.freelancerController.getAllFreelancers
         );
 
+        this.router.get(
+            `${this.path}/availablefreelancer`,
+            this.freelancerController.getAvailableFreelancers
+        );
+
     }
 }
