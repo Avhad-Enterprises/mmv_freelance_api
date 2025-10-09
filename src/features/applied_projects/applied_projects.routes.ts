@@ -68,7 +68,7 @@ class AppliedProjectsRoute implements Route {
     // Get application count for a specific project - NEW
     this.router.post(
       `${this.path}/projects/get-application-count`,
-      requireRole('CLIENT'), // Only clients can view application counts
+      requireRole('CLIENT','ADMIN', 'SUPER_ADMIN'), // Only clients can view application counts
       this.appliedProjectsController.getApplicationCount
     ); // enter project_task_id here
 

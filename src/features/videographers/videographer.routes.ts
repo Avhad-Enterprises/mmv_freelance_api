@@ -27,7 +27,7 @@ export class VideographerRoutes implements Route {
      * Requires: Authentication
      */
     this.router.get(
-      `${this.path}`,
+      `${this.path}/getvideographers`,
       requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users
       this.videographerController.getAllVideographers
     );
