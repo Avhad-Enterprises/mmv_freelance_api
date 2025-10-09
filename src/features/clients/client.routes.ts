@@ -28,7 +28,7 @@ export class ClientRoutes implements Route {
      * Requires: ADMIN or SUPER_ADMIN role
      */
     this.router.get(
-      `${this.path}`,
+      `${this.path}/getallclient`,
       requireRole('ADMIN', 'SUPER_ADMIN'),
       this.clientController.getAllClients
     );
