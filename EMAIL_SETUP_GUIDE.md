@@ -1,8 +1,89 @@
 # Email Configuration Guide
 
-## Gmail SMTP Setup
+## SendGrid Setup
 
-The application uses Gmail SMTP for sending emails. To configure email sending, you need to set up a Gmail App Password.
+The application uses SendGrid for sending emails. SendGrid provides reliable email delivery with excellent deliverability rates.
+
+### Step 1: Create SendGrid Account
+
+1. Go to [SendGrid](https://sendgrid.com) and create a free account
+2. Verify your email address
+3. Complete the account setup
+
+### Step 2: Generate API Key
+
+1. In your SendGrid dashboard, go to **Settings** > **API Keys**
+2. Click **Create API Key**
+3. Choose **Full Access** or **Restricted Access** (recommended for production)
+4. Give your API key a name (e.g., "MMV Freelance API")
+5. Copy the API key (you won't be able to see it again!)
+
+### Step 3: Verify Sender Identity
+
+**Important:** You must verify your sender email address before you can send emails.
+
+1. In SendGrid dashboard, go to **Settings** > **Sender Authentication**
+2. Choose **Verify a Single Sender**
+3. Enter your sender details:
+   - **From Email:** `no-reply@avhad.com`
+   - **From Name:** `MMV Freelance Platform`
+   - Fill in other required fields
+4. Send verification email and click the link
+
+### Step 4: Update Environment Variables
+
+Update your `.env` file with the SendGrid API key:
+
+```bash
+EMAIL_USER=no-reply@avhad.com
+SENDGRID_API_KEY=SG.your-actual-api-key-here
+```
+
+**Security Note:** Never commit your API key to version control. Use environment variables.
+
+### Step 5: Test Email Configuration
+
+Run the email test script to verify everything works:
+
+```bash
+npx ts-node scripts/test-email.ts
+```
+
+### Step 6: Test Admin Invite API
+
+Once email is working, test the admin invite functionality:
+
+```bash
+npx ts-node scripts/test-admin-invite.ts
+```
+
+## SendGrid Benefits
+
+- **High Deliverability:** Industry-leading delivery rates
+- **Free Tier:** 100 emails/day free
+- **Scalable:** Pay only for what you use
+- **Analytics:** Detailed email analytics and insights
+- **Reliable:** 99.9% uptime SLA
+
+## Troubleshooting
+
+### Common Issues:
+
+1. **"Unauthorized" Error**
+   - Check your API key is correct
+   - Ensure the API key has sending permissions
+
+2. **"Sender not verified" Error**
+   - Complete sender verification in SendGrid dashboard
+   - Check that `EMAIL_USER` matches your verified sender
+
+3. **Emails going to spam**
+   - SendGrid has good reputation, but check your content
+   - Avoid spam trigger words
+   - Use proper HTML formatting
+
+### Testing
+Always test your email configuration with the provided test script before deploying to production.
 
 ### Step 1: Enable 2-Factor Authentication (2FA)
 1. Go to your Google Account settings: https://myaccount.google.com/
