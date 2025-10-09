@@ -358,6 +358,22 @@ class ProjectstaskService {
     return project || null;
   }
 
+  public async getProjectsByClient(client_id: number): Promise<any[]> {
+    if (!client_id) {
+      throw new HttpException(400, "client_id is required");
+    }
+
+    const projects = await DB(T.PROJECTS_TASK)
+      .where({
+        client_id,
+        is_deleted: false
+      })
+      .orderBy('created_at', 'desc')
+      .select('*');
+
+    return projects;
+  }
+
   public async getCountByEditor(editor_id: number): Promise<number> {
     if (!editor_id) {
       throw new HttpException(400, "editor_id is required");

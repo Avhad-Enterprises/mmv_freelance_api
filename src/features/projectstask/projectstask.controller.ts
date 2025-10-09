@@ -247,6 +247,27 @@ class projectstaskcontroller {
     }
   };
 
+  public getProjectsByClient = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { client_id } = req.params;
+
+      const idNum: number = typeof client_id === 'string'
+        ? parseInt(client_id, 10)
+        : client_id;
+
+      if (isNaN(idNum)) {
+        res.status(400).json({ error: 'client_id must be a number' });
+        return;
+      }
+
+      const projects = await this.ProjectstaskService.getProjectsByClient(idNum);
+
+      res.status(200).json({ data: projects, success: true });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getCountBy = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { editor_id } = req.params;

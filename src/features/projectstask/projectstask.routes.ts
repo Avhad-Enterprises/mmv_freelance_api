@@ -89,6 +89,11 @@ class projectstaskRoute implements Route {
          this.projectstaskcontroller.getbytasksid
       );
 
+      this.router.get(`${this.path}/client/:client_id`,
+         requireRole('CLIENT', 'ADMIN', 'SUPER_ADMIN'),
+         this.projectstaskcontroller.getProjectsByClient
+      );
+
       this.router.get(`${this.path}/count/editor/:editor_id`,
          requireRole('VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // Editor and admin access
          (req, res, next) => this.projectstaskcontroller.getCountBy(req, res, next)
