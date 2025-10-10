@@ -218,7 +218,7 @@ export class FreelancerUpdateDto {
     }
     return value;
   })
-  payout_method?: object;
+  payment_method?: object;
 
   @IsOptional()
   @Transform(({ value }) => {

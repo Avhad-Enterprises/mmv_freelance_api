@@ -110,7 +110,6 @@ export class AuthService {
       company_description: data.company_description || 'No description provided',
       industry: data.industry,
       company_size: data.company_size,
-      address: data.address,
       project_title: data.project_title || 'Untitled Project',
       project_description: data.project_description || 'No description provided',
       project_category: data.project_category || 'General',
@@ -226,7 +225,6 @@ export class AuthService {
       experience_level: data.experience_level,
       role: data.role,
       base_skills: Array.isArray(data.base_skills) ? JSON.stringify(data.base_skills) : data.base_skills,
-      address: data.full_address || '',
     }).returning('*');
 
     // Clean up any existing videographer profile for this freelancer (for test cleanup)
@@ -337,7 +335,6 @@ export class AuthService {
       experience_level: data.experience_level,
       role: data.role,
       base_skills: Array.isArray(data.base_skills) ? JSON.stringify(data.base_skills) : data.base_skills,
-      address: data.address,
     }).returning('*');
 
     // Clean up any existing videoeditor profile for this freelancer (for test cleanup)

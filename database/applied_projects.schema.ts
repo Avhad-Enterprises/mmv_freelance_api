@@ -11,80 +11,63 @@ import DB from './index.schema';
 
 export const APPLIED_PROJECTS = 'applied_projects';
 
-export const seed = async (dropFirst = false) => {
-
-    try {
-        if (dropFirst) {
-            console.log('Dropping Tables');
-            await DB.raw(`DROP TABLE IF EXISTS "${APPLIED_PROJECTS}" CASCADE`);
-            console.log('Dropped Tables');
-        }
-        console.log('Seeding Tables');
-
-        // Check if table exists
-        const tableExists = await DB.schema.hasTable(APPLIED_PROJECTS);
-
-        if (!tableExists) {
-            await DB.schema.createTable(APPLIED_PROJECTS, table => {
-                table.increments('applied_projects_id').primary();
-                table.integer("projects_task_id").notNullable();
-                table.integer("user_id").notNullable();
-                table.integer("freelancer_id")
-                    .unsigned()
-                    .nullable() // or .notNullable() if you enforce
-                    .references('freelancer_id')
-                    .inTable('freelancer_profiles')
-                    .onDelete('CASCADE');
-
-                table.integer("status").notNullable().defaultTo(0); // 0: pending, 1: ongoing, 2: completed
-                table.text('description');
-                // compulsory columns
-                table.boolean("is_active").defaultTo(true);
-                table.boolean("is_deleted").defaultTo(false);
-                table.integer("deleted_by").nullable();
-                table.timestamp("deleted_at").nullable();
-                table.integer("created_by").nullable();
-                table.integer("updated_by").nullable();
-                table.timestamp("created_at").defaultTo(DB.fn.now());
-                table.timestamp("updated_at").defaultTo(DB.fn.now());
-
-            });
-
-            console.log('Finished Seeding Tables');
-            console.log('Creating Triggers');
-
-            await DB.raw(`
-              CREATE OR REPLACE FUNCTION update_timestamp()
-              RETURNS TRIGGER AS $$
-              BEGIN
-                  NEW.updated_at = CURRENT_TIMESTAMP;
-                  RETURN NEW;
-              END;
-              $$ LANGUAGE plpgsql;
-            `);
-
-            await DB.raw(`
-              DROP TRIGGER IF EXISTS update_timestamp ON ${APPLIED_PROJECTS};
-              CREATE TRIGGER update_timestamp
-              BEFORE UPDATE
-              ON ${APPLIED_PROJECTS}
-              FOR EACH ROW
-              EXECUTE FUNCTION update_timestamp();
-            `);
-
-            console.log('Finished Creating Triggers');
-        } else {
-            console.log('Table already exists, skipping creation');
-        }
-    } catch (error) {
-        console.log(error);
-    }
-};
-
 // Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, respect the dropFirst parameter
-    await seed(dropFirst);
-};
+export const migrate = async () => {
+    const tableExists = await DB.schema.hasTable(APPLIED_PROJECTS);
+    if (!tableExists) {
+        console.log('Applied Projects table does not exist, creating...');
+        console.log('Creating Applied Projects Table');
+        await DB.schema.createTable(APPLIED_PROJECTS, table => {
+            table.increments('applied_projects_id').primary();
+            table.integer("projects_task_id").notNullable()
+                .references('projects_task_id')
+                .inTable('projects_task')
+                .onDelete('CASCADE');
+            table.integer("user_id").notNullable()
+                .references('id')
+                .inTable('users')
+                .onDelete('CASCADE');
+            table.integer("freelancer_id")
+                .unsigned()
+                .nullable() // or .notNullable() if you enforce
+                .references('freelancer_id')
+                .inTable('freelancer_profiles')
+                .onDelete('CASCADE');
 
-// Version: 1.0.0 - Applied projects table for tracking freelancer applications
+            table.integer("status").notNullable().defaultTo(0); // 0: pending, 1: ongoing, 2: completed
+            table.text('description');
+            // compulsory columns
+            table.boolean("is_active").defaultTo(true);
+            table.boolean("is_deleted").defaultTo(false);
+            table.integer("deleted_by").nullable()
+                .references('id')
+                .inTable('users')
+                .onDelete('SET NULL');
+            table.timestamp("deleted_at").nullable();
+            table.integer("created_by").nullable()
+                .references('id')
+                .inTable('users')
+                .onDelete('SET NULL');
+            table.integer("updated_by").nullable()
+                .references('id')
+                .inTable('users')
+                .onDelete('SET NULL');
+            table.timestamp("created_at").defaultTo(DB.fn.now());
+            table.timestamp("updated_at").defaultTo(DB.fn.now());
+
+        });
+        console.log('Created Applied Projects Table');
+        
+        console.log('Creating Triggers for Applied Projects Table');
+        await DB.raw(`
+          CREATE TRIGGER update_timestamp
+          BEFORE UPDATE
+          ON ${APPLIED_PROJECTS}
+          FOR EACH ROW
+          EXECUTE PROCEDURE update_timestamp();
+        `);
+        console.log('Finished Creating Triggers');
+    } else {
+        console.log('Applied Projects table already exists, skipping migration');
+    }
+};// Version: 1.0.0 - Applied projects table for tracking freelancer applications

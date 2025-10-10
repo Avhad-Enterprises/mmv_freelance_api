@@ -10,12 +10,6 @@ export interface ClientProfile {
   industry?: string;
   company_size?: string;
 
-  // Location Information
-  country?: string;
-  state?: string;
-  city?: string;
-  address?: string;
-
   // Project Information
   project_title?: string;
   project_description?: string;
