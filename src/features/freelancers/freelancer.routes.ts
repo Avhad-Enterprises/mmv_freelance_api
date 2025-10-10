@@ -28,10 +28,5 @@ export class FreelancerRoutes implements Route {
             this.freelancerController.getAllFreelancers
         );
 
-        //Get all freelancers (public-safe version without email/phone)
-        this.router.get(
-            `${this.path}/getfreelancers-public`,
-            this.freelancerController.getAllFreelancersPublic
-        );
     }
 }
