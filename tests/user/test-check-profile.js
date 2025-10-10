@@ -9,7 +9,7 @@
 const https = require('https');
 const http = require('http');
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
 const API_PREFIX = '/api/v1';
 const ENDPOINT = '/users/me/has-profile';
 
@@ -35,7 +35,7 @@ let originalUserData = null; // Store original data to restore later
 // Helper function to make HTTP request
 function makeRequest(method = 'GET', headers = {}, data = null) {
   return new Promise((resolve, reject) => {
-    const url = BASE_URL + API_PREFIX + ENDPOINT;
+    const url = BASE_URL + ENDPOINT;
 
     const options = {
       method: method,
@@ -98,7 +98,7 @@ async function loginAndGetToken(email, password) {
     const loginData = JSON.stringify({ email, password });
     const options = {
       hostname: 'localhost',
-      port: 8000,
+      port: 8001,
       path: '/api/v1/auth/login',
       method: 'POST',
       headers: {

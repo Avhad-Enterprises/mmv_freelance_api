@@ -12,8 +12,8 @@
 const https = require('https');
 const http = require('http');
 
-const BASE_URL = 'http://localhost:8000';
-const LOGIN_ENDPOINT = '/api/v1/auth/login';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
+const LOGIN_ENDPOINT = '/auth/login';
 
 // Test configuration
 const TEST_CONFIG = {
@@ -263,7 +263,7 @@ function makeRequest(testCase) {
     
     const options = {
       hostname: 'localhost',
-      port: 8000,
+      port: 8001,
       path: TEST_CONFIG.endpoint,
       method: 'POST',
       headers: {
@@ -515,7 +515,7 @@ async function runAllTests() {
     await makeRequest({ data: { email: 'test', password: 'test' } });
   } catch (error) {
     if (error.code === 'ECONNREFUSED') {
-      console.error('❌ Cannot connect to server. Please ensure the server is running on http://localhost:8000');
+      console.error('❌ Cannot connect to server. Please ensure the server is running on http://localhost:8001');
       process.exit(1);
     }
   }

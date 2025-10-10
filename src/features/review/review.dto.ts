@@ -15,8 +15,9 @@ export class ReviewDto {
   @IsInt({ groups: ['create', 'update'] })
   project_id: number;
 
+  @IsOptional({ groups: ['create', 'update'] })
   @IsInt({ groups: ['create', 'update'] })
-  client_id: number;
+  client_id?: number;
 
   @IsInt({ groups: ['create', 'update'] })
   user_id: number;

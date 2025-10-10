@@ -8,9 +8,9 @@ export class SavedProjectsDto {
   @IsInt()
   projects_task_id: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsInt()
-  user_id: number;
+  user_id?: number;
 
   @IsOptional()
   @IsBoolean()

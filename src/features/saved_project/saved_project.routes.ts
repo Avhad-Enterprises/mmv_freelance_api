@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
 import { requireRole } from '../../middlewares/role.middleware';
+import authMiddleware from '../../middlewares/auth.middleware';
 import validationMiddleware from '../../middlewares/validation.middleware';
 import Savedprojectcontroller from './saved_project.controller';
 import { SavedProjectsDto } from './saved_project.dto';
@@ -17,13 +18,31 @@ class SavedprojectRoute implements Route {
 
     private initializeRoutes() {
       
-        this.router.post(`${this.path}/create`, validationMiddleware(SavedProjectsDto, 'body', false, []), (req, res, next) => this.Savedprojectcontroller.addsave(req, res, next));
+        // ✅ Personal operation - save project for authenticated user
+        this.router.post(`${this.path}/save-project`, 
+            authMiddleware, 
+            validationMiddleware(SavedProjectsDto, 'body', false, []), 
+            (req, res, next) => this.Savedprojectcontroller.addsave(req as any, res, next)
+        );
 
-        this.router.get(`${this.path}/listsave`, this.Savedprojectcontroller.getAllsaved);
+        // ⚠️ Admin operation - get all saved projects (keep existing)
+        this.router.get(`${this.path}/listsave`, 
+            requireRole('ADMIN', 'SUPER_ADMIN'), 
+            this.Savedprojectcontroller.getAllsaved
+        );
 
-        this.router.delete(`${this.path}/remove-saved`, validationMiddleware(SavedProjectsDto, 'body', false, []), (req, res, next) => this.Savedprojectcontroller.removeSavedProject(req, res, next));
+        // ✅ Personal operation - remove saved project for authenticated user
+        this.router.delete(`${this.path}/unsave-project`, 
+            authMiddleware, 
+            validationMiddleware(SavedProjectsDto, 'body', false, []), 
+            (req, res, next) => this.Savedprojectcontroller.removeSavedProject(req as any, res, next)
+        );
 
-        this.router.post(`${this.path}/savedbyuser_id`, this.Savedprojectcontroller.getUserId);
+        // ✅ Personal operation - get authenticated user's saved projects
+        this.router.get(`${this.path}/my-saved-projects`, 
+            authMiddleware, 
+            (req, res, next) => this.Savedprojectcontroller.getUserId(req as any, res, next)
+        );
 
     }
 }

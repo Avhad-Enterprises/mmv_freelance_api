@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:8000/api/v1';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
 
 // Test configuration
 const testConfig = {
