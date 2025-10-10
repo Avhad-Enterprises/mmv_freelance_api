@@ -15,8 +15,8 @@ const fs = require('fs');
 const path = require('path');
 const FormData = require('form-data');
 
-const BASE_URL = 'http://localhost:8000';
-const REGISTER_ENDPOINT = '/api/v1/auth/register/client';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
+const REGISTER_ENDPOINT = '/auth/register/client';
 
 // Test configuration
 const TEST_CONFIG = {
@@ -720,7 +720,7 @@ function makeRequest(testCase, testDir) {
     
     const options = {
       hostname: 'localhost',
-      port: 8000,
+      port: 8001,
       path: TEST_CONFIG.endpoint,
       method: 'POST',
       headers: {
@@ -983,7 +983,7 @@ async function runAllTests() {
     await makeRequest({ data: testData, files: {} }, testDir);
   } catch (error) {
     if (error.code === 'ECONNREFUSED') {
-      console.error('❌ Cannot connect to server. Please ensure the server is running on http://localhost:8000');
+      console.error('❌ Cannot connect to server. Please ensure the server is running on http://localhost:8001');
       process.exit(1);
     }
   }

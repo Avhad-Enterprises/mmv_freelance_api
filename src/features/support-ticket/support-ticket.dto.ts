@@ -29,8 +29,9 @@ export class SupportTicketDto {
   @IsInt({ groups: ['update'] })
   id?: number;
 
+  @IsOptional({ groups: ['create', 'update'] })
   @IsInt({ groups: ['create', 'update'] })
-  user_id: number;
+  user_id?: number;
 
   @IsOptional({ groups: ['create', 'update'] })
   @IsInt({ groups: ['create', 'update'] })

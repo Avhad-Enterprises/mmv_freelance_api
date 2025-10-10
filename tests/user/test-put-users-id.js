@@ -1,7 +1,7 @@
 const http = require('http');
 
 // Configuration
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
 const API_PREFIX = '/api/v1';
 
 // Test data
@@ -63,7 +63,7 @@ function validateResponse(response, expectedStatus, requiredFields = [], customV
 
   if (requiredFields.length > 0) {
     const missingFields = requiredFields.filter(field => !response.data || !(field in response.data));
-    console.log(`📋 Fields: ${missingFields.length === 0 ? 'success, message' : missingFields.join(', ')} ${missingFields.length === 0 ? '✅' : '❌'}`);
+    console.log(`📋 Fields: ${missingFields.length === 0 ? 'success, message, data' : missingFields.join(', ')} ${missingFields.length === 0 ? '✅' : '❌'}`);
     if (missingFields.length > 0) {
       return false;
     }
@@ -77,6 +77,16 @@ function validateResponse(response, expectedStatus, requiredFields = [], customV
   }
 
   return true;
+}
+
+function validateUserData(user) {
+  const requiredFields = ['user_id', 'email', 'first_name', 'last_name', 'username', 'is_active', 'created_at', 'updated_at'];
+  const hasAllFields = requiredFields.every(field => field in user);
+  const hasNoPassword = !('password' in user);
+
+  console.log(`👤 User Data: ${hasAllFields ? '✅' : '❌'} | Password Hidden: ${hasNoPassword ? '✅' : '❌'}`);
+
+  return hasAllFields && hasNoPassword;
 }
 
 async function loginAndGetToken(email, password) {
@@ -99,7 +109,7 @@ async function loginAndGetToken(email, password) {
   throw new Error('Failed to login');
 }
 
-// Create a test user for delete operations
+// Create a test user for update operations
 async function createTestUser() {
   const options = {
     hostname: 'localhost',
@@ -113,9 +123,9 @@ async function createTestUser() {
   };
 
   const userData = {
-    first_name: 'Delete',
-    last_name: 'Test',
-    email: `delete.test.${Date.now()}@example.com`,
+    first_name: 'Test',
+    last_name: 'User',
+    email: `test.user.${Date.now()}@example.com`,
     password: 'TestPassword123!'
   };
 
@@ -143,20 +153,24 @@ async function runTest(testName, testFunction) {
   }
 }
 
-async function testDeleteUserWithoutAuth() {
-  console.log(`📝 Test deleting user without JWT token`);
+async function testUpdateUserWithoutAuth() {
+  console.log(`📝 Test updating user without JWT token`);
 
   const options = {
     hostname: 'localhost',
     port: 8000,
     path: `${API_PREFIX}/users/1`,
-    method: 'DELETE',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
     }
   };
 
-  const response = await makeRequest(options);
+  const updateData = {
+    first_name: 'Updated'
+  };
+
+  const response = await makeRequest(options, updateData);
   return validateResponse(response, 404, ['success', 'message'], [
     (res) => {
       console.log(`💬 Message: "${res.data?.message}" (expected: "Authentication token missing") ${res.data?.message === 'Authentication token missing' ? '✅' : '❌'}`);
@@ -165,21 +179,25 @@ async function testDeleteUserWithoutAuth() {
   ]);
 }
 
-async function testDeleteUserWithInvalidToken() {
-  console.log(`📝 Test deleting user with invalid JWT token`);
+async function testUpdateUserWithInvalidToken() {
+  console.log(`📝 Test updating user with invalid JWT token`);
 
   const options = {
     hostname: 'localhost',
     port: 8000,
     path: `${API_PREFIX}/users/1`,
-    method: 'DELETE',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer invalid_token'
     }
   };
 
-  const response = await makeRequest(options);
+  const updateData = {
+    first_name: 'Updated'
+  };
+
+  const response = await makeRequest(options, updateData);
   return validateResponse(response, 401, ['success', 'message'], [
     (res) => {
       console.log(`💬 Message: "${res.data?.message}" (expected: "Auth Middleware Exception Occured") ${res.data?.message === 'Auth Middleware Exception Occured' ? '✅' : '❌'}`);
@@ -188,44 +206,123 @@ async function testDeleteUserWithInvalidToken() {
   ]);
 }
 
-async function testDeleteUserWithSuperAdmin() {
-  console.log(`📝 Test deleting user with super admin token`);
+async function testUpdateUserWithSuperAdmin() {
+  console.log(`📝 Test updating user with super admin token`);
 
   const options = {
     hostname: 'localhost',
     port: 8000,
     path: `${API_PREFIX}/users/${testUserId}`,
-    method: 'DELETE',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${superAdminToken}`
     }
   };
 
-  const response = await makeRequest(options);
-  return validateResponse(response, 200, ['success', 'message'], [
+  const updateData = {
+    first_name: 'Updated',
+    last_name: 'Name',
+    phone_number: '+1234567890'
+  };
+
+  const response = await makeRequest(options, updateData);
+  return validateResponse(response, 200, ['success', 'message', 'data'], [
     (res) => {
-      console.log(`💬 Message: "${res.data?.message}" (expected: "User deleted successfully") ${res.data?.message === 'User deleted successfully' ? '✅' : '❌'}`);
-      return res.data?.message === 'User deleted successfully';
+      console.log(`💬 Message: "${res.data?.message}" (expected: "User updated successfully") ${res.data?.message === 'User updated successfully' ? '✅' : '❌'}`);
+      return res.data?.message === 'User updated successfully';
+    },
+    (res) => validateUserData(res.data?.data),
+    (res) => {
+      const user = res.data?.data;
+      const isUpdated = user.first_name === 'Updated' && user.last_name === 'Name' && user.phone_number === '+1234567890';
+      console.log(`🔄 Data Updated: ${isUpdated ? '✅' : '❌'}`);
+      return isUpdated;
     }
   ]);
 }
 
-async function testDeleteUserNotFound() {
-  console.log(`📝 Test deleting non-existent user`);
+async function testUpdateUserPassword() {
+  console.log(`📝 Test updating user password`);
+
+  const options = {
+    hostname: 'localhost',
+    port: 8000,
+    path: `${API_PREFIX}/users/${testUserId}`,
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${superAdminToken}`
+    }
+  };
+
+  const updateData = {
+    password: 'NewPassword123!'
+  };
+
+  const response = await makeRequest(options, updateData);
+  return validateResponse(response, 200, ['success', 'message', 'data'], [
+    (res) => {
+      console.log(`💬 Message: "${res.data?.message}" (expected: "User updated successfully") ${res.data?.message === 'User updated successfully' ? '✅' : '❌'}`);
+      return res.data?.message === 'User updated successfully';
+    },
+    (res) => validateUserData(res.data?.data)
+  ]);
+}
+
+async function testUpdateUserEmail() {
+  console.log(`📝 Test updating user email`);
+
+  const options = {
+    hostname: 'localhost',
+    port: 8000,
+    path: `${API_PREFIX}/users/${testUserId}`,
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${superAdminToken}`
+    }
+  };
+
+  const updateData = {
+    email: `updated.email.${Date.now()}@example.com`
+  };
+
+  const response = await makeRequest(options, updateData);
+  return validateResponse(response, 200, ['success', 'message', 'data'], [
+    (res) => {
+      console.log(`💬 Message: "${res.data?.message}" (expected: "User updated successfully") ${res.data?.message === 'User updated successfully' ? '✅' : '❌'}`);
+      return res.data?.message === 'User updated successfully';
+    },
+    (res) => validateUserData(res.data?.data),
+    (res) => {
+      const user = res.data?.data;
+      const isEmailUpdated = user.email === updateData.email;
+      console.log(`📧 Email Updated: ${isEmailUpdated ? '✅' : '❌'}`);
+      return isEmailUpdated;
+    }
+  ]);
+}
+
+async function testUpdateUserNotFound() {
+  console.log(`📝 Test updating non-existent user`);
 
   const options = {
     hostname: 'localhost',
     port: 8000,
     path: `${API_PREFIX}/users/99999`,
-    method: 'DELETE',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${superAdminToken}`
     }
   };
 
-  const response = await makeRequest(options);
+  const updateData = {
+    first_name: 'NonExistent'
+  };
+
+  const response = await makeRequest(options, updateData);
   return validateResponse(response, 404, ['success', 'message'], [
     (res) => {
       console.log(`💬 Message: "${res.data?.message}" (expected: "User not found") ${res.data?.message === 'User not found' ? '✅' : '❌'}`);
@@ -234,116 +331,69 @@ async function testDeleteUserNotFound() {
   ]);
 }
 
-async function testDeleteUserTwice() {
-  console.log(`📝 Test deleting the same user twice`);
-
-  // First create another test user
-  const createOptions = {
-    hostname: 'localhost',
-    port: 8000,
-    path: `${API_PREFIX}/users`,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${superAdminToken}`
-    }
-  };
-
-  const userData = {
-    first_name: 'Delete',
-    last_name: 'Twice',
-    email: `delete.twice.${Date.now()}@example.com`,
-    password: 'TestPassword123!'
-  };
-
-  const createResponse = await makeRequest(createOptions, userData);
-  if (createResponse.status !== 201) {
-    throw new Error('Failed to create test user for double delete test');
-  }
-
-  const userId = createResponse.data.data.user_id;
-
-  // Delete the user first time
-  const deleteOptions1 = {
-    hostname: 'localhost',
-    port: 8000,
-    path: `${API_PREFIX}/users/${userId}`,
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${superAdminToken}`
-    }
-  };
-
-  const deleteResponse1 = await makeRequest(deleteOptions1);
-  if (deleteResponse1.status !== 200) {
-    throw new Error('First delete failed');
-  }
-
-  // Try to delete the same user again
-  const deleteOptions2 = {
-    hostname: 'localhost',
-    port: 8000,
-    path: `${API_PREFIX}/users/${userId}`,
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${superAdminToken}`
-    }
-  };
-
-  const deleteResponse2 = await makeRequest(deleteOptions2);
-  return validateResponse(deleteResponse2, 404, ['success', 'message'], [
-    (res) => {
-      console.log(`💬 Message: "${res.data?.message}" (expected: "User not found") ${res.data?.message === 'User not found' ? '✅' : '❌'}`);
-      return res.data?.message === 'User not found';
-    }
-  ]);
-}
-
-async function testDeleteUserInvalidId() {
-  console.log(`📝 Test deleting user with invalid ID format`);
+async function testUpdateUserEmptyData() {
+  console.log(`📝 Test updating user with empty data`);
 
   const options = {
     hostname: 'localhost',
     port: 8000,
-    path: `${API_PREFIX}/users/invalid`,
-    method: 'DELETE',
+    path: `${API_PREFIX}/users/${testUserId}`,
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${superAdminToken}`
     }
   };
 
-  const response = await makeRequest(options);
-  // Currently returns 500 due to parseInt("invalid") = NaN causing issues
-  return validateResponse(response, 500, [], [
+  const updateData = {}; // Empty object
+
+  const response = await makeRequest(options, updateData);
+  return validateResponse(response, 200, ['success', 'message', 'data'], [
     (res) => {
-      console.log(`💬 Response indicates server error (expected due to invalid ID parsing) ${response.status === 500 ? '✅' : '❌'}`);
-      return response.status === 500;
+      console.log(`💬 Message: "${res.data?.message}" (expected: "User updated successfully") ${res.data?.message === 'User updated successfully' ? '✅' : '❌'}`);
+      return res.data?.message === 'User updated successfully';
+    },
+    (res) => validateUserData(res.data?.data)
+  ]);
+}
+
+async function testUpdateUserInvalidEmail() {
+  console.log(`📝 Test updating user with invalid email`);
+
+  const options = {
+    hostname: 'localhost',
+    port: 8000,
+    path: `${API_PREFIX}/users/${testUserId}`,
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${superAdminToken}`
+    }
+  };
+
+  const updateData = {
+    email: 'invalid-email'
+  };
+
+  const response = await makeRequest(options, updateData);
+  return validateResponse(response, 400, ['success', 'message'], [
+    (res) => {
+      console.log(`💬 Message: "${res.data?.message}" (expected: validation error) ${res.data?.message && res.data.message.includes('email') ? '✅' : '❌'}`);
+      return res.data?.message && res.data.message.includes('email');
     }
   ]);
 }
 
-async function testDeleteOwnAccount() {
-  console.log(`📝 Test attempting to delete own super admin account`);
-
-  // Get the super admin user ID by checking the token payload or making a request
-  // For now, we'll skip this test as it requires more complex setup
-  console.log(`⏭️  Skipping - requires complex setup to identify super admin user ID`);
-  return true;
-}
-
 // Main test runner
 async function runAllTests() {
-  console.log('🚀 Starting DELETE /users/:id endpoint tests...\n');
+  console.log('🚀 Starting PUT /users/:id endpoint tests...\n');
 
   try {
     // Get super admin token
     superAdminToken = await loginAndGetToken(testUsers.superAdmin.email, testUsers.superAdmin.password);
     console.log('✅ Super admin token obtained\n');
 
-    // Create a test user for delete operations
+    // Create a test user for update operations
     await createTestUser();
   } catch (error) {
     console.log('❌ Setup failed:', error.message);
@@ -351,13 +401,14 @@ async function runAllTests() {
   }
 
   const tests = [
-    { name: 'Delete User Without Authentication', func: testDeleteUserWithoutAuth },
-    { name: 'Delete User With Invalid Token', func: testDeleteUserWithInvalidToken },
-    { name: 'Delete User With Super Admin Token', func: testDeleteUserWithSuperAdmin },
-    { name: 'Delete User Not Found', func: testDeleteUserNotFound },
-    { name: 'Delete User Twice', func: testDeleteUserTwice },
-    { name: 'Delete User Invalid ID', func: testDeleteUserInvalidId },
-    { name: 'Delete Own Account', func: testDeleteOwnAccount }
+    { name: 'Update User Without Authentication', func: testUpdateUserWithoutAuth },
+    { name: 'Update User With Invalid Token', func: testUpdateUserWithInvalidToken },
+    { name: 'Update User With Super Admin Token', func: testUpdateUserWithSuperAdmin },
+    { name: 'Update User Password', func: testUpdateUserPassword },
+    { name: 'Update User Email', func: testUpdateUserEmail },
+    { name: 'Update User Not Found', func: testUpdateUserNotFound },
+    { name: 'Update User Empty Data', func: testUpdateUserEmptyData },
+    { name: 'Update User Invalid Email', func: testUpdateUserInvalidEmail }
   ];
 
   let passed = 0;

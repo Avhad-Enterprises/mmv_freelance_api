@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
 import { requireRole } from '../../middlewares/role.middleware';
+import authMiddleware from '../../middlewares/auth.middleware';
 import supportTicketsController from './support-ticket.controller';
 
 class supportTicketsRoute implements Route {
@@ -13,38 +14,74 @@ class supportTicketsRoute implements Route {
   }
 
   private initializeRoutes() {
-    // Create a new ticket
-    this.router.post(`${this.path}/create`, this.supportTicketsController.createTicket);
-   this.router.post(
-      `${this.path}/adminnote`,
-      this.supportTicketsController.addNoteToTicket
+    // ✅ Personal operation - Create a new ticket
+    this.router.post(`${this.path}/create`, 
+      authMiddleware,
+      (req, res, next) => this.supportTicketsController.createTicket(req as any, res, next)
     );
-    // supportTicket.route.ts
+
+    // ⚠️ Admin operation - Add admin note to ticket
+    this.router.post(
+      `${this.path}/adminnote`,
+      requireRole('ADMIN', 'SUPER_ADMIN'),
+      (req, res, next) => this.supportTicketsController.addNoteToTicket(req as any, res, next)
+    );
+
+    // ⚠️ Admin operation - Get admin notes
     this.router.post(
       `${this.path}/getnotes`,
-      this.supportTicketsController.getAdminNotes
+      requireRole('ADMIN', 'SUPER_ADMIN'),
+      (req, res, next) => this.supportTicketsController.getAdminNotes(req as any, res, next)
     );
+
+    // ⚠️ Admin/User operation - Soft delete ticket
     this.router.delete(
       `${this.path}/delete`,
+      authMiddleware,
       this.supportTicketsController.softDeleteTicket
     );
 
-    this.router.post(
-      `${this.path}/get-all`,
-      this.supportTicketsController.getAllTickets
+    // ✅ Personal operation - Get authenticated user's tickets
+    this.router.get(
+      `${this.path}/my-tickets`,
+      authMiddleware,
+      (req, res, next) => this.supportTicketsController.getMyTickets(req as any, res, next)
     );
 
+    // ⚠️ Admin operation - Get all tickets for any user
+    this.router.post(
+      `${this.path}/admin/get-all`,
+      requireRole('ADMIN', 'SUPER_ADMIN'),
+      this.supportTicketsController.getAllTicketsAdmin
+    );
+
+    // ⚠️ Mixed operation - Get ticket details (keep existing for now)
     this.router.post(
       `${this.path}/details`,
+      authMiddleware,
       this.supportTicketsController.getTicketDetails
     );
-     this.router.patch(
+
+    // ⚠️ Admin operation - Update ticket status
+    this.router.patch(
       `${this.path}/status`,
-      this.supportTicketsController.updateTicketStatus
+      requireRole('ADMIN', 'SUPER_ADMIN'),
+      (req, res, next) => this.supportTicketsController.updateTicketStatus(req as any, res, next)
     );
-    this.router.post( `${this.path}/reply`,this.supportTicketsController.replyToTicket );
+
+    // ✅ Personal operation - Reply to ticket
+    this.router.post( 
+      `${this.path}/reply`,
+      authMiddleware,
+      (req, res, next) => this.supportTicketsController.replyToTicket(req as any, res, next)
+    );
    
-    this.router.post( `${this.path}/getall`, this.supportTicketsController.getallticket);
+    // ✅ Personal operation - Get user's tickets for specific project
+    this.router.post( 
+      `${this.path}/my-project-tickets`,
+      authMiddleware,
+      (req, res, next) => this.supportTicketsController.getMyProjectTickets(req as any, res, next)
+    );
   }
 
 }
