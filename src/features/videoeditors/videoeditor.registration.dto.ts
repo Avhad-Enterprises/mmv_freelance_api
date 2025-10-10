@@ -108,10 +108,6 @@ export class VideoEditorRegistrationDto {
 
   @IsOptional()
   @IsString()
-  address?: string;
-
-  @IsOptional()
-  @IsString()
   city?: string;
 
   @IsOptional()

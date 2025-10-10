@@ -89,7 +89,12 @@ export const seed = async (dropFirst = false) => {
 };
 
 // Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
+export const migrate = async () => {
+    const tableExists = await DB.schema.hasTable(USERS_TABLE);
+    if (!tableExists) {
+        console.log('Users table does not exist, creating...');
+        await seed(false); // Create without dropping
+    } else {
+        console.log('Users table already exists, skipping migration');
+    }
 };

@@ -25,7 +25,7 @@ export const seed = async (dropFirst = false) => {
             table.increments('id').primary();  //ID
             table.string ('email').unique();
             table.timestamp('subscribed_at').defaultTo(DB.fn.now());
-            table.integer('is_active').defaultTo(0);
+            table.boolean('is_active').defaultTo(false);
 
 
         });

@@ -72,10 +72,6 @@ export class VideographerRegistrationDto {
   @IsOptional()
   longitude?: number;
 
-  @IsOptional()
-  @IsString()
-  full_address?: string;
-
   @IsNotEmpty()
   @Transform(({ value }) => {
     if (typeof value === 'string') {

@@ -49,7 +49,6 @@ export const migrate = async (dropFirst = false) => {
       // Professional Info
       table.string('profile_title', 255).notNullable();
       table.string('role', 100).nullable().comment('Professional role/title');
-      table.text('address').nullable().comment('Full address');
       table.text('short_description').nullable();
       table.string('experience_level', 50).nullable().comment('entry, intermediate, expert, master');
 
@@ -68,7 +67,7 @@ export const migrate = async (dropFirst = false) => {
       table.jsonb('services').nullable().comment('Services offered');
 
       // Pricing & Availability
-      table.decimal('rate_amount', 10, 2).nullable();
+      table.decimal('rate_amount', 12, 2).nullable();
       table.string('currency', 3).defaultTo('INR').comment('Currency code: INR, USD, EUR');
       table.string('availability', 50).nullable().comment('part-time, full-time, flexible, on-demand');
       table.string('work_type', 50).nullable().comment('remote, on_site, hybrid');
@@ -91,7 +90,7 @@ export const migrate = async (dropFirst = false) => {
       table.jsonb('projects_completed').defaultTo('[]');
 
       // Payment
-      table.jsonb('payout_method').nullable();
+      table.jsonb('payment_method').nullable();
       table.jsonb('bank_account_info').nullable();
 
       // Timestamps
@@ -99,6 +98,16 @@ export const migrate = async (dropFirst = false) => {
       table.timestamp('updated_at').defaultTo(DB.fn.now());
     });
     console.log('Created Freelancer Profiles Table');
+    
+    console.log('Creating Triggers for Freelancer Profiles Table');
+    await DB.raw(`
+      CREATE TRIGGER update_timestamp
+      BEFORE UPDATE
+      ON ${FREELANCER_PROFILES}
+      FOR EACH ROW
+      EXECUTE PROCEDURE update_timestamp();
+    `);
+    console.log('Finished Creating Triggers');
   } else {
     console.log('Freelancer Profiles Table already exists');
   }
