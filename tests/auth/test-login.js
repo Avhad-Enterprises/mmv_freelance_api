@@ -9,15 +9,21 @@
  * Usage: node scripts/test-login.js
  */
 
-const https = require('https');
-const http = require('http');
+const {
+  CONFIG,
+  makeRequest,
+  printTestResult,
+  printSection,
+  printSummary,
+} = require('../test-utils');
 
-const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
+const http = require('http');
+const https = require('https');
 const LOGIN_ENDPOINT = '/auth/login';
 
 // Test configuration
 const TEST_CONFIG = {
-  baseUrl: BASE_URL,
+  baseUrl: CONFIG.baseUrl + CONFIG.apiVersion,
   endpoint: LOGIN_ENDPOINT,
   timeout: 10000,
   showFullResponse: false, // Set to true for debugging
@@ -256,7 +262,7 @@ const RATE_LIMIT_TESTS = [
 ];
 
 // Utility functions
-function makeRequest(testCase) {
+function makeLoginRequest(testCase) {
   return new Promise((resolve, reject) => {
     const postData = testCase.rawData || JSON.stringify(testCase.data);
     const contentType = testCase.contentType || 'application/json';
@@ -410,7 +416,7 @@ async function runSingleTest(testCase, index) {
   
   try {
     const startTime = Date.now();
-    const response = await makeRequest(testCase);
+    const response = await makeLoginRequest(testCase);
     const endTime = Date.now();
     const duration = endTime - startTime;
     
@@ -470,7 +476,7 @@ async function runRateLimitTest(testCase) {
   
   for (let i = 0; i < testCase.requestCount; i++) {
     try {
-      const response = await makeRequest(testCase);
+      const response = await makeLoginRequest(testCase);
       results.push({
         attempt: i + 1,
         status: response.status,
@@ -512,7 +518,7 @@ async function runAllTests() {
   
   // Check if server is running
   try {
-    await makeRequest({ data: { email: 'test', password: 'test' } });
+    await makeLoginRequest({ data: { email: 'test', password: 'test' } });
   } catch (error) {
     if (error.code === 'ECONNREFUSED') {
       console.error('❌ Cannot connect to server. Please ensure the server is running on http://localhost:8001');

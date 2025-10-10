@@ -21,7 +21,13 @@ export const ADMIN_PROFILES = 'admin_profiles';
  * Contains admin-specific fields
  * Currently prepared for future extensions
  */
-export const migrate = async () => {
+export const migrate = async (dropFirst = false) => {
+  if (dropFirst) {
+    console.log('Dropping Admin Profiles Table');
+    await DB.schema.dropTableIfExists(ADMIN_PROFILES);
+    console.log('Dropped Admin Profiles Table');
+  }
+
   const tableExists = await DB.schema.hasTable(ADMIN_PROFILES);
   if (!tableExists) {
     console.log('Admin Profiles table does not exist, creating...');

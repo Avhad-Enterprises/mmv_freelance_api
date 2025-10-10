@@ -12,7 +12,13 @@ import DB from './index.schema';
 export const APPLICATION = 'application';
 
 // Migration function for schema-based migrations
-export const migrate = async () => {
+export const migrate = async (dropFirst = false) => {
+    if (dropFirst) {
+        console.log('Dropping Application Table');
+        await DB.schema.dropTableIfExists(APPLICATION);
+        console.log('Dropped Application Table');
+    }
+
     const tableExists = await DB.schema.hasTable(APPLICATION);
     if (!tableExists) {
         console.log('Application table does not exist, creating...');
@@ -24,7 +30,7 @@ export const migrate = async () => {
                 .inTable('projects_task')
                 .onDelete('CASCADE');
             table.integer('applicant_id').notNullable()
-                .references('id')
+                .references('user_id')
                 .inTable('users')
                 .onDelete('CASCADE');
             table.text('resume_url').nullable();
@@ -33,18 +39,18 @@ export const migrate = async () => {
             table.boolean('is_hired').defaultTo(false);
             table.boolean('is_active').defaultTo(true);
             table.integer('created_by').notNullable()
-                .references('id')
+                .references('user_id')
                 .inTable('users')
                 .onDelete('SET NULL');
             table.timestamp('created_at').defaultTo(DB.fn.now());
             table.timestamp('updated_at').defaultTo(DB.fn.now());
             table.integer('updated_by').nullable()
-                .references('id')
+                .references('user_id')
                 .inTable('users')
                 .onDelete('SET NULL');
             table.boolean('is_deleted').defaultTo(false);
             table.integer('deleted_by').nullable()
-                .references('id')
+                .references('user_id')
                 .inTable('users')
                 .onDelete('SET NULL');
             table.timestamp('deleted_at').nullable();
