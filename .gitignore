@@ -84,6 +84,8 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
+# package-lock.json (optional - uncomment if you prefer to ignore)
+package-lock.json
 
 # dotenv environment variables file
 .env
