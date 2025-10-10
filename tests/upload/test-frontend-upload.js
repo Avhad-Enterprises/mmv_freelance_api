@@ -10,7 +10,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
 
 /**
  * Create a proper PNG file for testing
@@ -63,7 +63,7 @@ async function testRegistrationWithFile() {
     
     // Make request
     const response = await axios.post(
-      `${API_BASE_URL}/auth/register/videoeditor`,
+      `${BASE_URL}/auth/register/videoeditor`,
       formData,
       {
         headers: {

@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * Password Reset API Test
+ * Password Reset Request API Test
  *
- * Tests the /users/password-reset endpoint
+ * Tests the /users/password-reset-request endpoint
  */
 
 const https = require('https');
 const http = require('http');
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
 const API_PREFIX = '/api/v1';
-const ENDPOINT = '/users/password-reset';
+const ENDPOINT = '/users/password-reset-request';
 
 const TEST_CONFIG = {
   baseUrl: BASE_URL,
@@ -20,20 +20,41 @@ const TEST_CONFIG = {
   showFullResponse: false,
 };
 
-console.log('🔑 Password Reset API Test');
-console.log('===========================');
+console.log('🔐 Password Reset Request API Test');
+console.log('=====================================');
 console.log(`Base URL: ${BASE_URL}`);
 console.log(`Endpoint: ${API_PREFIX}${ENDPOINT}`);
 console.log('');
 
 // Test cases
 const TEST_CASES = [
+  // ============== VALID REQUESTS ==============
+  {
+    name: "Valid Password Reset Request",
+    description: "Test password reset request with valid email",
+    data: {
+      email: "test@example.com"
+    },
+    expectedStatus: 200,
+    expectedFields: ['success', 'message'],
+    category: "VALID_REQUESTS"
+  },
+
   // ============== VALIDATION ERRORS ==============
   {
-    name: "Missing Token",
-    description: "Test with missing token field",
+    name: "Missing Email",
+    description: "Test with missing email field",
+    data: {},
+    expectedStatus: 400,
+    expectedFields: ['success', 'message'],
+    category: "VALIDATION_ERRORS"
+  },
+
+  {
+    name: "Empty Email",
+    description: "Test with empty email string",
     data: {
-      new_password: "newpassword123"
+      email: ""
     },
     expectedStatus: 400,
     expectedFields: ['success', 'message'],
@@ -41,75 +62,26 @@ const TEST_CASES = [
   },
 
   {
-    name: "Missing New Password",
-    description: "Test with missing new_password field",
+    name: "Invalid Email Format",
+    description: "Test with invalid email format",
     data: {
-      token: "some-token"
+      email: "invalid-email"
     },
     expectedStatus: 400,
     expectedFields: ['success', 'message'],
     category: "VALIDATION_ERRORS"
   },
 
+  // ============== USER NOT FOUND ==============
   {
-    name: "Empty Token",
-    description: "Test with empty token string",
+    name: "Non-existent Email",
+    description: "Test with email that doesn't exist (should still return success for security)",
     data: {
-      token: "",
-      new_password: "newpassword123"
+      email: "nonexistent@example.com"
     },
-    expectedStatus: 400,
+    expectedStatus: 200,
     expectedFields: ['success', 'message'],
-    category: "VALIDATION_ERRORS"
-  },
-
-  {
-    name: "Empty New Password",
-    description: "Test with empty new_password string",
-    data: {
-      token: "some-token",
-      new_password: ""
-    },
-    expectedStatus: 400,
-    expectedFields: ['success', 'message'],
-    category: "VALIDATION_ERRORS"
-  },
-
-  {
-    name: "Short New Password",
-    description: "Test with password shorter than 6 characters",
-    data: {
-      token: "some-token",
-      new_password: "12345"
-    },
-    expectedStatus: 400,
-    expectedFields: ['success', 'message'],
-    category: "VALIDATION_ERRORS"
-  },
-
-  // ============== TOKEN ERRORS ==============
-  {
-    name: "Invalid Token",
-    description: "Test with non-existent token",
-    data: {
-      token: "invalid-token-12345678901234567890123456789012",
-      new_password: "newpassword123"
-    },
-    expectedStatus: 400,
-    expectedFields: ['success', 'message'],
-    category: "TOKEN_ERRORS"
-  },
-
-  {
-    name: "Expired Token",
-    description: "Test with expired token (simulate by using old token)",
-    data: {
-      token: "expired-token-12345678901234567890123456789012",
-      new_password: "newpassword123"
-    },
-    expectedStatus: 400,
-    expectedFields: ['success', 'message'],
-    category: "TOKEN_ERRORS"
+    category: "USER_ERRORS"
   },
 
   // ============== MALFORMED REQUESTS ==============
@@ -127,8 +99,7 @@ const TEST_CASES = [
     name: "Wrong Content Type",
     description: "Test with wrong content type",
     data: {
-      token: "some-token",
-      new_password: "newpassword123"
+      email: "test@example.com"
     },
     expectedStatus: 400,
     expectedFields: ['success', 'message'],
@@ -138,11 +109,10 @@ const TEST_CASES = [
 
   // ============== SECURITY TESTS ==============
   {
-    name: "SQL Injection in Token",
-    description: "Test SQL injection in token field",
+    name: "SQL Injection Attempt",
+    description: "Test SQL injection in email field",
     data: {
-      token: "'; DROP TABLE users; --",
-      new_password: "newpassword123"
+      email: "'; DROP TABLE users; --"
     },
     expectedStatus: 400,
     expectedFields: ['success', 'message'],
@@ -150,24 +120,22 @@ const TEST_CASES = [
   },
 
   {
-    name: "XSS in New Password",
-    description: "Test XSS injection in new_password field",
+    name: "XSS Attempt",
+    description: "Test XSS injection in email field",
     data: {
-      token: "some-token",
-      new_password: "<script>alert('xss')</script>"
+      email: "<script>alert('xss')</script>@example.com"
     },
-    expectedStatus: 400, // Correct - invalid token, but password validation passes
+    expectedStatus: 400,
     expectedFields: ['success', 'message'],
     category: "SECURITY_TESTS"
   },
 
   // ============== EDGE CASES ==============
   {
-    name: "Very Long Token",
-    description: "Test with extremely long token",
+    name: "Very Long Email",
+    description: "Test with extremely long email",
     data: {
-      token: "a".repeat(200),
-      new_password: "newpassword123"
+      email: "a".repeat(200) + "@example.com"
     },
     expectedStatus: 400,
     expectedFields: ['success', 'message'],
@@ -175,37 +143,12 @@ const TEST_CASES = [
   },
 
   {
-    name: "Very Long Password",
-    description: "Test with extremely long password",
+    name: "Email with Special Characters",
+    description: "Test email with special characters",
     data: {
-      token: "some-token",
-      new_password: "a".repeat(200)
+      email: "test+tag@example.com"
     },
-    expectedStatus: 400,
-    expectedFields: ['success', 'message'],
-    category: "EDGE_CASES"
-  },
-
-  {
-    name: "Minimum Valid Password",
-    description: "Test with minimum valid password length (6 chars)",
-    data: {
-      token: "some-token",
-      new_password: "123456"
-    },
-    expectedStatus: 400, // Will fail due to invalid token, but validates password format
-    expectedFields: ['success', 'message'],
-    category: "EDGE_CASES"
-  },
-
-  {
-    name: "Unicode Password",
-    description: "Test with unicode characters in password",
-    data: {
-      token: "some-token",
-      new_password: "pásswörd123"
-    },
-    expectedStatus: 400, // Will fail due to invalid token, but validates password format
+    expectedStatus: 200,
     expectedFields: ['success', 'message'],
     category: "EDGE_CASES"
   }
@@ -214,7 +157,7 @@ const TEST_CASES = [
 // Helper function to make HTTP request
 function makeRequest(testCase) {
   return new Promise((resolve, reject) => {
-    const url = BASE_URL + API_PREFIX + ENDPOINT;
+    const url = BASE_URL + ENDPOINT;
     const data = typeof testCase.data === 'string' ? testCase.data : JSON.stringify(testCase.data);
 
     const options = {
@@ -298,8 +241,9 @@ async function runTests() {
   let passed = 0;
   let failed = 0;
   const results = {
+    VALID_REQUESTS: { total: 0, passed: 0 },
     VALIDATION_ERRORS: { total: 0, passed: 0 },
-    TOKEN_ERRORS: { total: 0, passed: 0 },
+    USER_ERRORS: { total: 0, passed: 0 },
     MALFORMED_REQUESTS: { total: 0, passed: 0 },
     SECURITY_TESTS: { total: 0, passed: 0 },
     EDGE_CASES: { total: 0, passed: 0 }

@@ -1,14 +1,15 @@
 import DB from "../../../database/index.schema";
 import { NotificationDto } from "./notification.dto";
 import { NextFunction, Request, Response } from "express";
+import { RequestWithUser } from "../../interfaces/auth.interface";
 import NotificationService from "./notification.service";
 import HttpException from "../../exceptions/HttpException";
 
 class NotificationController {
     public NotificationService = new NotificationService();
-    public getnotificationby = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    public getnotificationby = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const user_id = parseInt(req.body.user_id);
+            const user_id = req.user.user_id;
             const notification = await this.NotificationService.getnotificationbysystem(user_id);
             res.status(200).json({ data: notification, success: true });
         } catch (err) {
@@ -36,10 +37,10 @@ class NotificationController {
         }
     };
 
-    public readallnotification = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const userId = parseInt(req.body.user_id);
-
+    public readallnotification = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
         try {
+            const userId = req.user.user_id;
+
             const updatedNotifications = await this.NotificationService.markallasread(userId);
             if (!updatedNotifications) {
                 throw new HttpException(404, "Notification not found");
@@ -55,13 +56,10 @@ class NotificationController {
         }
     };
 
-    public notificationcount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const user_id = parseInt(req.params.id);
-     
-        if (isNaN(user_id)) {
-            throw new HttpException(400, "User ID must be a valid number");
-        }
+    public notificationcount = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
         try {
+            const user_id = req.user.user_id;
+     
             const notification = await this.NotificationService.getUnreadCount(user_id)
 
             if (!notification) {
