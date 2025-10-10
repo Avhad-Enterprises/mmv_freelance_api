@@ -38,7 +38,7 @@ export const loadUserProfile = async (userId: number): Promise<UserWithProfile> 
     const freelancerProfile = await DB('freelancer_profiles').where({ user_id: userId }).first();
     if (freelancerProfile) {
       const videographerProfile = await DB('videographer_profiles')
-        .where({ profile_id: freelancerProfile.profile_id })
+        .where({ freelancer_id: freelancerProfile.freelancer_id })
         .first();
       profile = { ...freelancerProfile, videographer: videographerProfile };
     }
@@ -48,7 +48,7 @@ export const loadUserProfile = async (userId: number): Promise<UserWithProfile> 
     const freelancerProfile = await DB('freelancer_profiles').where({ user_id: userId }).first();
     if (freelancerProfile) {
       const editorProfile = await DB('videoeditor_profiles')
-        .where({ profile_id: freelancerProfile.profile_id })
+        .where({ freelancer_id: freelancerProfile.freelancer_id })
         .first();
       profile = { ...freelancerProfile, videoeditor: editorProfile };
     }
@@ -76,7 +76,7 @@ export const hasProfile = async (userId: number, profileType: string): Promise<b
     
     const specificTable = profileType === 'VIDEOGRAPHER' ? 'videographer_profiles' : 'videoeditor_profiles';
     const specificProfile = await DB(specificTable)
-      .where({ profile_id: freelancerProfile.profile_id })
+      .where({ freelancer_id: freelancerProfile.freelancer_id })
       .first();
     return !!specificProfile;
   }

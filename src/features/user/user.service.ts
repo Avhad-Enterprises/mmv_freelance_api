@@ -637,7 +637,7 @@ class UserService {
         }).returning('*');
         
         await DB('videographer_profiles').insert({
-          profile_id: freelancerProfile.profile_id
+          freelancer_id: freelancerProfile.freelancer_id
         });
         break;
       case 'VIDEO_EDITOR':
@@ -647,7 +647,7 @@ class UserService {
         }).returning('*');
         
         await DB('videoeditor_profiles').insert({
-          profile_id: editorProfile.profile_id
+          freelancer_id: editorProfile.freelancer_id
         });
         break;
       case 'ADMIN':

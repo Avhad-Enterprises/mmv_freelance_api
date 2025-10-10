@@ -263,10 +263,6 @@ export class UsersDto {
 
   @IsOptional()
   @IsArray()
-  payout_method: any[];
-
-  @IsOptional()
-  @IsArray()
   bank_account_info: any[];
 
   @IsOptional()

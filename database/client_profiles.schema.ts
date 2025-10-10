@@ -65,7 +65,6 @@ export const migrate = async (dropFirst = false) => {
     table.boolean('privacy_policy_accepted').defaultTo(false).comment('Privacy policy accepted');
 
     // Business Details
-    table.string('address', 255).nullable().comment('Business address');
     table.string('tax_id', 100).nullable().comment('Tax identification number');
     table.jsonb('business_documents').nullable().comment('Array of business document URLs');
     table.text('id_document_url').nullable().comment('ID document upload URL');
@@ -90,13 +89,17 @@ export const migrate = async (dropFirst = false) => {
     table.timestamp('updated_at').defaultTo(DB.fn.now());
   });
   console.log('Created Client Profiles Table');
+  
+  console.log('Creating Triggers for Client Profiles Table');
+  await DB.raw(`
+    CREATE TRIGGER update_timestamp
+    BEFORE UPDATE
+    ON ${CLIENT_PROFILES}
+    FOR EACH ROW
+    EXECUTE PROCEDURE update_timestamp();
+  `);
+  console.log('Finished Creating Triggers');
   } else {
     console.log('Client Profiles Table already exists');
   }
-};
-
-export const seed = async () => {
-  console.log('Seeding Client Profiles Table');
-  // No default seed data needed
-  console.log('Finished Seeding Client Profiles Table');
 };

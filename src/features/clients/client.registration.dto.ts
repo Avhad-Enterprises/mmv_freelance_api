@@ -63,9 +63,6 @@ export class ClientRegistrationDto {
   @IsNotEmpty()
   phone_number: string;
 
-  @IsNotEmpty()
-  address: string;
-
   @IsOptional()
   zip_code?: string;
 

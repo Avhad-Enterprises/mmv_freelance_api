@@ -1,12 +1,11 @@
 // Videographer Profile Interface
 export interface VideographerProfile {
-  profile_id?: number;
+  freelancer_id?: number;
   user_id: number;
 
   // Professional Info
   profile_title: string;
   role?: string;
-  address?: string;
   short_description?: string;
   experience_level?: 'entry' | 'intermediate' | 'expert' | 'master';
 
@@ -48,7 +47,7 @@ export interface VideographerProfile {
   projects_completed?: any[];
 
   // Payment
-  payout_method?: any;
+  payment_method?: any;
   bank_account_info?: any;
 
   // Timestamps
@@ -68,7 +67,6 @@ export interface VideographerRegistrationData {
   superpowers: string[];
   country: string;
   city: string;
-  full_address: string;
   portfolio_links: string[];
   rate_amount: number;
   rate_currency: string;
