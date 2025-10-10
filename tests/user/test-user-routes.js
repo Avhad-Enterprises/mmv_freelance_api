@@ -16,7 +16,7 @@ const {
   authHeader,
   randomEmail,
   randomUsername,
-} = require('./test-utils');
+} = require('../test-utils');
 
 let passedTests = 0;
 let failedTests = 0;

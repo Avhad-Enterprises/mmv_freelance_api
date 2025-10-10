@@ -1,7 +1,7 @@
 const http = require('http');
 
 // Configuration
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
 const API_PREFIX = '/api/v1';
 
 // Test data
