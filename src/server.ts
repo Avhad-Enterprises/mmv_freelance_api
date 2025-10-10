@@ -33,9 +33,7 @@ import EmailRoute from './features/email/email.routes';
 // Phase 8: Infrastructure Features
 import UploadRoute from './features/upload/upload.routes';
 import WebhookRoute from './features/webhook/webhook.routes';
-import LocationRoute from './features/location/location.routes';
 import BrandingRoute from './features/branding/branding.routes';
-import FirebaseAuthRoute from './features/firebase-auth/firebase-auth.routes';
 import DocumentRoute from './features/document/document.routes';
 
 // Phase 9: Remaining Features
@@ -83,9 +81,7 @@ const app = new App([
     new EmailRoute(),
     new UploadRoute(),
     new WebhookRoute(),
-    new LocationRoute(),
     new BrandingRoute(),
-    // new FirebaseAuthRoute(), // Temporarily disabled to avoid conflicts
     new DocumentRoute(),
     new CategoryRoute(),
     new TagRoute(),

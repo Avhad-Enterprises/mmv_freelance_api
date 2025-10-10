@@ -10,11 +10,7 @@ const DATABASE_DIR = path.join(__dirname, '../database');
 // Schema dependency order (tables that depend on others should come after)
 const MIGRATION_ORDER = [
   // Independent lookup tables first
-  'country.schema.ts',
-  'states.schema.ts', 
-  'city.schema.ts',
   'skill.schema.ts',
-  'niches.schema.ts',
   'category.schema.ts',
   'tags.schema.ts',
   
@@ -54,7 +50,6 @@ const MIGRATION_ORDER = [
   'robotstxt.schema.ts',
   'document_verification.schema.ts',
   'subscribed_emails.schema.ts',
-  'userinvitations.schema.ts',
   'admin_invites.schema.ts',
   'application.schema.ts',
   'report_system.schema.ts',

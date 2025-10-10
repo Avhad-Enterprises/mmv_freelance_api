@@ -42,6 +42,7 @@ export const seed = async (dropFirst = false) => {
             table.text('profile_picture').nullable();
             table.text('bio').nullable();
             table.string('timezone', 50).nullable();
+            table.string('category', 255).nullable();
             
             // Address (shared by all user types)
             table.string('address_line_first', 255).nullable();
