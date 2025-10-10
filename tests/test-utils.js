@@ -10,7 +10,7 @@ const https = require('https');
 
 // Base configuration
 const CONFIG = {
-  baseUrl: process.env.TEST_BASE_URL || 'http://localhost:8000',
+  baseUrl: process.env.TEST_BASE_URL || 'http://localhost:8001',
   apiVersion: '/api/v1',
   timeout: 10000,
   showFullResponse: process.env.SHOW_FULL_RESPONSE === 'true',

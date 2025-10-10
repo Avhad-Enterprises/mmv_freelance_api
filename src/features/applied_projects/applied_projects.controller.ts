@@ -3,6 +3,7 @@ import { AppliedProjectsDto } from "./applied_projects.dto";
 import { IAppliedProjects } from "./applied_projects.interface";
 import AppliedProjectsService from "./applied_projects.service";
 import HttpException from "../../exceptions/HttpException";
+import { RequestWithUser } from "../../interfaces/auth.interface";
 
 class AppliedProjectsController {
   public AppliedProjectsService = new AppliedProjectsService();
@@ -26,7 +27,7 @@ class AppliedProjectsController {
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    const projects_task_id = parseInt(req.body.projects_task_id);
+    const projects_task_id = parseInt(req.params.project_id);
     if (isNaN(projects_task_id)) {
       throw new HttpException(400, "Invalid Project Task ID");
     }
@@ -38,14 +39,11 @@ class AppliedProjectsController {
   };
 
   public getMyApplications = async (
-    req: Request,
+    req: RequestWithUser,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    const user_id = parseInt(req.body.user_id);
-    if (isNaN(user_id)) {
-      throw new HttpException(400, "Invalid or missing user_id in body");
-    }
+    const user_id = req.user.user_id;
     const applications = await this.AppliedProjectsService.getUserApplications(user_id);
     res.status(200).json({
       data: applications,
@@ -55,15 +53,15 @@ class AppliedProjectsController {
   };
 
   public getMyApplicationbyId = async (
-    req: Request,
+    req: RequestWithUser,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
 
-    const user_id = parseInt(req.body.user_id);
-    const projects_task_id = parseInt(req.body.projects_task_id);
-    if (isNaN(user_id) || isNaN(projects_task_id)) {
-      throw new HttpException(400, "Invalid user or project task id");
+    const user_id = req.user.user_id;
+    const projects_task_id = parseInt(req.params.project_id);
+    if (isNaN(projects_task_id)) {
+      throw new HttpException(400, "Invalid project task id");
     }
     const application = await this.AppliedProjectsService.getUserApplicationByProject(user_id, projects_task_id);
     if (!application) {
@@ -98,11 +96,11 @@ class AppliedProjectsController {
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    const { applied_projects_id } = req.body;
+    const { applied_projects_id } = req.params;
     if (!applied_projects_id) {
       throw new HttpException(400, "applied_projects_id is required");
     }
-    await this.AppliedProjectsService.withdrawApplication(applied_projects_id);
+    await this.AppliedProjectsService.withdrawApplication(parseInt(applied_projects_id));
     res.status(200).json({
       message: "Application withdrawn successfully"
     });
@@ -110,7 +108,7 @@ class AppliedProjectsController {
 
   public getApplicationCount = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { projects_task_id } = req.body;
+      const { projects_task_id } = req.params;
 
       if (!projects_task_id) {
         throw new HttpException(400, "Project Task ID is required");
@@ -125,20 +123,21 @@ class AppliedProjectsController {
 
   public getAppliedStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { status } = req.body;
+      const { status } = req.params;
 
       // Allow status: 0 = pending, 1 = completed, 2 = rejected
-      if (typeof status !== 'number' || ![0, 1, 2, 3].includes(status)) {
+      const statusNum = parseInt(status);
+      if (isNaN(statusNum) || ![0, 1, 2, 3].includes(statusNum)) {
         return res.status(400).json({
           success: false,
           message: 'Status must be 0 (pending), 1 (ongoing), 2 (completed), or 3 (rejected)'
         });
       }
 
-      const appliedProjects = await this.AppliedProjectsService.getAppliedprojectByStatus(status);
+      const appliedProjects = await this.AppliedProjectsService.getAppliedprojectByStatus(statusNum);
       res.status(200).json({
         success: true,
-        status,
+        status: statusNum,
         data: appliedProjects
       });
     } catch (error) {
@@ -146,12 +145,8 @@ class AppliedProjectsController {
     }
   };
 
-  public appliedcount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const user_id = parseInt(req.params.id);
-
-    if (isNaN(user_id)) {
-      throw new HttpException(400, "User ID must be a valid number");
-    }
+  public appliedcount = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
+    const user_id = req.user.user_id;
 
     try {
       const count = await this.AppliedProjectsService.getAppliedCount(user_id);
@@ -165,13 +160,9 @@ class AppliedProjectsController {
     }
   };
 
-  public getongoing = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public getongoing = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const user_id = parseInt(req.params.user_id);
-
-      if (isNaN(user_id)) {
-        throw new HttpException(400, "Invalid user ID");
-      }
+      const user_id = req.user.user_id;
 
       const projects = await this.AppliedProjectsService.ongoingprojects(user_id);
 
@@ -184,14 +175,10 @@ class AppliedProjectsController {
     }
   };
 
-  public getapplied = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public getapplied = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const user_id = parseInt(req.params.user_id);
-      const filter = req.query.filter as string;
-
-      if (isNaN(user_id)) {
-        throw new HttpException(400, "Invalid user ID");
-      }
+      const user_id = req.user.user_id;
+      const filter = req.params.filter;
 
       const allowedFilters = ['new', 'ongoing', 'completed'];
       if (!allowedFilters.includes(filter)) {
