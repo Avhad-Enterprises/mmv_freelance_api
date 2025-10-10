@@ -35,7 +35,7 @@ export const migrate = async (dropFirst = false) => {
     console.log('Creating Freelancer Profiles Table');
     await DB.schema.createTable(FREELANCER_PROFILES, (table) => {
       // Primary Key
-      table.increments('profile_id').primary();
+      table.increments('freelancer_id').primary();
       
       // Foreign Key to users table
       table.integer('user_id')

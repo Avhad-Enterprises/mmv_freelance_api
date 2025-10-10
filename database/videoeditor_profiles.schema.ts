@@ -9,7 +9,7 @@
 //
 // Version: 1.0.0 - Initial video editor profiles schema
 // - Extends freelancer_profiles with video editor-specific fields
-// - Links to freelancer_profiles table via profile_id foreign key
+// - Links to freelancer_profiles table via freelancer_id foreign key
 // - Prepared for future video editor-specific extensions
 //
 import DB from './index.schema';
@@ -32,11 +32,11 @@ export const migrate = async () => {
     table.increments('editor_id').primary();
     
     // Foreign Key to freelancer_profiles table
-    table.integer('profile_id')
+    table.integer('freelancer_id')
       .unsigned()
       .notNullable()
       .unique()
-      .references('profile_id')
+      .references('freelancer_id')
       .inTable('freelancer_profiles')
       .onDelete('CASCADE');
 

@@ -1,6 +1,6 @@
 // Videographer Profile Interface
 export interface VideographerProfile {
-  profile_id?: number;
+  freelancer_id?: number;
   user_id: number;
 
   // Professional Info

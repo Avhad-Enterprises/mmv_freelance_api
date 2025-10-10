@@ -1,6 +1,6 @@
 // Client Profile Interface
 export interface ClientProfile {
-  client_profile_id?: number;
+  client_freelancer_id?: number;
   user_id: number;
 
   // Company Information

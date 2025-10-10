@@ -230,10 +230,10 @@ export class AuthService {
     }).returning('*');
 
     // Clean up any existing videographer profile for this freelancer (for test cleanup)
-    await DB('videographer_profiles').where({ profile_id: freelancerProfile.profile_id }).del();
+    await DB('videographer_profiles').where({ freelancer_id: freelancerProfile.freelancer_id }).del();
 
     await DB('videographer_profiles').insert({
-      profile_id: freelancerProfile.profile_id,
+      freelancer_id: freelancerProfile.freelancer_id,
     });
 
     // Generate token
@@ -341,10 +341,10 @@ export class AuthService {
     }).returning('*');
 
     // Clean up any existing videoeditor profile for this freelancer (for test cleanup)
-    await DB('videoeditor_profiles').where({ profile_id: freelancerProfile.profile_id }).del();
+    await DB('videoeditor_profiles').where({ freelancer_id: freelancerProfile.freelancer_id }).del();
 
     await DB('videoeditor_profiles').insert({
-      profile_id: freelancerProfile.profile_id,
+      freelancer_id: freelancerProfile.freelancer_id,
     });
 
     // Generate token
