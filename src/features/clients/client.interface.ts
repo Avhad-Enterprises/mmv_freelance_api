@@ -1,6 +1,6 @@
 // Client Profile Interface
 export interface ClientProfile {
-  client_profile_id?: number;
+  client_freelancer_id?: number;
   user_id: number;
 
   // Company Information
@@ -9,12 +9,6 @@ export interface ClientProfile {
   company_description?: string;
   industry?: string;
   company_size?: string;
-
-  // Location Information
-  country?: string;
-  state?: string;
-  city?: string;
-  address?: string;
 
   // Project Information
   project_title?: string;

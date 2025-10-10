@@ -17,6 +17,10 @@ export class AppliedProjectsDto {
     @IsInt({ groups: ['create', 'update'] })
     user_id: number;
 
+    @IsOptional()
+    @IsInt()
+    freelancer_id?: number;
+
     @IsOptional({ groups: ['create', 'update'] })
     @IsInt({ groups: ['create', 'update'] })
     status?: number;

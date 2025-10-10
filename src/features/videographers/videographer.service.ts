@@ -39,7 +39,7 @@ class VideographerService extends FreelancerService {
 
     // Get videographer-specific profile
     const videographerProfile = await DB(T.VIDEOGRAPHER_PROFILES)
-      .where({ profile_id: freelancerProfile.profile_id })
+      .where({ freelancer_id: freelancerProfile.freelancer_id })
       .first();
 
     return {
@@ -60,7 +60,7 @@ class VideographerService extends FreelancerService {
       .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
       .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
       .join(T.FREELANCER_PROFILES, `${T.USERS_TABLE}.user_id`, `${T.FREELANCER_PROFILES}.user_id`)
-      .leftJoin(T.VIDEOGRAPHER_PROFILES, `${T.FREELANCER_PROFILES}.profile_id`, `${T.VIDEOGRAPHER_PROFILES}.profile_id`)
+      .leftJoin(T.VIDEOGRAPHER_PROFILES, `${T.FREELANCER_PROFILES}.freelancer_id`, `${T.VIDEOGRAPHER_PROFILES}.freelancer_id`)
       .where(`${T.ROLE}.name`, 'VIDEOGRAPHER')
       .where(`${T.USERS_TABLE}.is_active`, true)
       .where(`${T.USERS_TABLE}.is_banned`, false)
@@ -98,7 +98,7 @@ class VideographerService extends FreelancerService {
 
     // Update videographer-specific profile
     const updated = await DB(T.VIDEOGRAPHER_PROFILES)
-      .where({ profile_id: freelancerProfile.profile_id })
+      .where({ freelancer_id: freelancerProfile.freelancer_id })
       .update({
         ...profileData,
         updated_at: DB.fn.now()
@@ -141,7 +141,7 @@ class VideographerService extends FreelancerService {
       .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
       .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
       .join(T.FREELANCER_PROFILES, `${T.USERS_TABLE}.user_id`, `${T.FREELANCER_PROFILES}.user_id`)
-      .leftJoin(T.VIDEOGRAPHER_PROFILES, `${T.FREELANCER_PROFILES}.profile_id`, `${T.VIDEOGRAPHER_PROFILES}.profile_id`)
+      .leftJoin(T.VIDEOGRAPHER_PROFILES, `${T.FREELANCER_PROFILES}.freelancer_id`, `${T.VIDEOGRAPHER_PROFILES}.freelancer_id`)
       .where(`${T.ROLE}.name`, 'VIDEOGRAPHER')
       .where(`${T.USERS_TABLE}.is_active`, true)
       .where(`${T.USERS_TABLE}.is_banned`, false)
@@ -164,7 +164,7 @@ class VideographerService extends FreelancerService {
       .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
       .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
       .join(T.FREELANCER_PROFILES, `${T.USERS_TABLE}.user_id`, `${T.FREELANCER_PROFILES}.user_id`)
-      .leftJoin(T.VIDEOGRAPHER_PROFILES, `${T.FREELANCER_PROFILES}.profile_id`, `${T.VIDEOGRAPHER_PROFILES}.profile_id`)
+      .leftJoin(T.VIDEOGRAPHER_PROFILES, `${T.FREELANCER_PROFILES}.freelancer_id`, `${T.VIDEOGRAPHER_PROFILES}.freelancer_id`)
       .where(`${T.ROLE}.name`, 'VIDEOGRAPHER')
       .where(`${T.USERS_TABLE}.is_active`, true)
       .where(`${T.USERS_TABLE}.is_banned`, false)

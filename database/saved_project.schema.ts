@@ -11,62 +11,54 @@ import DB from './index.schema';
 
 export const SAVED_PROJECTS = 'saved_projects';
 
-export const seed = async (dropFirst = false) => {
-
-    try {
-        if (dropFirst) {
-            console.log('Dropping Tables');
-            await DB.schema.dropTableIfExists(SAVED_PROJECTS);
-            console.log('Dropped Tables');
-        }
-        console.log('Seeding Tables');
-
+// Migration function for schema-based migrations
+export const migrate = async () => {
+    const tableExists = await DB.schema.hasTable(SAVED_PROJECTS);
+    if (!tableExists) {
+        console.log('Saved Projects table does not exist, creating...');
+        console.log('Creating Saved Projects Table');
         await DB.schema.createTable(SAVED_PROJECTS, table => {
             table.increments('saved_projects_id').primary();
-            table.integer("projects_task_id").notNullable();
-            table.integer("user_id").notNullable();
+            table.integer("projects_task_id").notNullable()
+                .references('projects_task_id')
+                .inTable('projects_task')
+                .onDelete('CASCADE');
+            table.integer("user_id").notNullable()
+                .references('id')
+                .inTable('users')
+                .onDelete('CASCADE');
             table.boolean("is_active").defaultTo(true);
-            table.integer("created_by").nullable();
+            table.integer("created_by").nullable()
+                .references('id')
+                .inTable('users')
+                .onDelete('SET NULL');
             table.timestamp('created_at').defaultTo(DB.fn.now())
-            table.integer("updated_by").nullable();
+            table.integer("updated_by").nullable()
+                .references('id')
+                .inTable('users')
+                .onDelete('SET NULL');
             table.timestamp("updated_at").defaultTo(DB.fn.now());
             table.boolean("is_deleted").defaultTo(false);
-            table.integer("deleted_by").nullable();
+            table.integer("deleted_by").nullable()
+                .references('id')
+                .inTable('users')
+                .onDelete('SET NULL');
             table.timestamp("deleted_at").nullable();
         });
-
-        console.log('Finished Seeding Tables');
-        console.log('Creating Triggers');
-
+        console.log('Created Saved Projects Table');
+        
+        console.log('Creating Triggers for Saved Projects Table');
         await DB.raw(`
-          CREATE OR REPLACE FUNCTION update_timestamp()
-          RETURNS TRIGGER AS $$
-          BEGIN
-              NEW.updated_at = CURRENT_TIMESTAMP;
-              RETURN NEW;
-          END;
-          $$ LANGUAGE plpgsql;
-        `);
-
-        await DB.raw(`
-          DROP TRIGGER IF EXISTS update_timestamp ON ${SAVED_PROJECTS};
           CREATE TRIGGER update_timestamp
           BEFORE UPDATE
           ON ${SAVED_PROJECTS}
           FOR EACH ROW
-          EXECUTE FUNCTION update_timestamp();
+          EXECUTE PROCEDURE update_timestamp();
         `);
-
         console.log('Finished Creating Triggers');
-    } catch (error) {
-        console.log(error);
+    } else {
+        console.log('Saved Projects table already exists, skipping migration');
     }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
 };
 
 // Version: 1.0.0 - Saved projects table for user's bookmarked projects

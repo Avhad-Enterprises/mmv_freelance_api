@@ -82,7 +82,6 @@ export interface Users {
   total_earnings?: number;
   total_spent?: number;
   payment_method?: Record<string, any>;
-  payout_method?: Record<string, any>;
   bank_account_info?: Record<string, any>;
   time_spent?: number;
   account_status?: string;

@@ -61,7 +61,7 @@ Authorization: Bearer <jwt_token>
       "updated_at": "2024-01-20T14:45:00Z"
     },
     "profile": {
-      "profile_id": 5,
+      "freelancer_id": 5,
       "user_id": 8,
       "hourly_rate": null,
       "experience_level": null,
@@ -89,7 +89,7 @@ Authorization: Bearer <jwt_token>
       "total_spent": 0,
       "time_spent": 0,
       "videoeditor": {
-        "profile_id": 5,
+        "freelancer_id": 5,
         "proficiency_level": null,
         "software_skills": null,
         "specializations": null,

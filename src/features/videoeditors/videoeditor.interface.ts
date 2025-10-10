@@ -1,12 +1,11 @@
 // Video Editor Profile Interface
 export interface VideoEditorProfile {
-  profile_id?: number;
+  freelancer_id?: number;
   user_id: number;
 
   // Professional Info
   profile_title: string;
   role?: string;
-  address?: string;
   short_description?: string;
   experience_level?: 'entry' | 'intermediate' | 'expert' | 'master';
 
@@ -48,7 +47,7 @@ export interface VideoEditorProfile {
   projects_completed?: any[];
 
   // Payment
-  payout_method?: any;
+  payment_method?: any;
   bank_account_info?: any;
 
   // Timestamps
@@ -80,7 +79,6 @@ export interface VideoEditorRegistrationData {
 
   // Optional Fields
   experience_level?: string;
-  address?: string;
   city?: string;
   country?: string;
   pincode?: string;

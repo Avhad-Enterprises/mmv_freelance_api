@@ -93,4 +93,21 @@ export class ProjectsTaskDto {
 
   @IsInt()
   created_by: number;
+
+  @IsOptional()
+  @IsDateString()
+  assigned_at?: string;
+
+  @IsOptional()
+  @IsDateString()
+  completed_at?: string;
+
+  @IsOptional()
+  @IsInt()
+  application_count?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  shortlisted_freelancer_ids?: number[];
 }
