@@ -14,16 +14,17 @@ interface EmailPayload {
 
 const sendEmail = async ({ to, subject, text, html, attachments }: EmailPayload): Promise<void> => {
     try {
+        // SendGrid configuration
         const transporter = nodemailer.createTransport({
-            service: "gmail",
+            service: 'SendGrid',
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASSWORD,
+                user: 'apikey', // SendGrid requires 'apikey' as username
+                pass: process.env.SENDGRID_API_KEY,
             },
         });
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: `"MMV Freelance Platform" <${process.env.EMAIL_USER}>`,
             to,
             subject,
             text,
@@ -31,9 +32,11 @@ const sendEmail = async ({ to, subject, text, html, attachments }: EmailPayload)
             attachments,
         };
 
-        await transporter.sendMail(mailOptions);
+        const info = await transporter.sendMail(mailOptions);
+        console.log("✅ Email sent successfully:", info.messageId);
     } catch (error) {
         console.error("❌ Email sending failed:", error);
+        throw error;
     }
 };
 

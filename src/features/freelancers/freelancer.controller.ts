@@ -43,5 +43,5 @@ export class FreelancerController {
         } catch (error) {
             next(error);
         }
-    };
+    }
 }
