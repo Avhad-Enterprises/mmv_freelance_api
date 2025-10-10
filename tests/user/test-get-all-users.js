@@ -2,7 +2,7 @@ const http = require('http');
 const { URL } = require('url');
 
 // Configuration
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
 const API_PREFIX = '/api/v1';
 
 // Test data
@@ -367,7 +367,7 @@ async function runTests() {
     const preparedTest = prepareTestCase(testCase);
 
     try {
-      const url = new URL(BASE_URL + API_PREFIX + preparedTest.urlPath);
+      const url = new URL(BASE_URL + preparedTest.urlPath);
       const options = {
         hostname: url.hostname,
         port: url.port,

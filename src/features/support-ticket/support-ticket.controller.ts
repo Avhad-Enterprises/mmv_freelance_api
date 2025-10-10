@@ -1,33 +1,40 @@
 
 
 import { NextFunction, Request, Response } from 'express';
+import { RequestWithUser } from '../../interfaces/auth.interface';
 import supportTicketsService from './support-ticket.service';
 import HttpException from '../../exceptions/HttpException';
 
 class supportTicketsController {
   public supportTicketsService = new supportTicketsService();
 
-  // ✅ Create ticket
+  // ✅ Create ticket - Personal operation
   public createTicket = async (
-    req: Request,
+    req: RequestWithUser,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
       const ticketData = req.body;
+      // ✅ Security fix: Set user_id from JWT token instead of trusting client
+      ticketData.user_id = req.user.user_id;
+      
       const result = await this.supportTicketsService.createTicket(ticketData);
       res.status(201).json({ data: result, message: 'Ticket created' });
     } catch (error) {
       next(error);
     }
   };
+  // ⚠️ Admin operation - Add note to ticket (keep existing pattern)
   public addNoteToTicket = async (
-    req: Request,
+    req: RequestWithUser,
     res: Response,
     next: NextFunction
   ) => {
     try {
       const data = req.body; // Assuming body contains the note details
+      // ✅ Security enhancement: Set admin_id from JWT token for audit trail
+      data.admin_id = req.user.user_id;
 
       const result = await this.supportTicketsService.addAdminNote(data);
 
@@ -40,16 +47,19 @@ class supportTicketsController {
     }
   };
 
+  // ⚠️ Admin operation - Get admin notes (enhanced security)
   public getAdminNotes = async (
-    req: Request,
+    req: RequestWithUser,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const { ticket_id, admin_id } = req.body;
+      const { ticket_id } = req.body;
+      // ✅ Security enhancement: Use authenticated admin's ID
+      const admin_id = req.user.user_id;
 
-      if (!ticket_id || !admin_id) {
-        throw new HttpException(400, "ticket_id and admin_id are required");
+      if (!ticket_id) {
+        throw new HttpException(400, "ticket_id is required");
       }
 
       const notes = await this.supportTicketsService.getAdminNotes({
@@ -88,7 +98,29 @@ class supportTicketsController {
     }
   };
 
-  public getAllTickets = async (
+  // ✅ Personal operation - Get authenticated user's tickets
+  public getMyTickets = async (
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      // ✅ Security fix: Use authenticated user's ID and role from JWT
+      const user_id = req.user.user_id;
+      const role = req.user.roles?.[0] || 'CLIENT'; // Get primary role
+
+      const tickets = await this.supportTicketsService.getAllTickets({
+        user_id,
+        role,
+      });
+      res.status(200).json({ tickets, message: "Your tickets fetched successfully" });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // ⚠️ Admin operation - Get all tickets (keep for admin use)
+  public getAllTicketsAdmin = async (
     req: Request,
     res: Response,
     next: NextFunction
@@ -126,16 +158,19 @@ class supportTicketsController {
     }
   };
 
+  // ⚠️ Admin operation - Update ticket status (enhanced security)
   public updateTicketStatus = async (
-    req: Request,
+    req: RequestWithUser,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const { admin_id, ticket_id, status } = req.body;
+      const { ticket_id, status } = req.body;
+      // ✅ Security enhancement: Use authenticated admin's ID
+      const admin_id = req.user.user_id;
 
-      if (!admin_id || !ticket_id || !status) {
-        throw new HttpException(400, "admin_id, ticket_id and status are required");
+      if (!ticket_id || !status) {
+        throw new HttpException(400, "ticket_id and status are required");
       }
 
       const updatedTicket = await this.supportTicketsService.updateTicketStatus({
@@ -153,18 +188,22 @@ class supportTicketsController {
     }
   };
 
-  public replyToTicket = async (req: Request, res: Response, next: NextFunction) => {
+  // ✅ Personal operation - Reply to ticket
+  public replyToTicket = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
-      const { ticket_id, sender_id, sender_role, message } = req.body;
+      const { ticket_id, message } = req.body;
+      // ✅ Security fix: Set sender info from JWT token
+      const sender_id = req.user.user_id;
+      const sender_role = req.user.roles?.[0]?.toLowerCase() || 'client';
 
-      if (!ticket_id || !sender_id || !sender_role || !message?.trim()) {
-        throw new HttpException(400, 'ticket_id, sender_id, sender_role, and message are required');
+      if (!ticket_id || !message?.trim()) {
+        throw new HttpException(400, 'ticket_id and message are required');
       }
 
       const reply = await this.supportTicketsService.addTicketReply({
         ticket_id,
         sender_id,
-        sender_role,
+        sender_role: sender_role as any, // Type assertion for role enum
         message,
       });
 
@@ -176,15 +215,20 @@ class supportTicketsController {
       next(error);
     }
   };
-  public getallticket = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  // ✅ Personal operation - Get user's tickets for specific project
+  public getMyProjectTickets = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { user_id, projects_task_id } = req.body;
-      if (!user_id || !projects_task_id) {
-        res.status(400).json({ message: "user_id and project_task_id are required" });
+      const { projects_task_id } = req.body;
+      // ✅ Security fix: Use authenticated user's ID
+      const user_id = req.user.user_id;
+      
+      if (!projects_task_id) {
+        res.status(400).json({ message: "project_task_id is required" });
         return;
       }
+      
       const tickets = await this.supportTicketsService.getallticketsid(user_id, projects_task_id);
-      res.status(200).json({ data: tickets, message: "Support tickets retrieved successfully" });
+      res.status(200).json({ data: tickets, message: "Your project tickets retrieved successfully" });
     } catch (error) {
       next(error);
     }

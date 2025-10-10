@@ -9,7 +9,7 @@
 const https = require('https');
 const http = require('http');
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
 const API_PREFIX = '/api/v1';
 const ENDPOINT = '/users';
 
@@ -34,7 +34,7 @@ let bannedUserId = null; // Will create a test user to ban
 // Helper function to make HTTP request
 function makeRequest(method = 'POST', urlPath = '', headers = {}, data = null) {
   return new Promise((resolve, reject) => {
-    const url = BASE_URL + API_PREFIX + urlPath;
+    const url = BASE_URL + urlPath;
 
     const options = {
       method: method,

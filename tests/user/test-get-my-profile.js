@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * Get My Roles API Test
+ * Get My Profile API Test
  *
- * Tests the /users/me/roles endpoint (GET method) for retrieving user roles
+ * Tests the /users/me endpoint (requires authentication)
  */
 
 const https = require('https');
 const http = require('http');
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
 const API_PREFIX = '/api/v1';
-const ENDPOINT = '/users/me/roles';
+const ENDPOINT = '/users/me';
 
 const TEST_CONFIG = {
   baseUrl: BASE_URL,
@@ -20,22 +20,19 @@ const TEST_CONFIG = {
   showFullResponse: false,
 };
 
-console.log('👥 Get My Roles API Test');
-console.log('========================');
+// Test user credentials (we'll need to create one or use existing)
+let testToken = null;
+
+console.log('👤 Get My Profile API Test');
+console.log('===========================');
 console.log(`Base URL: ${BASE_URL}`);
-console.log(`Endpoint: ${API_PREFIX}${ENDPOINT} (GET)`);
+console.log(`Endpoint: ${API_PREFIX}${ENDPOINT}`);
 console.log('');
-
-// Test variables
-let adminToken = null;
-let adminRoles = null;
-
-let originalUserData = null; // Store original data to restore later
 
 // Helper function to make HTTP request
 function makeRequest(method = 'GET', headers = {}, data = null) {
   return new Promise((resolve, reject) => {
-    const url = BASE_URL + API_PREFIX + ENDPOINT;
+    const url = BASE_URL + ENDPOINT;
 
     const options = {
       method: method,
@@ -98,7 +95,7 @@ async function loginAndGetToken(email, password) {
     const loginData = JSON.stringify({ email, password });
     const options = {
       hostname: 'localhost',
-      port: 8000,
+      port: 8001,
       path: '/api/v1/auth/login',
       method: 'POST',
       headers: {
@@ -144,7 +141,7 @@ const TEST_CASES = [
     name: "No Authorization Header",
     description: "Test without Authorization header",
     headers: {},
-    expectedStatus: 404,
+    expectedStatus: 404, // Auth middleware returns 404 for missing token
     expectedFields: ['success', 'message'],
     category: "AUTH_ERRORS"
   },
@@ -171,76 +168,74 @@ const TEST_CASES = [
     category: "AUTH_ERRORS"
   },
 
-  // ============== SUCCESSFUL ROLE RETRIEVAL ==============
   {
-    name: "Get Admin Roles",
-    description: "Test retrieving roles for super admin user",
-    headers: {}, // Will be set dynamically with admin token
-    expectedStatus: 200,
-    expectedFields: ['success', 'data'],
-    category: "SUCCESSFUL_RETRIEVAL",
-    requiresAdminToken: true,
-    checkRoles: true,
-    expectedRoleNames: ['SUPER_ADMIN'] // Super admin should have SUPER_ADMIN role
+    name: "Expired JWT Token",
+    description: "Test with expired JWT token",
+    headers: {
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcl9pZCI6MSwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiQ0xJRU5UIl0sImlhdCI6MTYwOTQ2NzIwMCwiZXhwIjoxNjA5NDY3MjAwfQ.invalid'
+    },
+    expectedStatus: 401,
+    expectedFields: ['success', 'message'],
+    category: "AUTH_ERRORS"
   },
 
-  // ============== RESPONSE STRUCTURE ==============
+  // ============== VALID AUTHENTICATED REQUESTS ==============
   {
-    name: "Validate Role Structure",
-    description: "Test that role objects have correct structure",
-    headers: {}, // Will be set dynamically with admin token
+    name: "Valid Authenticated Request",
+    description: "Test with valid JWT token",
+    headers: {}, // Will be set dynamically with valid token
     expectedStatus: 200,
     expectedFields: ['success', 'data'],
-    category: "RESPONSE_VALIDATION",
-    requiresAdminToken: true,
-    validateRoleStructure: true
+    category: "VALID_REQUESTS",
+    requiresToken: true
   },
 
-  // ============== EDGE CASES ==============
+  // ============== MALFORMED REQUESTS ==============
   {
-    name: "User With Multiple Roles",
-    description: "Test user with multiple roles (if applicable)",
-    headers: {}, // Will be set dynamically with admin token
-    expectedStatus: 200,
-    expectedFields: ['success', 'data'],
-    category: "EDGE_CASES",
-    requiresAdminToken: true,
-    checkMultipleRoles: true
+    name: "Wrong HTTP Method",
+    description: "Test with POST instead of GET",
+    method: 'POST',
+    headers: {}, // Will be set dynamically with valid token
+    expectedStatus: 404, // Route not found for POST
+    expectedFields: ['success', 'message'],
+    category: "MALFORMED_REQUESTS",
+    requiresToken: true
+  },
+
+  // ============== SECURITY TESTS ==============
+  {
+    name: "SQL Injection in Token",
+    description: "Test SQL injection in Authorization header",
+    headers: {
+      'Authorization': 'Bearer "; DROP TABLE users; --"'
+    },
+    expectedStatus: 401,
+    expectedFields: ['success', 'message'],
+    category: "SECURITY_TESTS"
   },
 
   {
-    name: "Empty Roles Array",
-    description: "Test handling of users with no roles (edge case)",
-    headers: {}, // Will be set dynamically with admin token
-    expectedStatus: 200,
-    expectedFields: ['success', 'data'],
-    category: "EDGE_CASES",
-    requiresAdminToken: true,
-    allowEmptyRoles: true
+    name: "XSS in Token",
+    description: "Test XSS injection in Authorization header",
+    headers: {
+      'Authorization': 'Bearer <script>alert("xss")</script>'
+    },
+    expectedStatus: 401,
+    expectedFields: ['success', 'message'],
+    category: "SECURITY_TESTS"
   }
 ];
 
 // Run tests
 async function runTests() {
-  // Get admin token for testing
-  console.log('🔑 Obtaining admin authentication token...');
-  adminToken = await loginAndGetToken('superadmin@mmv.com', 'SuperAdmin123!');
+  // First, try to get a valid token for authenticated tests
+  console.log('🔑 Attempting to obtain authentication token...');
+  testToken = await loginAndGetToken('superadmin@mmv.com', 'SuperAdmin123!');
 
-  if (!adminToken) {
-    console.log('❌ Could not obtain admin token - authenticated tests will fail');
+  if (testToken) {
+    console.log('✅ Authentication token obtained');
   } else {
-    console.log('✅ Admin token obtained');
-
-    // Get admin roles for reference
-    try {
-      const rolesResponse = await makeRequest('GET', { 'Authorization': `Bearer ${adminToken}` });
-      if (rolesResponse.body && rolesResponse.body.success && rolesResponse.body.data && rolesResponse.body.data.roles) {
-        adminRoles = rolesResponse.body.data.roles;
-        console.log(`✅ Admin has ${adminRoles.length} role(s):`, adminRoles.map(r => r.name).join(', '));
-      }
-    } catch (error) {
-      console.log('⚠️  Could not retrieve admin roles');
-    }
+    console.log('⚠️  Could not obtain authentication token - some tests may fail');
   }
   console.log('');
 
@@ -248,9 +243,9 @@ async function runTests() {
   let failed = 0;
   const results = {
     AUTH_ERRORS: { total: 0, passed: 0 },
-    SUCCESSFUL_RETRIEVAL: { total: 0, passed: 0 },
-    RESPONSE_VALIDATION: { total: 0, passed: 0 },
-    EDGE_CASES: { total: 0, passed: 0 }
+    VALID_REQUESTS: { total: 0, passed: 0 },
+    MALFORMED_REQUESTS: { total: 0, passed: 0 },
+    SECURITY_TESTS: { total: 0, passed: 0 }
   };
 
   for (let i = 0; i < TEST_CASES.length; i++) {
@@ -265,12 +260,12 @@ async function runTests() {
       // Prepare headers
       let headers = { ...testCase.headers };
 
-      if (testCase.requiresAdminToken && adminToken) {
-        headers['Authorization'] = `Bearer ${adminToken}`;
+      if (testCase.requiresToken && testToken) {
+        headers['Authorization'] = `Bearer ${testToken}`;
       }
 
       const startTime = Date.now();
-      const response = await makeRequest('GET', headers);
+      const response = await makeRequest(testCase.method || 'GET', headers);
       const endTime = Date.now();
       const duration = endTime - startTime;
 
@@ -345,53 +340,19 @@ function validateResponse(testCase, response) {
     }
   }
 
-  // Additional validation for successful responses
-  if (testCase.expectedStatus === 200 && response.body && response.body.success && response.body.data) {
+  // Additional validation for successful profile requests
+  if (testCase.expectedStatus === 200 && response.body && response.body.success) {
     const data = response.body.data;
-
-    // Check roles field exists
-    if (!('roles' in data)) {
-      errors.push('Missing roles field in response data');
+    if (!data) {
+      errors.push('Missing data field in successful response');
+    } else if (!data.user) {
+      errors.push('Missing user field in profile data');
     } else {
-      const roles = data.roles;
-
-      // Check roles is an array
-      if (!Array.isArray(roles)) {
-        errors.push('Roles field should be an array');
-      } else {
-        // Validate role structure
-        if (testCase.validateRoleStructure) {
-          for (let i = 0; i < roles.length; i++) {
-            const role = roles[i];
-            const requiredFields = ['role_id', 'name', 'label'];
-            for (const field of requiredFields) {
-              if (!(field in role)) {
-                errors.push(`Role ${i} missing required field: ${field}`);
-              }
-            }
-          }
-        }
-
-        // Check expected roles
-        if (testCase.checkRoles && testCase.expectedRoleNames) {
-          const roleNames = roles.map(r => r.name);
-          for (const expectedRole of testCase.expectedRoleNames) {
-            if (!roleNames.includes(expectedRole)) {
-              errors.push(`Expected role "${expectedRole}" not found in user roles: [${roleNames.join(', ')}]`);
-            }
-          }
-        }
-
-        // Check multiple roles
-        if (testCase.checkMultipleRoles && roles.length < 1) {
-          errors.push('Expected user to have at least one role');
-        }
-
-        // Check empty roles handling
-        if (testCase.allowEmptyRoles && roles.length === 0) {
-          // This is allowed, no error
-        } else if (!testCase.allowEmptyRoles && roles.length === 0) {
-          errors.push('User should have at least one role');
+      // Check for essential user fields
+      const requiredFields = ['user_id', 'email', 'first_name', 'last_name'];
+      for (const field of requiredFields) {
+        if (!(field in data.user)) {
+          errors.push(`Missing required user field: ${field}`);
         }
       }
     }
