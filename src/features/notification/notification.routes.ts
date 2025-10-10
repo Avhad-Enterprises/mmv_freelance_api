@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
 import notificationController from './notification.controller';
+import { requireRole } from '../../middlewares/role.middleware';
+import authMiddleware from '../../middlewares/auth.middleware';
 
 class notificationRoute implements Route {
 
@@ -14,13 +16,25 @@ class notificationRoute implements Route {
 
     private initializeRoutes() {
 
-        this.router.post(`${this.path}/getnotification`, (req, res, next) => this.notificationController.getnotificationby(req, res, next));
+        // ✅ Personal operation - get authenticated user's notifications
+        this.router.get(`${this.path}/my-notifications`, authMiddleware, (req, res, next) => {
+            this.notificationController.getnotificationby(req as any, res, next);
+        });
 
-        this.router.get(`${this.path}/read/:id`, (req, res, next) => this.notificationController.notificationisread(req, res, next));
+        // ✅ Admin operation - mark specific notification as read (keeps existing pattern)
+        this.router.get(`${this.path}/read/:id`, authMiddleware, (req, res, next) => {
+            this.notificationController.notificationisread(req, res, next);
+        });
 
-        this.router.post(`${this.path}/read-all`, (req, res, next) => this.notificationController.readallnotification(req, res, next));
+        // ✅ Personal operation - mark all authenticated user's notifications as read  
+        this.router.post(`${this.path}/read-all`, authMiddleware, (req, res, next) => {
+            this.notificationController.readallnotification(req as any, res, next);
+        });
 
-        this.router.get(`${this.path}/count/:id`, (req, res, next) => this.notificationController.notificationcount(req, res, next));
+        // ✅ Personal operation - get authenticated user's notification count
+        this.router.get(`${this.path}/my-count`, authMiddleware, (req, res, next) => {
+            this.notificationController.notificationcount(req as any, res, next);
+        });
 
     }
 }

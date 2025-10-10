@@ -24,9 +24,13 @@ export class FreelancerRoutes implements Route {
 
         this.router.get(
             `${this.path}/getfreelancers`,
-            requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'),
             this.freelancerController.getAllFreelancers
         );
 
+        //Get all freelancers (public-safe version without email/phone)
+        this.router.get(
+            `${this.path}/getfreelancers-public`,
+            this.freelancerController.getAllFreelancersPublic
+        );
     }
 }

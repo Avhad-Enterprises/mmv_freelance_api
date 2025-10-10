@@ -15,8 +15,8 @@ const { spawn } = require('child_process');
 const path = require('path');
 
 const SCRIPTS = {
-  login: 'test-login.js',
-  register: 'test-register.js'
+  login: 'auth/test-login.js',
+  register: 'auth/test-register.js'
 };
 
 function runScript(scriptName) {

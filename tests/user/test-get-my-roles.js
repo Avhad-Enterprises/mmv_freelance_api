@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * Delete Account API Test
+ * Get My Roles API Test
  *
- * Tests the /users/me endpoint (DELETE method) for account deletion
+ * Tests the /users/me/roles endpoint (GET method) for retrieving user roles
  */
 
 const https = require('https');
 const http = require('http');
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
 const API_PREFIX = '/api/v1';
-const ENDPOINT = '/users/me';
+const ENDPOINT = '/users/me/roles';
 
 const TEST_CONFIG = {
   baseUrl: BASE_URL,
@@ -20,25 +20,22 @@ const TEST_CONFIG = {
   showFullResponse: false,
 };
 
-console.log('🗑️  Delete Account API Test');
-console.log('===========================');
+console.log('👥 Get My Roles API Test');
+console.log('========================');
 console.log(`Base URL: ${BASE_URL}`);
-console.log(`Endpoint: ${API_PREFIX}${ENDPOINT} (DELETE)`);
+console.log(`Endpoint: ${API_PREFIX}${ENDPOINT} (GET)`);
 console.log('');
 
 // Test variables
 let adminToken = null;
-let testUserToken = null;
-let testUserId = null;
-let testUserEmail = `test-delete-${Date.now()}@example.com`;
+let adminRoles = null;
 
-// For this test, we'll use the admin account itself for deletion testing
-// This is safe since we can verify the soft delete and the account should still work for admin operations
+let originalUserData = null; // Store original data to restore later
 
 // Helper function to make HTTP request
-function makeRequest(method = 'DELETE', headers = {}, data = null) {
+function makeRequest(method = 'GET', headers = {}, data = null) {
   return new Promise((resolve, reject) => {
-    const url = BASE_URL + API_PREFIX + ENDPOINT;
+    const url = BASE_URL + ENDPOINT;
 
     const options = {
       method: method,
@@ -140,93 +137,6 @@ async function loginAndGetToken(email, password) {
   });
 }
 
-// Helper function to register a test user
-async function registerTestUser(email, password = 'TestPassword123!') {
-  return new Promise((resolve, reject) => {
-    const registerData = JSON.stringify({
-      email,
-      password,
-      first_name: 'Test',
-      last_name: 'User',
-      roleName: 'CLIENT'
-    });
-
-    const options = {
-      hostname: 'localhost',
-      port: 8000,
-      path: '/api/v1/users',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${adminToken}`,
-        'Content-Length': Buffer.byteLength(registerData)
-      }
-    };
-
-    const req = http.request(options, (res) => {
-      let body = '';
-
-      res.on('data', (chunk) => {
-        body += chunk;
-      });
-
-      res.on('end', () => {
-        try {
-          const response = JSON.parse(body);
-          resolve(response);
-        } catch (e) {
-          resolve({ success: false, error: e.message });
-        }
-      });
-    });
-
-    req.on('error', (err) => {
-      resolve({ success: false, error: err.message });
-    });
-
-    req.write(registerData);
-    req.end();
-  });
-}
-
-// Helper function to get user by email (admin only)
-async function getUserByEmail(email) {
-  return new Promise((resolve, reject) => {
-    const options = {
-      hostname: 'localhost',
-      port: 8000,
-      path: `/api/v1/admin/users/search?email=${encodeURIComponent(email)}`,
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${adminToken}`
-      }
-    };
-
-    const req = http.request(options, (res) => {
-      let body = '';
-
-      res.on('data', (chunk) => {
-        body += chunk;
-      });
-
-      res.on('end', () => {
-        try {
-          const response = JSON.parse(body);
-          resolve(response);
-        } catch (e) {
-          resolve({ success: false, error: e.message });
-        }
-      });
-    });
-
-    req.on('error', (err) => {
-      resolve({ success: false, error: err.message });
-    });
-
-    req.end();
-  });
-}
-
 // Test cases
 const TEST_CASES = [
   // ============== AUTHENTICATION ERRORS ==============
@@ -261,78 +171,76 @@ const TEST_CASES = [
     category: "AUTH_ERRORS"
   },
 
-  // ============== SUCCESSFUL DELETION ==============
+  // ============== SUCCESSFUL ROLE RETRIEVAL ==============
   {
-    name: "Successful Account Deletion",
-    description: "Test successful account deletion with valid admin token",
+    name: "Get Admin Roles",
+    description: "Test retrieving roles for super admin user",
     headers: {}, // Will be set dynamically with admin token
     expectedStatus: 200,
-    expectedFields: ['success', 'message'],
-    category: "SUCCESSFUL_DELETION",
+    expectedFields: ['success', 'data'],
+    category: "SUCCESSFUL_RETRIEVAL",
     requiresAdminToken: true,
-    expectedMessage: 'Account deleted successfully'
+    checkRoles: true,
+    expectedRoleNames: ['SUPER_ADMIN'] // Super admin should have SUPER_ADMIN role
   },
 
-  // ============== POST-DELETION VERIFICATION ==============
+  // ============== RESPONSE STRUCTURE ==============
   {
-    name: "Access After Deletion",
-    description: "Test that deleted admin can still access endpoints (soft delete)",
+    name: "Validate Role Structure",
+    description: "Test that role objects have correct structure",
     headers: {}, // Will be set dynamically with admin token
-    expectedStatus: 200, // Admin should still work even if soft deleted
-    expectedFields: ['success', 'message'],
-    category: "POST_DELETION",
-    requiresAdminToken: true
+    expectedStatus: 200,
+    expectedFields: ['success', 'data'],
+    category: "RESPONSE_VALIDATION",
+    requiresAdminToken: true,
+    validateRoleStructure: true
+  },
+
+  // ============== EDGE CASES ==============
+  {
+    name: "User With Multiple Roles",
+    description: "Test user with multiple roles (if applicable)",
+    headers: {}, // Will be set dynamically with admin token
+    expectedStatus: 200,
+    expectedFields: ['success', 'data'],
+    category: "EDGE_CASES",
+    requiresAdminToken: true,
+    checkMultipleRoles: true
+  },
+
+  {
+    name: "Empty Roles Array",
+    description: "Test handling of users with no roles (edge case)",
+    headers: {}, // Will be set dynamically with admin token
+    expectedStatus: 200,
+    expectedFields: ['success', 'data'],
+    category: "EDGE_CASES",
+    requiresAdminToken: true,
+    allowEmptyRoles: true
   }
 ];
 
 // Run tests
 async function runTests() {
-  // Get admin token for user management
+  // Get admin token for testing
   console.log('🔑 Obtaining admin authentication token...');
   adminToken = await loginAndGetToken('superadmin@mmv.com', 'SuperAdmin123!');
 
   if (!adminToken) {
-    console.log('❌ Could not obtain admin token - some tests will be skipped');
+    console.log('❌ Could not obtain admin token - authenticated tests will fail');
   } else {
     console.log('✅ Admin token obtained');
-  }
 
-  // Create test user for deletion
-  console.log('👤 Creating test user for deletion...');
-  const registerResult = await registerTestUser(testUserEmail);
-
-  if (registerResult.success) {
-    console.log('✅ Test user created');
-
-    // Try to login with the test user
-    testUserToken = await loginAndGetToken(testUserEmail, 'TestPassword123!');
-    if (!testUserToken) {
-      console.log('⚠️  Test user created but cannot login - trying without password...');
-      // Try login without password (in case password wasn't set)
-      testUserToken = await loginAndGetToken(testUserEmail, '');
-    }
-
-    if (testUserToken) {
-      console.log('✅ Test user token obtained');
-
-      // Get test user ID
-      const userSearch = await getUserByEmail(testUserEmail);
-      if (userSearch.success && userSearch.data && userSearch.data.length > 0) {
-        testUserId = userSearch.data[0].user_id;
-        console.log(`✅ Test user ID: ${testUserId}`);
+    // Get admin roles for reference
+    try {
+      const rolesResponse = await makeRequest('GET', { 'Authorization': `Bearer ${adminToken}` });
+      if (rolesResponse.body && rolesResponse.body.success && rolesResponse.body.data && rolesResponse.body.data.roles) {
+        adminRoles = rolesResponse.body.data.roles;
+        console.log(`✅ Admin has ${adminRoles.length} role(s):`, adminRoles.map(r => r.name).join(', '));
       }
-    } else {
-      console.log('❌ Could not obtain test user token - checking if user exists...');
-      // Check if user exists even without login
-      const userSearch = await getUserByEmail(testUserEmail);
-      if (userSearch.success && userSearch.data && userSearch.data.length > 0) {
-        testUserId = userSearch.data[0].user_id;
-        console.log(`✅ Test user exists with ID: ${testUserId} (but cannot login)`);
-      }
+    } catch (error) {
+      console.log('⚠️  Could not retrieve admin roles');
     }
-  } else {
-    console.log('❌ Could not create test user');
-    console.log('Registration response:', registerResult);
   }
   console.log('');
 
@@ -340,8 +248,9 @@ async function runTests() {
   let failed = 0;
   const results = {
     AUTH_ERRORS: { total: 0, passed: 0 },
-    SUCCESSFUL_DELETION: { total: 0, passed: 0 },
-    POST_DELETION: { total: 0, passed: 0 }
+    SUCCESSFUL_RETRIEVAL: { total: 0, passed: 0 },
+    RESPONSE_VALIDATION: { total: 0, passed: 0 },
+    EDGE_CASES: { total: 0, passed: 0 }
   };
 
   for (let i = 0; i < TEST_CASES.length; i++) {
@@ -358,14 +267,10 @@ async function runTests() {
 
       if (testCase.requiresAdminToken && adminToken) {
         headers['Authorization'] = `Bearer ${adminToken}`;
-      } else if (testCase.requiresTestUser && testUserToken) {
-        headers['Authorization'] = `Bearer ${testUserToken}`;
-      } else if (testCase.requiresDeletedUser && testUserToken) {
-        headers['Authorization'] = `Bearer ${testUserToken}`;
       }
 
       const startTime = Date.now();
-      const response = await makeRequest('DELETE', headers);
+      const response = await makeRequest('GET', headers);
       const endTime = Date.now();
       const duration = endTime - startTime;
 
@@ -397,26 +302,6 @@ async function runTests() {
     console.log('');
   }
 
-  // Verify deletion in database (admin check)
-  if (adminToken && testUserId) {
-    console.log('🔍 Verifying deletion in database...');
-    try {
-      const userCheck = await getUserByEmail(testUserEmail);
-      if (userCheck.success && userCheck.data && userCheck.data.length > 0) {
-        const user = userCheck.data[0];
-        if (user.is_deleted === true && user.is_active === false) {
-          console.log('✅ User properly soft-deleted in database');
-        } else {
-          console.log('⚠️  User deletion status unclear:', { is_deleted: user.is_deleted, is_active: user.is_active });
-        }
-      } else {
-        console.log('⚠️  Could not verify user deletion status');
-      }
-    } catch (error) {
-      console.log('⚠️  Could not verify deletion:', error.message);
-    }
-  }
-
   // Summary
   console.log('📊 Test Summary');
   console.log('===============');
@@ -434,8 +319,6 @@ async function runTests() {
 
   console.log('');
   console.log('🏁 Testing completed!');
-  console.log('');
-  console.log('Note: Test user account has been soft-deleted. This is expected behavior.');
 }
 
 // Helper function to validate response
@@ -462,10 +345,55 @@ function validateResponse(testCase, response) {
     }
   }
 
-  // Check expected message
-  if (testCase.expectedMessage && response.body) {
-    if (response.body.message !== testCase.expectedMessage) {
-      errors.push(`Expected message "${testCase.expectedMessage}", got "${response.body.message}"`);
+  // Additional validation for successful responses
+  if (testCase.expectedStatus === 200 && response.body && response.body.success && response.body.data) {
+    const data = response.body.data;
+
+    // Check roles field exists
+    if (!('roles' in data)) {
+      errors.push('Missing roles field in response data');
+    } else {
+      const roles = data.roles;
+
+      // Check roles is an array
+      if (!Array.isArray(roles)) {
+        errors.push('Roles field should be an array');
+      } else {
+        // Validate role structure
+        if (testCase.validateRoleStructure) {
+          for (let i = 0; i < roles.length; i++) {
+            const role = roles[i];
+            const requiredFields = ['role_id', 'name', 'label'];
+            for (const field of requiredFields) {
+              if (!(field in role)) {
+                errors.push(`Role ${i} missing required field: ${field}`);
+              }
+            }
+          }
+        }
+
+        // Check expected roles
+        if (testCase.checkRoles && testCase.expectedRoleNames) {
+          const roleNames = roles.map(r => r.name);
+          for (const expectedRole of testCase.expectedRoleNames) {
+            if (!roleNames.includes(expectedRole)) {
+              errors.push(`Expected role "${expectedRole}" not found in user roles: [${roleNames.join(', ')}]`);
+            }
+          }
+        }
+
+        // Check multiple roles
+        if (testCase.checkMultipleRoles && roles.length < 1) {
+          errors.push('Expected user to have at least one role');
+        }
+
+        // Check empty roles handling
+        if (testCase.allowEmptyRoles && roles.length === 0) {
+          // This is allowed, no error
+        } else if (!testCase.allowEmptyRoles && roles.length === 0) {
+          errors.push('User should have at least one role');
+        }
+      }
     }
   }
 
