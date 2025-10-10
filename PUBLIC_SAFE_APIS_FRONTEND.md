@@ -73,7 +73,7 @@ These public APIs provide data for the homepage without requiring authentication
       "email_notifications": true,
       "created_at": "2025-10-03T17:09:45.453Z",
       "updated_at": "2025-10-03T17:09:45.453Z",
-      "profile_id": 1,
+      "freelancer_id": 1,
       "profile_title": "Senior Video Editor",
       "short_description": "Professional editor with 5+ years experience",
       "experience_level": "expert",

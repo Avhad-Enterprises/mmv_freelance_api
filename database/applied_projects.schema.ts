@@ -23,12 +23,19 @@ export const seed = async (dropFirst = false) => {
 
         // Check if table exists
         const tableExists = await DB.schema.hasTable(APPLIED_PROJECTS);
-        
+
         if (!tableExists) {
             await DB.schema.createTable(APPLIED_PROJECTS, table => {
                 table.increments('applied_projects_id').primary();
                 table.integer("projects_task_id").notNullable();
                 table.integer("user_id").notNullable();
+                table.integer("freelancer_id")
+                    .unsigned()
+                    .nullable() // or .notNullable() if you enforce
+                    .references('freelancer_id')
+                    .inTable('freelancer_profiles')
+                    .onDelete('CASCADE');
+
                 table.integer("status").notNullable().defaultTo(0); // 0: pending, 1: ongoing, 2: completed
                 table.text('description');
                 // compulsory columns

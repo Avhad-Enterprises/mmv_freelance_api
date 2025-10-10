@@ -1,6 +1,6 @@
 // Video Editor Profile Interface
 export interface VideoEditorProfile {
-  profile_id?: number;
+  freelancer_id?: number;
   user_id: number;
 
   // Professional Info

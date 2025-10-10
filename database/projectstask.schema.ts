@@ -28,7 +28,7 @@ export const seed = async (dropFirst = false) => {
             await DB.schema.createTable(PROJECTS_TASK, table => {
                 table.increments('projects_task_id').primary();  //ID
                 table.integer('client_id').notNullable();
-                table.integer('editor_id').nullable();
+                table.integer('freelancer_id').nullable();
                 table.string('project_title').notNullable();
                 table.text('project_category').notNullable();
                 table.date('deadline').notNullable();
@@ -51,6 +51,10 @@ export const seed = async (dropFirst = false) => {
                 table.string('url').notNullable();
                 table.string('meta_title').notNullable();
                 table.text('meta_description').notNullable();
+                table.timestamp('assigned_at').nullable();
+                table.timestamp('completed_at').nullable();
+                table.integer('application_count').defaultTo(0);
+                table.jsonb('shortlisted_freelancer_ids').nullable();
                 table.integer('is_active').defaultTo(0);
                 table.integer('created_by').notNullable();
                 table.timestamp('created_at').defaultTo(DB.fn.now());
@@ -59,6 +63,7 @@ export const seed = async (dropFirst = false) => {
                 table.boolean('is_deleted').defaultTo(false);
                 table.integer('deleted_by').nullable();
                 table.timestamp('deleted_at').nullable();
+                
 
             });
 
