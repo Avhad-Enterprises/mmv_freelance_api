@@ -12,7 +12,13 @@ import DB from './index.schema';
 export const SUBMITTED_PROJECTS = 'submitted_projects';
 
 // Migration function for schema-based migrations
-export const migrate = async () => {
+export const migrate = async (dropFirst = false) => {
+    if (dropFirst) {
+        console.log('Dropping Submitted Projects Table');
+        await DB.schema.dropTableIfExists(SUBMITTED_PROJECTS);
+        console.log('Dropped Submitted Projects Table');
+    }
+
     const tableExists = await DB.schema.hasTable(SUBMITTED_PROJECTS);
     if (!tableExists) {
         console.log('Submitted Projects table does not exist, creating...');
@@ -24,7 +30,7 @@ export const migrate = async () => {
                 .inTable('projects_task')
                 .onDelete('CASCADE');
             table.integer('user_id').notNullable()
-                .references('id')
+                .references('user_id')
                 .inTable('users')
                 .onDelete('CASCADE');
             table.string('submitted_files').notNullable();
@@ -35,16 +41,16 @@ export const migrate = async () => {
             table.boolean('is_active').defaultTo(true);
             table.boolean('is_deleted').defaultTo(false);
             table.integer('deleted_by').nullable()
-                .references('id')
+                .references('user_id')
                 .inTable('users')
                 .onDelete('SET NULL');
             table.timestamp('deleted_at').nullable();
             table.integer('created_by').nullable()
-                .references('id')
+                .references('user_id')
                 .inTable('users')
                 .onDelete('SET NULL');
             table.integer('updated_by').nullable()
-                .references('id')
+                .references('user_id')
                 .inTable('users')
                 .onDelete('SET NULL');
             table.timestamp('created_at').defaultTo(DB.fn.now());

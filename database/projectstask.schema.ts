@@ -12,7 +12,13 @@ import DB from './index.schema';
 export const PROJECTS_TASK = 'projects_task';
 
 // Migration function for schema-based migrations
-export const migrate = async () => {
+export const migrate = async (dropFirst = false) => {
+    if (dropFirst) {
+        console.log('Dropping Projects Task Table');
+        await DB.schema.dropTableIfExists(PROJECTS_TASK);
+        console.log('Dropped Projects Task Table');
+    }
+
     const tableExists = await DB.schema.hasTable(PROJECTS_TASK);
     if (!tableExists) {
         console.log('Projects Task table does not exist, creating...');
@@ -55,18 +61,18 @@ export const migrate = async () => {
             table.jsonb('shortlisted_freelancer_ids').nullable();
             table.boolean('is_active').defaultTo(true);
             table.integer('created_by').notNullable()
-                .references('id')
+                .references('user_id')
                 .inTable('users')
                 .onDelete('SET NULL');
             table.timestamp('created_at').defaultTo(DB.fn.now());
             table.timestamp('updated_at').defaultTo(DB.fn.now());
             table.integer('updated_by').nullable()
-                .references('id')
+                .references('user_id')
                 .inTable('users')
                 .onDelete('SET NULL');
             table.boolean('is_deleted').defaultTo(false);
             table.integer('deleted_by').nullable()
-                .references('id')
+                .references('user_id')
                 .inTable('users')
                 .onDelete('SET NULL');
             table.timestamp('deleted_at').nullable();

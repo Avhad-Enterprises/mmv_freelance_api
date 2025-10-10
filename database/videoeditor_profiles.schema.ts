@@ -21,7 +21,13 @@ export const VIDEOEDITOR_PROFILES = 'videoeditor_profiles';
  * Contains video editor-specific fields
  * Currently prepared for future extensions
  */
-export const migrate = async () => {
+export const migrate = async (dropFirst = false) => {
+  if (dropFirst) {
+    console.log('Dropping Video Editor Profiles Table');
+    await DB.schema.dropTableIfExists(VIDEOEDITOR_PROFILES);
+    console.log('Dropped Video Editor Profiles Table');
+  }
+
   const tableExists = await DB.schema.hasTable(VIDEOEDITOR_PROFILES);
   if (!tableExists) {
     console.log('Video Editor Profiles table does not exist, creating...');
