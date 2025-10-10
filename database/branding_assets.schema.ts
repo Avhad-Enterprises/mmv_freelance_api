@@ -12,6 +12,7 @@ import DB from './index.schema';
 export const BRANDING_ASSETS = 'branding_assets';
 
 export const seed = async (dropFirst = false) => {
+
     try {
         if (dropFirst) {
             console.log('Dropping Tables');
@@ -19,22 +20,22 @@ export const seed = async (dropFirst = false) => {
             console.log('Dropped Tables');
         }
         console.log('Seeding Tables');
-        // await DB.raw("set search_path to public")
         await DB.schema.createTable(BRANDING_ASSETS, table => {
-            table.increments('id').primary();  //ID
-            table.text('navbar_logo').nullable();
-            table.text('navbar_logo_mobile').nullable();
-            table.text('footer_logo').nullable();
-            table.text('favicon').nullable();
-            table.boolean("is_active").defaultTo(true);
-            table.integer('created_by').notNullable();
-            table.timestamp('created_at').defaultTo(DB.fn.now());
-            table.timestamp('updated_at').defaultTo(DB.fn.now());
-            table.integer('updated_by').nullable();
-            table.boolean('is_deleted').defaultTo(false);
-            table.integer('deleted_by').nullable();
-            table.timestamp('deleted_at').nullable();
+            table.increments('id').primary();
+            table.string('navbar_logo').nullable();
+            table.string('navbar_logo_mobile').nullable();
+            table.string('footer_logo').nullable();
+            table.string('favicon').nullable();
 
+            // compulsory columns
+            table.boolean("is_active").defaultTo(true);
+            table.boolean("is_deleted").defaultTo(false);
+            table.integer("deleted_by").nullable();
+            table.timestamp("deleted_at").nullable();
+            table.integer("created_by").nullable();
+            table.integer("updated_by").nullable();
+            table.timestamp("created_at").defaultTo(DB.fn.now());
+            table.timestamp("updated_at").defaultTo(DB.fn.now());
         });
 
         console.log('Finished Seeding Tables');
@@ -58,4 +59,4 @@ export const migrate = async (dropFirst = false) => {
     await seed(true); // Always drop and recreate for clean migrations
 };
 
-// Version: 1.0.0 - Branding assets table for website logos and images
+// Version: 1.0.0 - Branding assets table for storing logos and branding elements

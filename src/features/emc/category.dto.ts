@@ -9,24 +9,24 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-enum NicheType {
+enum CategoryType {
   EDITOR = 'editor',
   VIDEOGRAPHER = 'videographer'
 }
 
-export class NicheSelectionDto {
+export class CategorySelectionDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  niche_id?: number;
+  category_id?: number;
 
   @IsString()
   @IsNotEmpty()
-  niche_name: string;
+  category_name: string;
 
-  @IsEnum(NicheType)
+  @IsEnum(CategoryType)
   @IsNotEmpty()
-  niche_type: NicheType;
+  category_type: CategoryType;
 
   @IsOptional()
   @IsString()

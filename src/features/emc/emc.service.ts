@@ -3,17 +3,17 @@ import { UsersDto } from '../user/user.dto';
 import HttpException from '../../exceptions/HttpException';
 import { USERS_TABLE } from '../../../database/users.schema';
 import { PROJECTS_TASK } from '../../../database/projectstask.schema';
-import { NICHES_TABLE } from '../../../database/niches.schema';
+import { CATEGORY } from '../../../database/category.schema';
 import { calculateEmcScore } from './matchEngine';
 
 class emcService {
 
-  // Helper method to get valid niches from database
-  private async getValidNiches(): Promise<string[]> {
-    const niches = await DB(NICHES_TABLE)
+  // Helper method to get valid categories from database
+  private async getValidCategories(): Promise<string[]> {
+    const categories = await DB(CATEGORY)
       .where({ is_active: true, is_deleted: false })
-      .select('niche_name');
-    return niches.map(n => n.niche_name);
+      .select('category_name');
+    return categories.map(c => c.category_name);
   }
 
   public async saveUserArtworkSelection(user_id: number, projects_task_id: number, artwork: string) {
@@ -112,15 +112,15 @@ class emcService {
     return { success: true, message: "Artworks updated for creator successfully" };
   }
 
-  public async saveUserNicheSelection(user_id: number, projects_task_id: number, niche: string) {
-    if (!user_id || !projects_task_id || !niche) {
-      throw new HttpException(400, "User id, project task id, and niche are required");
+  public async saveUserCategorySelection(user_id: number, projects_task_id: number, category: string) {
+    if (!user_id || !projects_task_id || !category) {
+      throw new HttpException(400, "User id, project task id, and category are required");
     }
 
-    // Validate niche against database
-    const validNiches = await this.getValidNiches();
-    if (!validNiches.includes(niche)) {
-      throw new HttpException(400, `Enter valid niche. Valid niches are: ${validNiches.join(', ')}`);
+    // Validate category against database
+    const validCategories = await this.getValidCategories();
+    if (!validCategories.includes(category)) {
+      throw new HttpException(400, `Enter valid category. Valid categories are: ${validCategories.join(', ')}`);
     }
 
     // First check if the project exists and belongs to the user
@@ -136,46 +136,46 @@ class emcService {
       throw new HttpException(404, "Project not found or doesn't belong to the user");
     }
 
-    // Check if user already has this niche
+    // Check if user already has this category
     const existingUser = await DB(USERS_TABLE)
       .where({ 
         user_id: user_id,
         account_type: 'user'
       })
-      .select('niche')
+      .select('category')
       .first();
 
-    if (existingUser && existingUser.niche === niche) {
-      throw new HttpException(409, "Niche already added for this user");
+    if (existingUser && existingUser.category === category) {
+      throw new HttpException(409, "Category already added for this user");
     }
 
-    // Update the user's niche field in users table
+    // Update the user's category field in users table
     const updated = await DB(USERS_TABLE)
       .where({ 
         user_id: user_id,
         account_type: 'user'
       })
       .update({ 
-        niche: niche, 
+        category: category, 
         updated_at: DB.fn.now() 
       });
 
     if (!updated) {
-      throw new HttpException(404, "Failed to update user Niche");
+      throw new HttpException(404, "Failed to update user Category");
     }
 
-    return { success: true, message: "Niche updated for user successfully" };
+    return { success: true, message: "Category updated for user successfully" };
   }
 
-  public async saveCreatorNicheSelection(user_id: number, niche: string) {
-    if (!user_id || !niche ) {
-      throw new HttpException(400, "User id and Niche are required");
+  public async saveCreatorCategorySelection(user_id: number, category: string) {
+    if (!user_id || !category ) {
+      throw new HttpException(400, "User id and Category are required");
     }
 
-    // Validate niche against database
-    const validNiches = await this.getValidNiches();
-    if (!validNiches.includes(niche)) {
-      throw new HttpException(400, `Enter valid niche. Valid niches are: ${validNiches.join(', ')}`);
+    // Validate category against database
+    const validCategories = await this.getValidCategories();
+    if (!validCategories.includes(category)) {
+      throw new HttpException(400, `Enter valid category. Valid categories are: ${validCategories.join(', ')}`);
     }
 
     // Check if user exists and is a creator
@@ -191,24 +191,24 @@ class emcService {
       throw new HttpException(404, "Creator not found");
     }
 
-    // Check if creator already has this niche
-    if (user.niche === niche) {
-      throw new HttpException(409, "Niche already added for this creator");
+    // Check if creator already has this category
+    if (user.category === category) {
+      throw new HttpException(409, "Category already added for this creator");
     }
 
-    // Update the user's niche
+    // Update the user's category
     const updated = await DB(USERS_TABLE)
       .where({ user_id: user_id })
       .update({ 
-        niche: niche, 
+        category: category, 
         updated_at: DB.fn.now() 
       });
 
     if (!updated) {
-      throw new HttpException(404, "Failed to update creator Niche");
+      throw new HttpException(404, "Failed to update creator category");
     }
 
-    return { success: true, message: "Niche updated for creator successfully" };
+    return { success: true, message: "Category updated for creator successfully" };
   }
 
   async getRecommendedEditors(projectid: number) {
@@ -218,25 +218,25 @@ class emcService {
       .first();
     if (!project) throw new HttpException(404, 'Project not found');
 
-    // 2. Get user's artwork and niche using the project's user_id
+    // 2. Get user's artwork and category using the project's user_id
     const user = await DB(USERS_TABLE)
       .where({ user_id: project.user_id })
-      .select('user_id', 'artworks', 'niche')
+      .select('user_id', 'artworks', 'category')
       .first();
     
     if (!user) throw new HttpException(404, 'User not found');
     
     const userArtworks = Array.isArray(user.artworks) ? user.artworks.map(Number) : [];
-    const userNiche = user.niche;
+    const userCategory = user.category;
     
-    if (!userArtworks.length || !userNiche) {
-      throw new HttpException(400, 'User missing artwork or niche');
+    if (!userArtworks.length || !userCategory) {
+      throw new HttpException(400, 'User missing artwork or category');
     }
 
     // 3. Fetch all creators
     const creators = await DB(USERS_TABLE)
       .where({ account_type: 'creator', is_active: true , is_banned : false})
-      .select('user_id', 'artworks', 'niche');
+      .select('user_id', 'artworks', 'category');
 
     // 4. Score each creator
     const ranked = creators.map(c => {
@@ -245,17 +245,17 @@ class emcService {
       // Calculate EMC score using the first user artwork (assuming single artwork for users)
       const emc = calculateEmcScore(userArtworks[0], creatorArtworks);
       
-      // Calculate niche match
-      const nicheMatch = userNiche === c.niche ? 100 : 0;
+      // Calculate category match
+      const categoryMatch = userCategory === c.category ? 100 : 0;
       
       // Calculate final score
-      const finalScore = 0.6 * nicheMatch + 0.4 * emc;
+      const finalScore = 0.6 * categoryMatch + 0.4 * emc;
       
       return {
         creator_id: c.user_id,
         finalScore,
         emc,
-        nicheMatch
+        categoryMatch
       };
     }).sort((a, b) => b.finalScore - a.finalScore);
 

@@ -28,7 +28,6 @@ export default DB;
 import { USERS_TABLE } from './users.schema';
 import { PROJECTS_TASK } from './projectstask.schema';
 import { TAGS_TABLE } from './tags.schema';
-import { USERINVITATIONS } from "./userinvitations.schema";
 import { APPLIED_PROJECTS } from './applied_projects.schema';
 import { BLOG } from './blog.schema';
 import { CATEGORY } from './category.schema';
@@ -38,7 +37,6 @@ import { PERMISSION } from './permission.schema';
 import { REPORT_TABLE } from './report_system.schema';
 import { ROLE } from './role.schema';
 import { VISITOR_LOGS } from './visitor_logs.schema';
-import { NICHES_TABLE } from './niches.schema';
 import { REVIEWS_TABLE } from './review.schema';
 import { SUPPORT_TICKETS_TABLE } from './support_ticket.schema'
 import { TICKET_REPLY_TABLE } from './support_ticket_reply.schema'
@@ -54,15 +52,12 @@ import { FAQ } from "./faq.schema";
 import { APPLICATION } from "./application.schema";
 import { TRANSACTION_TABLE } from "./transactions.schema";
 import { CMS } from "./cms.schema";
-import { SEO } from './SEO.schema';
+import { SEO } from './seo.schema';
 import { BRANDING_ASSETS } from './branding_assets.schema';
 import { ANALYTICS_SETTINGS } from './analytics_setting.schema';
 import { SUBSCRIBED_EMAILS } from './subscribed_emails.schema';
 import { SKILLS } from './skill.schema';
 import { SAVED_PROJECTS } from './saved_project.schema';
-import { COUNTRY } from './country.schema';
-import { STATES } from './states.schema';
-import { CITIES } from './city.schema';
 import { EMAIL_LOG_TABLE } from './emailog.schema';
 
 // New Profile Tables (Architecture Refactor)
@@ -77,7 +72,6 @@ export const T = {
   USERS_TABLE,
   PROJECTS_TASK,
   TAGS_TABLE,
-  USERINVITATIONS,
   APPLIED_PROJECTS,
   BLOG,
   CATEGORY,
@@ -87,7 +81,6 @@ export const T = {
   REPORT_TABLE,
   ROLE,
   VISITOR_LOGS,
-  NICHES_TABLE,
   REVIEWS_TABLE,
   SUPPORT_TICKETS_TABLE,
   TICKET_REPLY_TABLE,
@@ -109,9 +102,6 @@ export const T = {
   ANALYTICS_SETTINGS,
   SUBSCRIBED_EMAILS,
   SAVED_PROJECTS,
-  COUNTRY,
-  STATES,
-  CITIES,
   EMAIL_LOG_TABLE,
   // New Profile Tables
   FREELANCER_PROFILES,

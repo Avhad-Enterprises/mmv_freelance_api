@@ -49,46 +49,46 @@ class EmcController {
     }
   };
 
-  public saveNicheSelection = async (
+  public saveCategorySelection = async (
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const { account_type, user_id, projects_task_id, niche } = req.body;
+      const { account_type, user_id, projects_task_id, category } = req.body;
       
       if (!account_type || !user_id) {
         throw new HttpException(400, 'account_type and user_id are required');
       }
 
       if (account_type === 'user') {
-        if (!projects_task_id || !niche) {
-          throw new HttpException(400, 'projects_task_id and niche are required for user');
+        if (!projects_task_id || !category) {
+          throw new HttpException(400, 'projects_task_id and category are required for user');
         }
         
-        const result = await this.EMCService.saveUserNicheSelection(user_id, projects_task_id, niche);
+        const result = await this.EMCService.saveUserCategorySelection(user_id, projects_task_id, category);
         res.status(200).json({
           data: result,
-          message: "Niche added for user successfully"
+          message: "Category added for user successfully"
         });
       } else if (account_type === 'creator') {
 
-        if (!niche) {
-          throw new HttpException(400, 'Niche is required for creator');
+        if (!category) {
+          throw new HttpException(400, 'Category is required for creator');
         }
 
-        const result = await this.EMCService.saveCreatorNicheSelection(user_id, niche);
+        const result = await this.EMCService.saveCreatorCategorySelection(user_id, category);
         res.status(200).json({
           data: result,
-          message: "Niche added for creator successfully"
+          message: "Category added for creator successfully"
         });
       } else {
         throw new HttpException(400, 'Invalid account_type. Must be "user" or "creator"');
       }
     } catch (err: any) {
       // Handle database constraint violations specifically
-      if (err.code === '23514' && err.constraint === 'users_niche_check') {
-        next(new HttpException(400, 'Enter valid niche. Please check the list of available niches.'));
+      if (err.code === '23514' && err.constraint === 'users_category_check') {
+        next(new HttpException(400, 'Enter valid category. Please check the list of available categories.'));
       } else {
         next(err);
       }
