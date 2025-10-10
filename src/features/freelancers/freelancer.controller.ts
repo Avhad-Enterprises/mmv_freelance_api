@@ -25,16 +25,15 @@ export class FreelancerController {
             });
         } catch (error) {
             next(error);
-        }
+        };
     }
-
-    public getAllFreelancersPublic = async (
+    public getAvailableFreelancers = async (
         req: Request,
         res: Response,
         next: NextFunction
     ): Promise<void> => {
         try {
-            const freelancers = await this.freelancerService.getAllFreelancersPublic();
+            const freelancers = await this.freelancerService.getAvailableFreelancers();
 
             res.status(200).json({
                 success: true,
