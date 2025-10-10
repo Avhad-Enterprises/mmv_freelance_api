@@ -26,8 +26,6 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/health',
       '/projectsTask/getallprojectlisting',
       '/freelancers/getfreelancers',
-      '/applications/my-applications',
-      '/applications/count/',
       '/category/getallcategorys',
       '/category/getcategorytypes',
       '/tags/getallskill'

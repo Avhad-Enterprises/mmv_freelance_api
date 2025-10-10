@@ -28,68 +28,68 @@ class AppliedProjectsRoute implements Route {
       this.appliedProjectsController.applyToProject
     );
 
-    // Get Editors all applications - DONE
-    this.router.post(
+    // Get Editors all applications - FIXED: Changed to GET, moved user_id to params
+    this.router.get(
       `${this.path}/my-applications`,
       requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR'), // Only editors can view their applications
       this.appliedProjectsController.getMyApplications
     );
 
-    // Get Editors applications by Project ID - DONE
-    this.router.post(
-      `${this.path}/my-applications/project`,
+    // Get Editors applications by Project ID - FIXED: Changed to GET, moved params to URL
+    this.router.get(
+      `${this.path}/my-applications/project/:project_id`,
       requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR'), // Only editors can view their applications
       this.appliedProjectsController.getMyApplicationbyId
     );
 
     // Editor Withdraw his application - DONE
     this.router.delete(
-      `${this.path}/my-applications/withdraw`,
+      `${this.path}/withdraw/:application_id`,
       requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR'), // Only editors can withdraw
       this.appliedProjectsController.withdrawApplication
     );
 
     // CLIENT APIS
 
-    // Get all applications for a specific project  - DONE
-    this.router.post(
-      `${this.path}/projects/get-applications`,
+    // Get all applications for a specific project - FIXED: Changed to GET, moved project_id to params
+    this.router.get(
+      `${this.path}/projects/:project_id/applications`,
       requireRole('CLIENT'), // Only clients can view applications for their projects
       this.appliedProjectsController.getProjectApplications
-    ); // enter project_task_id here 
+    );
 
-    // Update application status, HIRE THE EDITOR - DONE 
+    // Update application status, HIRE THE EDITOR - DONE
     this.router.patch(
       `${this.path}/update-status`,
       requireRole('CLIENT'), // Only clients can update application status
       this.appliedProjectsController.updateApplicationStatus
     );
 
-    // Get application count for a specific project - NEW
-    this.router.post(
-      `${this.path}/projects/get-application-count`,
+    // Get application count for a specific project - FIXED: Changed to GET, moved project_id to params
+    this.router.get(
+      `${this.path}/projects/:project_id/application-count`,
       requireRole('CLIENT','ADMIN', 'SUPER_ADMIN'), // Only clients can view application counts
       this.appliedProjectsController.getApplicationCount
-    ); // enter project_task_id here
+    );
 
-    this.router.post(`${this.path}/getStatus`,
+    this.router.get(`${this.path}/status/:status`,
       requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR', 'CLIENT'), // Editors and clients can check status
       this.appliedProjectsController.getAppliedStatus.bind(this.appliedProjectsController)
     );
     
-    this.router.get(`${this.path}/count/:id`,
+    this.router.get(`${this.path}/count`,
       requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // Editors and admins can view counts
-      (req, res, next) => this.appliedProjectsController.appliedcount(req, res, next)
+      (req, res, next) => this.appliedProjectsController.appliedcount(req as any, res, next)
     );
     
-    this.router.get(`${this.path}/ongoing/:user_id`,
+    this.router.get(`${this.path}/ongoing`,
       requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR', 'CLIENT', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users
-      (req, res, next) => this.appliedProjectsController.getongoing(req, res, next)
+      (req, res, next) => this.appliedProjectsController.getongoing(req as any, res, next)
     );
     
-    this.router.get(`${this.path}/:user_id`,
+    this.router.get(`${this.path}/filter/:filter`,
       requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR', 'CLIENT', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users
-      (req, res, next) => this.appliedProjectsController.getapplied(req, res, next)
+      (req, res, next) => this.appliedProjectsController.getapplied(req as any, res, next)
     );
 
     this.router.get(`${this.path}/projects/completed-count`,
