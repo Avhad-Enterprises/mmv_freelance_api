@@ -156,6 +156,41 @@ class ProjectstaskService {
     return result;
   };
 
+  /**
+   * Get all active projects listing (public-safe version without sensitive client info)
+   */
+  public getAllProjectslistingPublic = async (): Promise<any[]> => {
+    const result = await DB(T.PROJECTS_TASK)
+      .leftJoin(`${T.USERS_TABLE} as client`, `${T.PROJECTS_TASK}.client_id`, 'client.user_id')
+      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.user_id`)
+      .leftJoin(`${T.USERS_TABLE} as editor`, `${T.PROJECTS_TASK}.editor_id`, 'editor.user_id')
+      .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.editor_id`, `${T.FREELANCER_PROFILES}.user_id`)
+      .where(`${T.PROJECTS_TASK}.is_deleted`, false)
+      .where(`${T.PROJECTS_TASK}.status`, 0) // Only show active/pending jobs (not assigned or completed)
+      .orderBy(`${T.PROJECTS_TASK}.created_at`, 'desc')
+      .select(
+        `${T.PROJECTS_TASK}.*`,
+
+        // Client Info (excluding sensitive data)
+        'client.user_id as client_user_id',
+        'client.first_name as client_first_name',
+        'client.last_name as client_last_name',
+        'client.profile_picture as client_profile_picture',
+        `${T.CLIENT_PROFILES}.company_name as client_company_name`,
+        `${T.CLIENT_PROFILES}.industry as client_industry`,
+
+        // Editor Info
+        'editor.user_id as editor_user_id',
+        'editor.first_name as editor_first_name',
+        'editor.last_name as editor_last_name',
+        'editor.profile_picture as editor_profile_picture',
+        `${T.FREELANCER_PROFILES}.profile_title as editor_profile_title`,
+        `${T.FREELANCER_PROFILES}.experience_level as editor_experience_level`
+      );
+
+    return result;
+  };
+
   public getactivedeleted = async (): Promise<IProjectTask[]> => {
     try {
       const result = await DB(T.PROJECTS_TASK)
@@ -323,6 +358,22 @@ class ProjectstaskService {
     return project || null;
   }
 
+  public async getProjectsByClient(client_id: number): Promise<any[]> {
+    if (!client_id) {
+      throw new HttpException(400, "client_id is required");
+    }
+
+    const projects = await DB(T.PROJECTS_TASK)
+      .where({
+        client_id,
+        is_deleted: false
+      })
+      .orderBy('created_at', 'desc')
+      .select('*');
+
+    return projects;
+  }
+
   public async getCountByEditor(editor_id: number): Promise<number> {
     if (!editor_id) {
       throw new HttpException(400, "editor_id is required");
@@ -415,6 +466,7 @@ class ProjectstaskService {
       .leftJoin(`${T.USERS_TABLE} as editor`, `${T.PROJECTS_TASK}.editor_id`, 'editor.user_id')
       .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.editor_id`, `${T.FREELANCER_PROFILES}.user_id`)
       .where(`${T.PROJECTS_TASK}.is_deleted`, false)
+      .where(`${T.PROJECTS_TASK}.status`, 0) // Only show active/pending jobs (not assigned or completed)
       .orderBy(`${T.PROJECTS_TASK}.created_at`, 'desc')
       .select(
         `${T.PROJECTS_TASK}.*`,

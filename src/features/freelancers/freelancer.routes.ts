@@ -20,17 +20,12 @@ export class FreelancerRoutes implements Route {
 
     private initializeRoutes() {
 
-        //Get all freelancers
+        //Get all freelancers (public endpoint for homepage)
 
         this.router.get(
             `${this.path}/getfreelancers`,
             requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'),
             this.freelancerController.getAllFreelancers
-        );
-
-        this.router.get(
-            `${this.path}/availablefreelancer`,
-            this.freelancerController.getAvailableFreelancers
         );
 
     }

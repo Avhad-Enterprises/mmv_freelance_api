@@ -19,7 +19,7 @@ async function testEmail() {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Test Email</h2>
           <p>This is a test email to verify that the email service is working correctly.</p>
-          <p>If you received this email, the email configuration is working!</p>
+          <p>If you received this email, the SendGrid configuration is working!</p>
           <p>Time sent: ${new Date().toLocaleString()}</p>
           <p>Best regards,<br>MMV Team</p>
         </div>
@@ -38,17 +38,16 @@ async function testEmail() {
     }
 
     console.error('\n🔍 Possible issues:');
-    console.error('1. EMAIL_USER and EMAIL_PASSWORD not set correctly in .env');
-    console.error('2. Gmail requires App Password (not regular password) when 2FA is enabled');
-    console.error('3. Gmail account security settings blocking SMTP access');
-    console.error('4. Network/firewall blocking SMTP port 587');
-    console.error('5. Invalid email address');
+    console.error('1. SENDGRID_API_KEY not set correctly in .env');
+    console.error('2. API key lacks sending permissions');
+    console.error('3. Sender email not verified in SendGrid');
+    console.error('4. Invalid recipient email address');
 
     console.error('\n🔧 Solutions:');
-    console.error('1. Check .env file has correct EMAIL_USER and EMAIL_PASSWORD');
-    console.error('2. For Gmail: Enable 2FA, generate App Password at https://myaccount.google.com/apppasswords');
-    console.error('3. Use App Password (16 chars, no spaces) instead of regular Gmail password');
-    console.error('4. See EMAIL_SETUP_GUIDE.md for detailed Gmail SMTP setup instructions');
+    console.error('1. Check .env file has correct SENDGRID_API_KEY');
+    console.error('2. Verify API key in SendGrid dashboard');
+    console.error('3. Verify sender identity in SendGrid (Settings > Sender Authentication)');
+    console.error('4. Check that EMAIL_USER matches verified sender');
   }
 }
 
