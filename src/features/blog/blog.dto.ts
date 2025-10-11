@@ -11,6 +11,10 @@ export class BlogDto {
   @IsInt()
   blog_id?: number;
 
+  @IsOptional()
+  @IsInt()
+  author_id?: number;
+
   @IsString()
   @IsNotEmpty()
   title: string;
@@ -101,4 +105,12 @@ export class BlogDto {
   @Type(() => Number)
   @IsInt()
   deleted_by?: number;
+
+  @IsOptional()
+  @IsString()
+  status?: 'draft' | 'published';
+
+  @IsOptional()
+  @IsString()
+  format?: string;
 }
