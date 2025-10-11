@@ -22,13 +22,23 @@ export const seed = async (dropFirst = false) => {
         // await DB.raw("set search_path to public")
         await DB.schema.createTable(BLOG, table => {
             table.increments('blog_id').primary();
+            table.integer('author_id')
+                .unsigned()
+                .nullable()
+                .references('user_id')
+                .inTable('users')
+                .onDelete('SET NULL');
+            table.string('author_name').notNullable();
             table.string('title').notNullable();
             table.string('slug').notNullable().unique();
             table.text('featured_image').nullable();
             table.text('content', 'longtext').nullable();
             table.text('short_description').nullable();
-            table.string('author_name').notNullable();
             table.string('category').nullable();
+            // status: draft | published
+            table.enu('status', ['draft', 'published']).defaultTo('draft');
+            // format: e.g., 'article', 'video', 'gallery', etc.
+            table.string('format').nullable();
             table.boolean('is_featured').defaultTo(false);
             table.integer('views').defaultTo(0);
             table.string('seo_title').nullable();
