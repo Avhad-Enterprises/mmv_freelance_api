@@ -272,5 +272,10 @@ export class UserRoutes implements Route {
       // requirePermission('admin.roles'), // DISABLED: Using only role-based access
       this.userController.getUserPermissions
     );
+
+     // Invite user (Admin only)
+    this.router.post(`${this.path}/send-invitation`, requireRole('ADMIN', 'SUPER_ADMIN'), this.userController.sendInvitation);
+
+
   }
 }
