@@ -34,7 +34,6 @@ import EmailRoute from './features/email/email.routes';
 import UploadRoute from './features/upload/upload.routes';
 import WebhookRoute from './features/webhook/webhook.routes';
 import BrandingRoute from './features/branding/branding.routes';
-import DocumentRoute from './features/document/document.routes';
 
 // Phase 9: Remaining Features
 import CategoryRoute from './features/category/category.routes';
@@ -82,7 +81,6 @@ const app = new App([
     new UploadRoute(),
     new WebhookRoute(),
     new BrandingRoute(),
-    new DocumentRoute(),
     new CategoryRoute(),
     new TagRoute(),
     new ReviewRoute(),

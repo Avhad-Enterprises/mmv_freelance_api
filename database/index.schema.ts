@@ -44,17 +44,15 @@ import { TICKET_NOTE_TABLE } from './support_ticket_note.schema'
 import { ROBOTS_TXT } from './robotstxt.schema';
 import { INVITATION_TABLE } from './admin_invites.schema';
 import { REPORT_TEMPLATES } from './report_templates.schema';
-import { REPORT_SCHEDULES } from './reports_schedules.schema';
 import { ROLE_PERMISSION } from './role_permission.schema';
 import { SUBMITTED_PROJECTS } from './submitted_projects.schema';
 import { USER_ROLES } from './user_role.schema';
 import { FAQ } from "./faq.schema";
-import { APPLICATION } from "./application.schema";
 import { TRANSACTION_TABLE } from "./transactions.schema";
 import { CMS } from "./cms.schema";
 import { SEO } from './seo.schema';
 import { BRANDING_ASSETS } from './branding_assets.schema';
-import { ANALYTICS_SETTINGS } from './analytics_setting.schema';
+import { ANALYTICS_SETTINGS } from './analytics.schema';
 import { SUBSCRIBED_EMAILS } from './subscribed_emails.schema';
 import { SKILLS } from './skill.schema';
 import { SAVED_PROJECTS } from './saved_project.schema';
@@ -91,9 +89,7 @@ export const T = {
   ROBOTS_TXT,
   INVITATION_TABLE,
   REPORT_TEMPLATES,
-  REPORT_SCHEDULES,
   ROLE_PERMISSION,
-  APPLICATION,
   TRANSACTION_TABLE,
   SKILLS,
   CMS,
