@@ -20,6 +20,11 @@ export class FaqDto {
   answer: string;
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
+
+  @IsOptional()
   @IsBoolean()
   is_active: boolean;
 
