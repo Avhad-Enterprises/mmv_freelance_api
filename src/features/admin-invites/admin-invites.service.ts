@@ -7,7 +7,7 @@ import { INVITATION_TABLE } from '../../../database/admin_invites.schema';
 import { IAdminInvite } from './admin_invites.interface';
 import { CreateAdminInviteDto, AdminInviteResponseDto, AcceptInviteDto } from './admin-invites.dto';
 import HttpException from '../../exceptions/HttpException';
-import sendEmail from '../../utils/email/sendemail';
+import { sendInvitationEmail } from '../../utils/email/sendInvitationEmail';
 
 class AdminInvitesService {
 
@@ -222,10 +222,12 @@ class AdminInvitesService {
                 </div>
             `;
 
-            await sendEmail({
+            await sendInvitationEmail({
                 to: dto.email,
-                subject: 'You\'re invited to join MMV Freelance Platform',
-                html: emailHtml
+                firstName: dto.email.split('@')[0], // Using email prefix as firstName if not provided
+                email: dto.email,
+                password: '', // No password for initial invite
+                inviteLink: `${process.env.FRONTEND_URL}/accept-invite/${token}`
             });
         } catch (error) {
             console.error('Failed to send invitation email:', error);
