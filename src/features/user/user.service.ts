@@ -5,6 +5,8 @@ import HttpException from "../../exceptions/HttpException";
 import bcrypt from "bcrypt";
 import { loadUserProfile } from "../../utils/user/profile-loader";
 import { getUserRoles, hasRole, getUserPermissions as getRoleCheckerPermissions } from "../../utils/rbac/role-checker";
+import { UsersDto } from "./user.dto";
+import { isEmpty } from "../../utils/common";
 
 /**
  * Base User Service
@@ -658,6 +660,52 @@ class UserService {
         });
         break;
     }
+  }
+  public async createuserInvitation(data: UsersDto): Promise<Users> {
+
+    if (!data.username || !data.password || !data.email || !data.phone_number || !data.full_name) {
+      throw new HttpException(400, "Missing required fields");
+    }
+    if (isEmpty(data)) throw new HttpException(400, "Data Invalid");
+
+    // Split full_name into first_name and last_name
+    const nameParts = data.full_name.trim().split(' ');
+    const first_name = nameParts[0];
+    const last_name = nameParts.slice(1).join(' ') || first_name;
+
+    const existingEmployee = await DB(T.USERS_TABLE)
+      .where({ email: data.email })
+      .first();
+
+    if (existingEmployee)
+      throw new HttpException(409, "Email already registered");
+
+    if (data.username) {
+      const existingUsername = await DB(T.USERS_TABLE)
+        .where({ username: data.username })
+        .first();
+
+
+      if (existingUsername) {
+        throw new HttpException(409, "Username already taken");
+      }
+    }
+
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    
+    // Create user data object with correct fields
+    const userData = {
+      first_name,
+      last_name,
+      username: data.username,
+      email: data.email,
+      password: hashedPassword,
+      phone_number: data.phone_number
+    };
+
+    const res = await DB(T.USERS_TABLE).insert(userData).returning("*");
+    return res[0];
   }
 }
 

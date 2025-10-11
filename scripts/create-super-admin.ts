@@ -20,9 +20,9 @@ async function createSuperAdmin(options: CreateAdminOptions = {}) {
 
     // Default values
     const adminData = {
-      firstName: options.firstName || 'Super',
-      lastName: options.lastName || 'Admin',
-      email: options.email || 'superadmin@mmv.com',
+      firstName: options.firstName || 'Abhi',
+      lastName: options.lastName || 'Yadav',
+      email: options.email || 'avhadenterprisespc5@gmail.com',
       password: options.password || 'SuperAdmin123!',
     };
 

@@ -3,7 +3,7 @@ import DB, { T } from '../../../database/index.schema';
 import { SupportTicket } from './support-ticket.interface';
 import HttpException from '../../exceptions/HttpException';
 import { isEmpty } from '../../utils/common';
-import { sendSupportEmail } from '../../utils/email/support_ticket_email.util';
+import { sendSupportTicketEmail } from '../../utils/email';
 import { ITicketNote } from '../../interfaces/support_ticket_notes.interface';
 import { TicketNoteDto } from './support-ticket-notes.dto';
 import { hasRole, getUserRoles } from '../../utils/rbac/role-checker';
@@ -46,11 +46,12 @@ User Email: ${email ?? 'N/A'}
   const [ticket] = await DB(T.SUPPORT_TICKETS_TABLE).insert(insertData).returning('*');
 
   try {
-    await sendSupportEmail({
+    await sendSupportTicketEmail({
       to: supportEmail,
       subject: 'New Support Ticket',
-      body: emailContent,
-      replyTo,
+      ticketId: ticket.id.toString(),
+      message: emailContent,
+      replyTo
     });
 
     // ✅ Log success in email_logs table
@@ -331,11 +332,12 @@ Message: ${message}
 
   if (recipientEmail) {
     try {
-      await sendSupportEmail({
+      await sendSupportTicketEmail({
         to: recipientEmail,
-        subject: `Reply to Ticket #${ticket_id}`,
-        body: emailContent,
-        replyTo: sender.email,
+        subject: 'Support Ticket Reply',
+        ticketId: ticket_id.toString(),
+        message: message,
+        replyTo: sender.email
       });
 
       // ✅ Log successful email

@@ -4,6 +4,9 @@ import UserService from './user.service';
 import { UserUpdateDto, ChangePasswordDto, PasswordResetRequestDto, PasswordResetDto } from './user.update.dto';
 import { RequestWithUser } from '../../interfaces/auth.interface';
 import HttpException from '../../exceptions/HttpException';
+import { Users } from './user.interface';
+import { sendPasswordResetEmail, sendInvitationEmail } from '../../utils/email';
+import * as crypto from 'crypto';
 
 /**
  * User Controller (Refactored)
@@ -143,24 +146,40 @@ export class UserController {
 
       // Always return success for security reasons (prevent email enumeration)
       // Only generate token if user exists
+      let debugInfo = {};
+      
       if (user) {
         // Generate reset token (expires in 1 hour)
-        const crypto = require('crypto');
         const resetToken = crypto.randomBytes(32).toString('hex');
         const expiresAt = new Date(Date.now() + 3600000); // 1 hour
 
         await this.userService.saveResetToken(user.user_id, resetToken, expiresAt);
 
-        // TODO: Send email with reset link
-        // await sendPasswordResetEmail(email, resetToken);
+        // Send password reset email
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+        
+        await sendPasswordResetEmail({
+          to: email,
+          name: user.first_name || 'User',
+          resetLink
+        });
+
+        // Add debug info for development environment
+        if (process.env.NODE_ENV === 'development') {
+          debugInfo = {
+            debug: {
+              resetToken: resetToken,
+              resetLink: resetLink
+            }
+          };
+        }
       }
 
+      // Always return same message whether user exists or not (prevent email enumeration)
       res.status(200).json({
         success: true,
         message: 'If the email exists, a password reset link has been sent',
-        // For development only - remove in production
-        resetToken: user && process.env.NODE_ENV === 'development' ?
-          'Token generated but not exposed for security' : undefined
+        ...debugInfo
       });
     } catch (error) {
       next(error);
@@ -177,11 +196,13 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const { token, new_password }: PasswordResetDto = req.body;
-      
-      await this.userService.resetPassword(token, new_password);
-      
-      res.status(200).json({
+      const { token, newPassword, confirmPassword }: PasswordResetDto = req.body;
+          
+          if (newPassword !== confirmPassword) {
+            throw new HttpException(400, "Passwords do not match");
+          }
+          
+          await this.userService.resetPassword(token, newPassword);      res.status(200).json({
         success: true,
         message: 'Password reset successfully'
       });
@@ -536,6 +557,33 @@ export class UserController {
         success: true,
         data: permissions
       });
+    } catch (error) {
+      next(error);
+    }
+  };
+    public sendInvitation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const {
+        first_name,
+        last_name,
+        username,
+        email,
+        phone_number,
+        password
+      } = req.body;
+      console.log(req.body);
+      const locationData: Users = await this.userService.createuserInvitation(req.body);
+      const token = crypto.randomBytes(32).toString("hex");
+      const inviteLink = `${process.env.FRONTEND_URL}/register?token=${token}`;
+
+      await sendInvitationEmail({
+        to: email,
+        firstName: first_name,
+        email: email,
+        password: password,
+        inviteLink: inviteLink
+      });
+      res.status(201).json({ data: locationData, message: "Inserted" });
     } catch (error) {
       next(error);
     }
