@@ -207,8 +207,8 @@ class AppliedProjectsService {
                 'ap.status',
                 'ap.created_at as applied_at',
                 'pt.project_title',
-                'pt.Deadline',
-                'pt.Budget'
+                'pt.deadline',
+                'pt.budget'
             )
             .where({
                 'ap.user_id': user_id,
@@ -237,8 +237,8 @@ class AppliedProjectsService {
                 'pt.projects_task_id',
                 'pt.project_title',
                 'pt.project_category',
-                'pt.Deadline',
-                'pt.Budget',
+                'pt.deadline',
+                'pt.budget',
                 'pt.project_description',
                 'pt.tags',
                 'pt.skills_required',

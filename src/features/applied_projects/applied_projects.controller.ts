@@ -8,9 +8,14 @@ import { RequestWithUser } from "../../interfaces/auth.interface";
 class AppliedProjectsController {
   public AppliedProjectsService = new AppliedProjectsService();
 
-  public applyToProject = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public applyToProject = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const result = await this.AppliedProjectsService.apply(req.body);
+      const user_id = req.user.user_id;
+      const applicationData = {
+        ...req.body,
+        user_id: user_id
+      };
+      const result = await this.AppliedProjectsService.apply(applicationData);
       res.status(200).json({
         success: true,
         message: result.message,
@@ -79,16 +84,19 @@ class AppliedProjectsController {
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    const { applied_projects_id, status } = req.body;
-    if (!applied_projects_id || typeof status === 'undefined') {
-      throw new HttpException(400, "applied_projects_id and status are required");
+    try {
+      const { applied_projects_id, status } = req.body;
+      if (!applied_projects_id || typeof status === 'undefined') {
+        throw new HttpException(400, "applied_projects_id and status are required");
+      }
+      const updated = await this.AppliedProjectsService.updateApplicationStatus(applied_projects_id, status);
+      res.status(200).json({
+        data: updated,
+        message: "Application status updated successfully"
+      });
+    } catch (error) {
+      next(error);
     }
-    const updated = await this.AppliedProjectsService.updateApplicationStatus(applied_projects_id, status);
-    res.status(200).json({
-      data: updated,
-      message: "Application status updated successfully"
-    });
-
   };
 
   public withdrawApplication = async (
@@ -96,26 +104,30 @@ class AppliedProjectsController {
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    const { application_id } = req.params;
-    if (!application_id) {
-      throw new HttpException(400, "application_id is required");
+    try {
+      const { application_id } = req.params;
+      if (!application_id) {
+        throw new HttpException(400, "application_id is required");
+      }
+      await this.AppliedProjectsService.withdrawApplication(parseInt(application_id));
+      res.status(200).json({
+        message: "Application withdrawn successfully"
+      });
+    } catch (error) {
+      next(error);
     }
-    await this.AppliedProjectsService.withdrawApplication(parseInt(application_id));
-    res.status(200).json({
-      message: "Application withdrawn successfully"
-    });
   };
 
   public getApplicationCount = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { projects_task_id } = req.params;
+      const { project_id } = req.params;
 
-      if (!projects_task_id) {
-        throw new HttpException(400, "Project Task ID is required");
+      if (!project_id) {
+        throw new HttpException(400, "Project ID is required");
       }
 
-      const count = await this.AppliedProjectsService.getApplicationCountByProject(Number(projects_task_id));
-      res.status(200).json({ success: true, projects_task_id, count });
+      const count = await this.AppliedProjectsService.getApplicationCountByProject(Number(project_id));
+      res.status(200).json({ success: true, project_id, count });
     } catch (error) {
       next(error);
     }
