@@ -40,7 +40,7 @@ import CategoryRoute from './features/category/category.routes';
 import TagRoute from './features/tag/tag.routes';
 import ReviewRoute from './features/review/review.routes';
 import RobotsTxtRoute from './features/robots-txt/robots-txt.routes';
-import EmcRoute from './features/emc/emc.routes';
+import EMCRoute from './features/emc/emc.routes';
 import ReportTemplatesRoute from './features/report-templates/report-templates.routes';
 import AdminInvitesRoutes from './features/admin-invites/admin-invites.routes';
 
@@ -85,7 +85,7 @@ const app = new App([
     new TagRoute(),
     new ReviewRoute(),
     new RobotsTxtRoute(),
-    new EmcRoute(),
+    new EMCRoute(),
     new ReportTemplatesRoute(),
     new AdminInvitesRoutes(),
 ]);
