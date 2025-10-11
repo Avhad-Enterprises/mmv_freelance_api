@@ -12,66 +12,47 @@ const BASE_URL = 'http://localhost:8000/api/v1';
 async function testWithdrawApplication() {
   printSection('Testing DELETE /applications/withdraw/:application_id');
 
-  let applicationId;
-
   try {
-    // Create a fresh application for testing withdrawal
-    console.log('\nCreating a new application for withdrawal test...');
+    // First, let's apply to a project to get an application ID
+    console.log('\nFirst, applying to a project to get an application ID...');
     const videographerEmail = 'test.videographer@example.com';
     const videographerPassword = 'TestPass123!';
 
-    // Login videographer
-    const loginResponse = await makeRequest(
+    const videographerLoginResponse = await makeRequest(
       'POST',
       `${BASE_URL}/auth/login`,
       { email: videographerEmail, password: videographerPassword }
     );
-    const loginData = processApiResponse(loginResponse);
-    storeToken('VIDEOGRAPHER', loginData.data.token);
+    const videographerLoginData = processApiResponse(videographerLoginResponse);
+    storeToken('VIDEOGRAPHER', videographerLoginData.data.token);
 
-    // Apply to a new project to get a fresh application
+    console.log('✅ Videographer login successful');
+
+    // Apply to a project to get a fresh application ID for testing
     const applyResponse = await makeRequest(
       'POST',
       `${BASE_URL}/applications/projects/apply`,
-      { projects_task_id: 999, user_id: 45 },
+      {
+        projects_task_id: 3, // Use project ID 3 to avoid conflicts
+        description: "Test application for withdrawal testing"
+      },
       authHeader('VIDEOGRAPHER')
     );
 
-    if (applyResponse.statusCode !== 200) {
-      console.log('Could not create test application, using existing one');
-      // Get existing applications
-      const getApplicationsResponse = await makeRequest(
-        'GET',
-        `${BASE_URL}/applications/my-applications`,
-        null,
-        authHeader('VIDEOGRAPHER')
-      );
-      const applications = processApiResponse(getApplicationsResponse);
-
-      if (!applications.data || applications.data.length === 0) {
-        console.log('No applications available for testing');
-        printTestResult(false, 'No applications available for withdrawal test', { message: 'Need applications to test withdrawal' });
-        return;
-      }
-
-      // Find an application that hasn't been withdrawn (is_deleted = false)
-      const availableApp = applications.data.find(app => !app.is_deleted);
-      if (!availableApp) {
-        console.log('All applications have been withdrawn, cannot test withdrawal');
-        printTestResult(false, 'All applications withdrawn', { message: 'Cannot test withdrawal functionality' });
-        return;
-      }
-
-      applicationId = availableApp.applied_projects_id;
-    } else {
+    let applicationId;
+    if (applyResponse.statusCode === 201 || applyResponse.statusCode === 200) {
       const applyData = processApiResponse(applyResponse);
       applicationId = applyData.data.applied_projects_id;
+      console.log(`✅ Created fresh application for testing, ID: ${applicationId}`);
+    } else {
+      console.log('❌ Could not create fresh application for testing, checking response...');
+      console.log('Apply response status:', applyResponse.statusCode);
+      console.log('Apply response body:', applyResponse.body);
+      return;
     }
 
-    console.log(`Using application ID: ${applicationId} for withdrawal test`);
-
-    // Test 1: Successful withdrawal
-    console.log('\nTest 1: Successful withdrawal');
+    // Test 1: Withdraw application successfully
+    console.log('\nTest 1: Withdraw application successfully');
     const withdrawResponse = await makeRequest(
       'DELETE',
       `${BASE_URL}/applications/withdraw/${applicationId}`,
@@ -81,47 +62,122 @@ async function testWithdrawApplication() {
 
     if (withdrawResponse.statusCode === 200) {
       const withdrawData = processApiResponse(withdrawResponse);
-      printTestResult(true, 'Successful withdrawal', withdrawData);
+      printTestResult('Withdraw application successfully', true, 'Successfully withdrew application', {
+        applicationId,
+        response: withdrawData
+      });
     } else {
-      printTestResult(false, 'Failed to withdraw application', { statusCode: withdrawResponse.statusCode, body: withdrawResponse.body });
+      printTestResult('Withdraw application successfully', false, 'Failed to withdraw application', {
+        statusCode: withdrawResponse.statusCode,
+        body: withdrawResponse.body
+      });
     }
 
-    // Test 2: Attempt to withdraw the same application again (should fail)
-    console.log('\nTest 2: Attempt to withdraw already withdrawn application');
-    const duplicateWithdrawResponse = await makeRequest(
+    // Test 2: Try to withdraw the same application again (should fail)
+    console.log('\nTest 2: Try to withdraw the same application again (should fail)');
+    const withdrawAgainResponse = await makeRequest(
       'DELETE',
       `${BASE_URL}/applications/withdraw/${applicationId}`,
       null,
       authHeader('VIDEOGRAPHER')
     );
 
-    if (duplicateWithdrawResponse.statusCode === 400) {
-      // For 400 errors, we don't call processApiResponse as it throws an error
-      printTestResult(true, 'Correctly rejected duplicate withdrawal', { statusCode: 400, message: 'Application already withdrawn' });
+    if (withdrawAgainResponse.statusCode === 400) {
+      printTestResult('Withdraw already withdrawn application', true, 'Correctly rejected withdrawal of already withdrawn application', { statusCode: 400 });
     } else {
-      printTestResult(false, 'Should have rejected duplicate withdrawal', { statusCode: duplicateWithdrawResponse.statusCode, body: duplicateWithdrawResponse.body });
+      printTestResult('Withdraw already withdrawn application', false, 'Should have rejected withdrawal of already withdrawn application', {
+        statusCode: withdrawAgainResponse.statusCode,
+        body: withdrawAgainResponse.body
+      });
     }
 
-    // Test 3: Attempt to withdraw non-existent application
-    console.log('\nTest 3: Attempt to withdraw non-existent application');
+    // Test 3: Try to withdraw non-existent application (should fail)
+    console.log('\nTest 3: Try to withdraw non-existent application (should fail)');
     const nonExistentId = 999999;
-    const nonExistentWithdrawResponse = await makeRequest(
+    const nonExistentResponse = await makeRequest(
       'DELETE',
       `${BASE_URL}/applications/withdraw/${nonExistentId}`,
       null,
       authHeader('VIDEOGRAPHER')
     );
 
-    if (nonExistentWithdrawResponse.statusCode === 404) {
-      // For 404 errors, we don't call processApiResponse as it throws an error
-      printTestResult(true, 'Correctly handled non-existent application', { statusCode: 404, message: 'Application not found' });
+    if (nonExistentResponse.statusCode === 404) {
+      printTestResult('Withdraw non-existent application', true, 'Correctly rejected withdrawal of non-existent application', { statusCode: 404 });
     } else {
-      printTestResult(false, 'Should have returned 404 for non-existent application', { statusCode: nonExistentWithdrawResponse.statusCode, body: nonExistentWithdrawResponse.body });
+      printTestResult('Withdraw non-existent application', false, 'Should have rejected withdrawal of non-existent application', {
+        statusCode: nonExistentResponse.statusCode,
+        body: nonExistentResponse.body
+      });
+    }
+
+    // Test 4: Try to withdraw with invalid application_id format (should fail)
+    console.log('\nTest 4: Try to withdraw with invalid application_id format (should fail)');
+    const invalidIdResponse = await makeRequest(
+      'DELETE',
+      `${BASE_URL}/applications/withdraw/abc`,
+      null,
+      authHeader('VIDEOGRAPHER')
+    );
+
+    if (invalidIdResponse.statusCode === 400) {
+      printTestResult('Withdraw with invalid application_id', true, 'Correctly rejected withdrawal with invalid application_id', { statusCode: 400 });
+    } else {
+      printTestResult('Withdraw with invalid application_id', false, 'Should have rejected withdrawal with invalid application_id', {
+        statusCode: invalidIdResponse.statusCode,
+        body: invalidIdResponse.body
+      });
+    }
+
+    // Test 5: Try to access with unauthorized role (should fail)
+    console.log('\nTest 5: Access with unauthorized role (should fail)');
+    const clientEmail = 'harshalv4@gmail.com';
+    const clientPassword = 'TestPass123!';
+
+    const clientLoginResponse = await makeRequest(
+      'POST',
+      `${BASE_URL}/auth/login`,
+      { email: clientEmail, password: clientPassword }
+    );
+    const clientLoginData = processApiResponse(clientLoginResponse);
+    storeToken('CLIENT', clientLoginData.data.token);
+
+    const unauthorizedResponse = await makeRequest(
+      'DELETE',
+      `${BASE_URL}/applications/withdraw/${applicationId}`,
+      null,
+      authHeader('CLIENT')
+    );
+
+    if (unauthorizedResponse.statusCode === 403) {
+      printTestResult('Unauthorized role access check', true, 'Correctly denied access to unauthorized role', { statusCode: 403 });
+    } else {
+      printTestResult('Unauthorized role access check', false, 'Should have denied access to unauthorized role', {
+        statusCode: unauthorizedResponse.statusCode,
+        body: unauthorizedResponse.body
+      });
+    }
+
+    // Test 6: Try to access without authentication (should fail)
+    console.log('\nTest 6: Access without authentication (should fail)');
+    const unauthenticatedResponse = await makeRequest(
+      'DELETE',
+      `${BASE_URL}/applications/withdraw/${applicationId}`,
+      null,
+      {} // No auth header
+    );
+
+    if (unauthenticatedResponse.statusCode === 404) {
+      printTestResult('Unauthenticated access check', true, 'Correctly denied access without authentication', { statusCode: 404 });
+    } else {
+      printTestResult('Unauthenticated access check', false, 'Should have denied access without authentication', {
+        statusCode: unauthenticatedResponse.statusCode,
+        body: unauthenticatedResponse.body
+      });
     }
 
   } catch (error) {
-    console.error('Error during withdrawal test:', error.message);
-    printTestResult(false, 'Test failed with exception', { error: error.message });
+    console.error('Error during withdraw application test:', error.message);
+    printTestResult('Withdraw application test', false, 'Test failed with exception', { error: error.message });
   }
 }
 
