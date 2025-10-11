@@ -96,11 +96,11 @@ class AppliedProjectsController {
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    const { applied_projects_id } = req.params;
-    if (!applied_projects_id) {
-      throw new HttpException(400, "applied_projects_id is required");
+    const { application_id } = req.params;
+    if (!application_id) {
+      throw new HttpException(400, "application_id is required");
     }
-    await this.AppliedProjectsService.withdrawApplication(parseInt(applied_projects_id));
+    await this.AppliedProjectsService.withdrawApplication(parseInt(application_id));
     res.status(200).json({
       message: "Application withdrawn successfully"
     });
