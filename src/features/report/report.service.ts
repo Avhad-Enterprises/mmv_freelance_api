@@ -95,17 +95,21 @@ class reportservices {
   }
 
   public async updateReportStatus(dto: ReportDto): Promise<number> {
-    const updatedRows = await DB(T.REPORT_TABLE)
-      .where({ report_id: dto.reporter_id, is_deleted: false })
-      .update({
-        status: dto.status,
-        admin_remarks: dto.admin_remarks || null,
-        reviewed_by: dto.reviewed_by,
-        updated_by: dto.updated_by || null,
-        updated_at: new Date()
-      });
+        if (!dto.report_id || isNaN(Number(dto.report_id))) {
+            throw new Error('Invalid or missing report_id');
+        }
 
-    return updatedRows; // Number of affected rows
+        const updatedRows = await DB(T.REPORT_TABLE)
+            .where({ report_id: Number(dto.report_id), is_deleted: false })
+            .update({
+                status: dto.status,
+                admin_remarks: dto.admin_remarks || null,
+                reviewed_by: dto.reviewed_by || null,
+                updated_by: dto.updated_by || null,
+                updated_at: new Date()
+            });
+
+        return updatedRows; // Number of affected rows
   }
 
 
