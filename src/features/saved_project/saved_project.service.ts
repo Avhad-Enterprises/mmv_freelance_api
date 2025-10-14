@@ -51,10 +51,10 @@ class Savedprojectservices {
   }
   public async getsavedbyuser_id(user_id: number): Promise<any> {
     const saved = await DB(T.SAVED_PROJECTS)
-      .where({ user_id, is_active: true })
-      .first();
+      .where({ user_id, is_deleted: false })
+      .select('*')
+      .orderBy('created_at', 'desc');
 
-    if (!saved) throw new HttpException(404, "User not found");
     return saved;
   }
 
