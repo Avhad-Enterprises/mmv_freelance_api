@@ -100,7 +100,7 @@ export class ClientRoutes implements Route {
      */
     this.router.delete(
       `${this.path}/profile`,
-      requireRole('CLIENT'),
+      requireRole('CLIENT', 'ADMIN'),
       this.clientController.deleteAccount
     );
 
