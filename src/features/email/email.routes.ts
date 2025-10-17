@@ -17,8 +17,16 @@ class subscribed_emailsRoute implements Route {
 
   private initializeRoutes() {
 
-    //subscribed_emails section  , validationMiddleware(SubscribedEmailDTO, 'body', false, [])
+    /**
+     *    POST /subscribed/insert
+     *    Subscribe an email address to the newsletter
+     */
     this.router.post(`${this.path}/insert`, validationMiddleware(SubscribedEmailDTO, 'body', false, []), this.SubscribedEmailsController.insert);
+
+    /**
+     *    GET /subscribed/getall
+     *    Get all subscribed email addresses
+     */
     this.router.get(`${this.path}/getall`, this.SubscribedEmailsController.getallemails);
 
 }

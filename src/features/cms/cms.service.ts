@@ -6,6 +6,9 @@ import { CMS } from "../../../database/cms.schema";
 
 class CmsService {
 
+    /**
+     * Creates a new CMS content entry
+     */
     public async addtocms(data: CmsDto): Promise<any> {
         if (isEmpty(data)) {
             throw new HttpException(400, "Cms data is empty");
@@ -15,6 +18,10 @@ class CmsService {
             .returning("*");
         return insertedCms[0];
     }
+
+    /**
+     * Updates existing CMS content
+     */
     public async updatecmsbyid(data: Partial<CmsDto>): Promise<any> {
         if (isEmpty(data)) throw new HttpException(400, "Update data is empty");
 
@@ -28,10 +35,12 @@ class CmsService {
         if (!updated.length) throw new HttpException(404, "Cms not found or not updated");
 
         return updated[0];
-
     }
-    public async SoftDeletecms(data: Partial<CmsDto>): Promise<any> {
 
+    /**
+     * Soft deletes CMS content
+     */
+    public async SoftDeletecms(data: Partial<CmsDto>): Promise<any> {
         if (isEmpty(data)) throw new HttpException(400, "Data is required");
 
         const deleted = await DB(T.CMS)
@@ -43,6 +52,10 @@ class CmsService {
 
         return deleted[0];
     }
+
+    /**
+     * Retrieves CMS content by ID for editing
+     */
     public async geteditcmsby(cms_id: number): Promise<any> {
         if (!cms_id) throw new HttpException(400, "Cms ID is required");
 
@@ -51,6 +64,10 @@ class CmsService {
 
         return cms;
     }
+
+    /**
+     * Gets all active CMS content
+     */
     public async getallcmsbytable(): Promise<any> {
         try {
             const result = await DB(T.CMS)

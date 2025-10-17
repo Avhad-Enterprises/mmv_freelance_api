@@ -8,6 +8,8 @@ import HttpException from "../../exceptions/HttpException";
 class TagsController {
     public TagsService = new TagsService();
 
+    // POST /api/tags/insertetag
+    // Create a new tag entry
     public insertTag = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const tagData: TagsDto = req.body;
@@ -18,6 +20,8 @@ class TagsController {
         }
     };
 
+    // GET /api/tags/geteventtags
+    // Get all event tags
     public getTagsByType = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const tags = await this.TagsService.GetTagsByType("events");
@@ -26,6 +30,8 @@ class TagsController {
             next(error);
         }
     };
+    // POST /api/tags/insertskill
+    // Create a new skill entry
     public insertskills = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const skillData: SkillsDto = req.body;
@@ -35,6 +41,9 @@ class TagsController {
             next(error);
         }
     };
+
+    // GET /api/tags/getallskill
+    // Retrieve all skill entries
     public getallskills = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const skill = await this.TagsService.getallskillsby();

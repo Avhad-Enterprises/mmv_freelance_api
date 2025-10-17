@@ -6,6 +6,10 @@ import HttpException from "../../exceptions/HttpException";
 
 class CmsController {
     public CmsService = new CmsService();
+
+    /**
+     * Creates a new CMS content entry
+     */
     public addcms = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const cmsData: CmsDto = req.body;
@@ -15,9 +19,12 @@ class CmsController {
             next(error);
         }
     }
+
+    /**
+     * Updates existing CMS content
+     */
     public updatecmsby = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-
             const cmsData: Partial<CmsDto> = req.body;
             const updatecms = await this.CmsService.updatecmsbyid(cmsData);
             res.status(200).json({ data: updatecms, message: "Cms updated" });
@@ -25,6 +32,10 @@ class CmsController {
             next(error);
         }
     };
+
+    /**
+     * Soft deletes CMS content
+     */
     public deletecms = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const cmsdata = req.body;
@@ -34,15 +45,23 @@ class CmsController {
             next(error);
         }
     };
+
+    /**
+     * Gets complete CMS content details by ID for editing
+     */
     public geteditcms = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const id = Number(req.params.id);
             const cms = await this.CmsService.geteditcmsby(id);
             res.status(200).json({ data: cms, message: "Cms fetched" });
         } catch (error) {
-            next();
+            next(error);
         }
     };
+
+    /**
+     * Gets all active CMS content
+     */
     public getallcmsby = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const cms = await this.CmsService.getallcmsbytable();

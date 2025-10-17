@@ -5,6 +5,7 @@ import PaymentService from "../payment/payment.service";
 export default class RazorpayWebhookController {
     private service = new PaymentService();
 
+    // POST /webhook/razorpay - Handle Razorpay webhooks
     public handleWebhook = async (req: Request, res: Response) => {
         const secret = process.env.RAZORPAY_WEBHOOK_SECRET!;
         const razorSignature = req.headers["x-razorpay-signature"] as string;

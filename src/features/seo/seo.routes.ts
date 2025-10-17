@@ -17,9 +17,11 @@ class subscribed_emailsRoute implements Route {
 
   private initializeRoutes() {
 
-    //subscribed_emails section  , validationMiddleware(SubscribedEmailDTO, 'body', false, [])
+    //SEO detail routes
     this.router.post(`${this.path}/insert`, validationMiddleware(SeoDto, 'body', false, []), this.SEOcontroller.insert);
+    //Get SEO detail by seodetail
     this.router.get(`${this.path}/getall`, this.SEOcontroller.getAllbyseodetail);
+    //Update SEO detail by seodetail
     this.router.put(`${this.path}/update`, this.SEOcontroller.updatebyseodetail);
 
 }

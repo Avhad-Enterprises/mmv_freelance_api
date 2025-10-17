@@ -5,6 +5,7 @@ import HttpException from '../../exceptions/HttpException';
 class UploadToAWSController {
     public UploadtoAWSService = new UploadtoAWSService();
 
+    // POST /files/uploadtoaws - Upload a file to AWS S3
     public insertfiletoaws = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { filename, base64String } = req.body;
