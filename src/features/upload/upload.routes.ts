@@ -15,6 +15,7 @@ class uploadtoaws implements Route {
     }
 
     private initializeRoutes() {
+        // Upload file to AWS S3
         this.router.post(`${this.path}/uploadtoaws`,
             requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users can upload files
             validationMiddleware(uploadtoawsDto, 'body', false, []),

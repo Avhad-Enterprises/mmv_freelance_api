@@ -5,6 +5,7 @@ import { ITransaction } from "./payment.interface";
 import { TransactionDto, TransactionStatus } from "./payment.dto";
 
 export default class PaymentService {
+    // Create a new payment order
     public async createOrder(
         payload: TransactionDto
     ): Promise<{ razorpayOrder: any; transaction: ITransaction }> {

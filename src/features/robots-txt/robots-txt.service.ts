@@ -4,6 +4,7 @@ import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 
 class robotsservice {
+    // Get the latest robots.txt content
     public async getLatestContent(): Promise<string | null> {
         const entry = await DB(T.ROBOTS_TXT).orderBy('updated_at', 'desc').first();
         return entry?.content || null;
@@ -18,6 +19,7 @@ class robotsservice {
         };
     }
 
+    // Update or create the robots.txt entry
     public async updateOrCreate(content: string, updatedBy: number): Promise<any> {
         const existing = await DB(T.ROBOTS_TXT).first();
 

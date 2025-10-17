@@ -4,10 +4,12 @@ import { ReportTemplateDTO } from "./report-templates.dto";
 import HttpException from "../../exceptions/HttpException";
 import createHttpError from 'http-errors';
 
- class ReportTemplateController {
-    public ReportTemplateService = new ReportTemplateService();
+class ReportTemplateController {
+  public ReportTemplateService = new ReportTemplateService();
 
-    public insert = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  // POST /api/reports/save
+  // Insert a new report template
+  public insert = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 
     try {
       const userData: ReportTemplateDTO = req.body;
@@ -19,6 +21,8 @@ import createHttpError from 'http-errors';
     }
   };
 
+  // GET /api/reports/all
+  // Retrieve all report templates
   public getall = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const templates = await this.ReportTemplateService.getAll();
@@ -28,7 +32,9 @@ import createHttpError from 'http-errors';
       res.status(500).json({ message: 'Failed to fetch report templates' });
     }
   };
-    
+
+  // PUT /api/reports/update
+  // Update an existing report template
   public update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const raw = (req.body as any).id;
@@ -39,7 +45,7 @@ import createHttpError from 'http-errors';
       }
 
       // Clone body and exclude code_id
-      const fieldsToUpdate  = req.body;
+      const fieldsToUpdate = req.body;
 
       if (Object.keys(fieldsToUpdate).length === 0) {
         res.status(400).json({ error: 'No update data provided' });
@@ -54,17 +60,19 @@ import createHttpError from 'http-errors';
   };
 
 
+  // DELETE /api/reports/delete
+  // Soft delete a report template
   public delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const raw = (req.body as any).id;
-     
+
       if (isNaN(raw)) {
         res.status(400).json({ error: 'id must be a required' });
         return;
       }
 
       // Clone body and exclude code_id
-      const fieldsToUpdate  = req.body;
+      const fieldsToUpdate = req.body;
 
       if (Object.keys(fieldsToUpdate).length === 0) {
         res.status(400).json({ error: 'No update data provided' });
@@ -72,34 +80,36 @@ import createHttpError from 'http-errors';
       }
 
       const updated = await this.ReportTemplateService.delete(raw, fieldsToUpdate);
-      res.status(200).json({ data:updated, message: 'report_template updated' });
+      res.status(200).json({ data: updated, message: 'report_template updated' });
     } catch (error) {
-      next(error); 
+      next(error);
     }
   };
-        
+
+  // POST /api/reports/getbyid
+  // Get a report template by ID
   public getbyid = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    
+
     try {
       const raw = (req.body as any).id;
-    const idNum: number = typeof raw === 'string'
-      ? parseInt(raw, 10)
-      : raw;
-    if (isNaN(idNum)) {
-      res.status(400).json({ error: 'id must be a number' });
-      return;
-    }
-    const report = await this.ReportTemplateService.getById(idNum);
-    if (!report) {
-      res.status(404).json({ error: 'report templates not found' });
-      return;
-    }
+      const idNum: number = typeof raw === 'string'
+        ? parseInt(raw, 10)
+        : raw;
+      if (isNaN(idNum)) {
+        res.status(400).json({ error: 'id must be a number' });
+        return;
+      }
+      const report = await this.ReportTemplateService.getById(idNum);
+      if (!report) {
+        res.status(404).json({ error: 'report templates not found' });
+        return;
+      }
 
-    res.status(200).json({ report, success: true });
-  } catch (error) {
-    next(error);
-  }
-};
+      res.status(200).json({ report, success: true });
+    } catch (error) {
+      next(error);
+    }
+  };
 
 }
 

@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 
 class TagsService {
 
+  // Insert a new tag
   public async InsertTag(data: TagsDto): Promise<any> {
     if (isEmpty(data)) {
       throw new HttpException(400, "Tag data is empty");
@@ -17,17 +18,20 @@ class TagsService {
     return insertedTag[0];
   }
 
+  // Get tags by type
   public async GetTagsByType(type: string): Promise<any[]> {
     const tags = await DB(T.TAGS_TABLE)
       .where({ is_deleted: false, tag_type: type });
     return tags;
   }
 
+  // Get all tags
   public async GetAllTags(): Promise<any[]> {
     const tags = await DB(T.TAGS_TABLE).where({ is_deleted: false });
     return tags;
   }
-  
+
+  //
   public async insertskillsby(data: SkillsDto): Promise<any> {
     if (isEmpty(data)) {
       throw new HttpException(400, "skill data is empty");
@@ -45,18 +49,19 @@ class TagsService {
     const insertedskill = await DB(T.SKILLS).insert(data).returning("*");
     return insertedskill[0];
   }
-  
+
+  // Get all skills
   public getallskillsby = async (): Promise<SkillsDto[]> => {
     try {
       const result = await DB(T.SKILLS)
         .select("*")
         .distinct(); // This ensures we get unique records
-      
+
       // Further ensure uniqueness by skill name if needed
       const uniqueSkills = result.filter((skill, index, self) =>
         index === self.findIndex((s) => s.skill_name === skill.skill_name)
       );
-      
+
       return uniqueSkills;
     } catch (error) {
       throw new Error('Error fetching SKILL');
