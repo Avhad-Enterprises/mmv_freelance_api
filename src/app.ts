@@ -70,12 +70,30 @@ class App {
     }
 
     // Set CORS to allow all origins and allow credentials
-    this.app.use(
-      cors({
-        origin: "*",
-        credentials: true,
-      })
-    );
+    // this.app.use(
+    //   cors({
+    //     origin: "*",
+    //     credentials: true,
+    //   })
+    // );
+
+    const allowedOrigins = [
+  "https://makemyvid.io",
+  "http://localhost:3000"
+];
+
+this.app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 
     this.app.use(hpp());
     this.app.use(helmet());
