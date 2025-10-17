@@ -6,6 +6,10 @@ import HttpException from "../../exceptions/HttpException";
 
 class CategoryController {
     public CategoryService = new CategoryService();
+
+    /**
+     * Creates a new category in the system
+     */
     public addcategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const categoryData: CategoryDto = req.body;
@@ -15,6 +19,10 @@ class CategoryController {
             next(error);
         }
     }
+
+    /**
+     * Retrieves all non-deleted categories
+     */
     public getallcategorysby = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const category = await this.CategoryService.getallcategorysbytable();
@@ -24,6 +32,9 @@ class CategoryController {
         }
     };
 
+    /**
+     * Gets categories filtered by type
+     */
     public getcategorytypesby = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const type = req.body.type as string;
@@ -37,6 +48,9 @@ class CategoryController {
         }
     };
 
+    /**
+     * Retrieves a single category by ID for editing
+     */
     public geteditcategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const categoryId = Number(req.params.id);
@@ -46,9 +60,12 @@ class CategoryController {
             next(error);
         }
     };
+
+    /**
+     * Updates an existing category
+     */
     public updatecategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-
             const categoryData: Partial<CategoryDto> = req.body;
             const updatecategory = await this.CategoryService.updatecategoryid(categoryData);
             res.status(200).json({ data: updatecategory, message: "Category updated" });
@@ -56,9 +73,13 @@ class CategoryController {
             next(error);
         }
     };
+
+    /**
+     * Soft deletes a category (marks as deleted)
+     */
     public deletecategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const categorydata = req.body; //{'id}
+            const categorydata = req.body;
             const deletedcategory = await this.CategoryService.SoftDeletecategory(categorydata);
             res.status(200).json({ data: deletedcategory, message: "category deleted" });
         } catch (error) {

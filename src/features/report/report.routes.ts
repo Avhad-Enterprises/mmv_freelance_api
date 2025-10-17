@@ -18,11 +18,14 @@ class ReportsRoute implements Route {
   private initializeRoutes() {
 
     //report_system section  , validationMiddleware(reportDto, 'body', false, [])
-    this.router.post(`${this.path}/user`, validationMiddleware(ReportDto, 'body', false, []), this.reportcontroller.reportsuser);
-    this.router.post(`${this.path}/project`, validationMiddleware(ReportDto, 'body', false, []), this.reportcontroller.reportProject);
-    this.router.post(`${this.path}/status`, this.reportcontroller.getreportstatus);
-    this.router.get(`${this.path}/getallreports`, this.reportcontroller.getAllReports);
-    this.router.post(`${this.path}/statusupdate`, validationMiddleware(ReportDto, 'body', false, []), this.reportcontroller.updateReportStatus);
+    // Allow any authenticated user roles to create reports (clients, freelancers, editors, etc.)
+    this.router.post(`${this.path}/user`, requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), validationMiddleware(ReportDto, 'body', false, []), this.reportcontroller.reportsuser);
+    this.router.post(`${this.path}/project`, requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), validationMiddleware(ReportDto, 'body', false, []), this.reportcontroller.reportProject);
+
+    // Admin-only endpoints for viewing/updating report status
+    this.router.post(`${this.path}/status`, requireRole('ADMIN', 'SUPER_ADMIN'), this.reportcontroller.getreportstatus);
+    this.router.get(`${this.path}/getallreports`, requireRole('ADMIN', 'SUPER_ADMIN'), this.reportcontroller.getAllReports);
+    this.router.post(`${this.path}/statusupdate`, requireRole('ADMIN', 'SUPER_ADMIN'), validationMiddleware(ReportDto, 'body', false, []), this.reportcontroller.updateReportStatus);
 
   }
 }

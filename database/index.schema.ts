@@ -50,7 +50,7 @@ import { USER_ROLES } from './user_role.schema';
 import { FAQ } from "./faq.schema";
 import { TRANSACTION_TABLE } from "./transactions.schema";
 import { CMS } from "./cms.schema";
-import { SEO } from './seo.schema';
+import { SEO } from './SEO.schema';
 import { BRANDING_ASSETS } from './branding_assets.schema';
 import { ANALYTICS_SETTINGS } from './analytics.schema';
 import { SUBSCRIBED_EMAILS } from './subscribed_emails.schema';

@@ -70,18 +70,36 @@ class App {
     }
 
     // Set CORS to allow all origins and allow credentials
-    this.app.use(
-      cors({
-        origin: "*",
-        credentials: true,
-      })
-    );
+    // this.app.use(
+    //   cors({
+    //     origin: "*",
+    //     credentials: true,
+    //   })
+    // );
+
+    const allowedOrigins = [
+  "https://makemyvid.io",
+  "http://localhost:3000"
+];
+
+this.app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 
     this.app.use(hpp());
     this.app.use(helmet());
     this.app.use(compression());
-    this.app.use(express.json({ limit: "10mb" })); // Reduced from 2gb
-    this.app.use(express.urlencoded({ limit: "10mb", extended: true }));
+    this.app.use(express.json({ limit: "200mb" })); // Reduced from 2gb
+    this.app.use(express.urlencoded({ limit: "200mb", extended: true }));
     this.app.use(cookieParser());
   }
 

@@ -6,7 +6,9 @@ import { FAVORITES_TABLE } from "../../../database/favorites.schema";
 import { application } from "express";
 
 class favoritesservices {
-
+  /**
+   * Creates a new favorite relationship between client and freelancer
+   */
   public async Insert(data: favoritesDto): Promise<any> {
     if (isEmpty(data)) {
       throw new HttpException(400, "Data Invalid");
@@ -26,8 +28,9 @@ class favoritesservices {
     return res[0];
   }
 
-
-
+  /**
+   * Removes a favorite relationship
+   */
   public async removeFavorite(dto: favoritesDto): Promise<string> {
     const { id } = dto;
 
@@ -42,17 +45,22 @@ class favoritesservices {
     return 'Removed from favorites';
   }
 
-
+  /**
+   * Retrieves all favorite relationships
+   */
   public async getFavoriteFreelancers(): Promise<any[]> {
-    const result = await DB(T.FAVORITES_TABLE)
-      .select("*");
-    return result;
-  } catch(error) {
-    throw new Error('Error fetching freelancers');
+    try {
+      const result = await DB(T.FAVORITES_TABLE)
+        .select("*");
+      return result;
+    } catch (error) {
+      throw new Error('Error fetching freelancers');
+    }
   }
 
-
-
+  /**
+   * Gets all favorite freelancers for a specific user
+   */
   public async getFavoritesByUser(user_id: number): Promise<any> {
     const favorites = await DB(T.FAVORITES_TABLE)
       .where({ user_id, is_active: true })
@@ -62,18 +70,17 @@ class favoritesservices {
     return favorites;
   }
 
-
+  /**
+   * Gets detailed information about favorite freelancers
+   */
   public async getfreelanceinfo(user_id: number): Promise<any[]> {
-
     if (!user_id) {
       throw new HttpException(400, "User ID is required");
     }
-    console.log("User ID:", user_id); // Debugging line
+
     const results = await DB(T.FAVORITES_TABLE)
       .where({
         [`${T.FAVORITES_TABLE}.user_id`]: user_id,
-
-
       })
       .leftJoin(
         `${T.USERS_TABLE}`,
@@ -91,9 +98,6 @@ class favoritesservices {
       );
     return results;
   }
-
-
-
 }
 
 export default favoritesservices;

@@ -10,6 +10,9 @@ import {
 } from 'class-validator';
 
 export class ReportDto {
+    @IsOptional()
+    @IsInt()
+    report_id?: number;
     @IsIn(['user', 'project'])
     report_type: 'user' | 'project';
 
@@ -42,15 +45,17 @@ export class ReportDto {
     @IsInt()
     created_by: number;
 
+    @IsOptional()
     @IsIn(['reviewed', 'resolved', 'rejected'])
-    status: 'reviewed' | 'resolved' | 'rejected';
+    status?: 'reviewed' | 'resolved' | 'rejected';
 
     @IsOptional()
     @IsString()
     admin_remarks?: string;
 
+    @IsOptional()
     @IsInt()
-    reviewed_by: number;
+    reviewed_by?: number;
 
     @IsOptional()
     @IsInt()

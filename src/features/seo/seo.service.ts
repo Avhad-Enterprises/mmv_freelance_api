@@ -5,16 +5,18 @@ import { isEmpty } from "../../utils/common";
 import { ISeo } from './seo.interface';
 
 class subscribedEmailservice {
+  // Insert a new SEO detail
   public Insert = async (data: SeoDto): Promise<any> => {
     if (isEmpty(data)) {
       throw new HttpException(400, "Data Invalid");
     }
     const res = await DB(T.SEO)
-    .insert(data)
-    .returning("*");
+      .insert(data)
+      .returning("*");
     return res[0];
   }
 
+  // Retrieve all SEO details
   public getAllbyseodetail = async (): Promise<ISeo[]> => {
     try {
       const result = await DB(T.SEO)
@@ -26,20 +28,21 @@ class subscribedEmailservice {
     }
   }
 
-    public async updatebyseodetail(id: number, data: Partial<SeoDto>): Promise<any> {
-      if (!id) throw new HttpException(400, 'ID is required');
-      if (isEmpty(data)) throw new HttpException(400, 'Update data is empty');
-        
-      const updated = await DB(T.SEO)
-        .where({ id })
-        .update(data)
-        .returning('*');
-    
-      if (!updated || updated.length === 0) {
-        throw new HttpException(404, 'SEO not found or not updated');
-      }
-    
-      return updated[0];
+  // Update SEO detail by seodetail
+  public async updatebyseodetail(id: number, data: Partial<SeoDto>): Promise<any> {
+    if (!id) throw new HttpException(400, 'ID is required');
+    if (isEmpty(data)) throw new HttpException(400, 'Update data is empty');
+
+    const updated = await DB(T.SEO)
+      .where({ id })
+      .update(data)
+      .returning('*');
+
+    if (!updated || updated.length === 0) {
+      throw new HttpException(404, 'SEO not found or not updated');
     }
+
+    return updated[0];
   }
+}
 export default subscribedEmailservice;

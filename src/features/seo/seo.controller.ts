@@ -2,12 +2,13 @@ import { NextFunction, Request, Response } from 'express';
 import { SeoDto } from './seo.dto';
 import SEOservice from './seo.service';
 
-class SEOcontroller  {
+class SEOcontroller {
 
   public SEOservice = new SEOservice();
 
+  // POST /api/SEO/insert
+  // Insert a new SEO detail
   public insert = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-
     try {
 
       const userData: SeoDto = req.body;
@@ -18,6 +19,8 @@ class SEOcontroller  {
     }
   };
 
+  // GET /api/SEO/getall
+  // Retrieve all SEO details
   public getAllbyseodetail = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const emails = await this.SEOservice.getAllbyseodetail();
@@ -27,6 +30,8 @@ class SEOcontroller  {
     }
   };
 
+  // PUT /api/SEO/update
+  // Update SEO detail by seodetail
   public updatebyseodetail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const raw = (req.body as any).id;
