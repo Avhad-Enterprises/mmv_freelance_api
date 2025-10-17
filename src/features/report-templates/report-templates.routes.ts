@@ -22,7 +22,7 @@ class report_templatesRoute implements Route {
   // Admin only: manage report templates
   this.router.post(`${this.path}/save`, requireRole('ADMIN', 'SUPER_ADMIN'), validationMiddleware(ReportTemplateDTO, 'body', false, []), this.ReportTemplateController.insert);
   this.router.get(`${this.path}/viewall`, requireRole('ADMIN', 'SUPER_ADMIN'), this.ReportTemplateController.getall);
-  this.router.post(`${this.path}/update`, requireRole('ADMIN', 'SUPER_ADMIN'), validationMiddleware(ReportTemplateDTO, 'body', false, []), this.ReportTemplateController.update);
+  this.router.put(`${this.path}/update`, requireRole('ADMIN', 'SUPER_ADMIN'), validationMiddleware(ReportTemplateDTO, 'body', false, []), this.ReportTemplateController.update);
   this.router.post(`${this.path}/delete`, requireRole('ADMIN', 'SUPER_ADMIN'), validationMiddleware(ReportTemplateDTO, 'body', false, []), this.ReportTemplateController.delete);
   this.router.post(`${this.path}/run`, requireRole('ADMIN', 'SUPER_ADMIN'), this.ReportTemplateController.getbyid);
 

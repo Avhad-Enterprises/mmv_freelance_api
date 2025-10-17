@@ -6,6 +6,8 @@ import { NextFunction, Request, Response } from "express";
 class VisitorController {
   private visitorservice = new visitorservice();
 
+  // POST /api/visitor/logs
+  // Log a visitor entry
   public logvisitor = async (req: Request, res: Response) => {
     try {
       const data = (req.body);
@@ -16,7 +18,8 @@ class VisitorController {
     }
   };
 
-
+  // GET /api/visitor/statistic
+  // Get visitor statistics
   public getStats = async (req: Request, res: Response) => {
     try {
       const stats = await this.visitorservice.getVisitorStats();
@@ -26,6 +29,8 @@ class VisitorController {
     }
   };
 
+  // GET /api/visitor/getvisitor
+  // Get visitor by ID or criteria
   public getvisitorby = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const visitor_id = parseInt(req.body.visitor_id);
@@ -36,6 +41,8 @@ class VisitorController {
     }
   }
 
+  // GET /api/visitor/getallvisitor
+  // Get all visitors
   public getallvisitorby = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const visitor = await this.visitorservice.getallvisitorbytable();
@@ -44,7 +51,8 @@ class VisitorController {
       next(err);
     }
   };
-
+  // GET /api/visitor/visitorcount
+  // Get visitor count
   public getallvisitor = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const counts = await this.visitorservice.getallTableCounts();
@@ -53,7 +61,8 @@ class VisitorController {
       next(error);
     }
   };
-
+  // GET /api/visitor/admin-smart-search
+  // Admin smart search
   public smartsearch = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { query } = req.query;
@@ -68,6 +77,8 @@ class VisitorController {
     }
   };
 
+  // GET /api/visitor/getdate
+  // Get visitor logs by date range
   public getbydate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { start_date, end_date } = req.body;
@@ -90,6 +101,8 @@ class VisitorController {
     }
   };
 
+  // GET /api/visitor/getweek
+  // Get visitor logs by week
   public getbyweek = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { week } = req.body;
@@ -107,6 +120,8 @@ class VisitorController {
       next(error);
     }
   };
+  // GET /api/visitor/getfilter
+  // Get visitor logs by custom filter
   public gettimefilter = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { filter } = req.body;

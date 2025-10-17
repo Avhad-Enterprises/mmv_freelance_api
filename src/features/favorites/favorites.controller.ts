@@ -6,13 +6,13 @@ import HttpException from '../../exceptions/HttpException';
 
 
 class favoritescontroller {
-
     public favoritesservices = new favoritesservices();
 
+    /**
+     * Adds a freelancer to client's favorites list
+     */
     public addFavorite = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-
         try {
-
             const userData: favoritesDto = req.body;
             const insertedData = await this.favoritesservices.Insert(userData);
             res.status(201).json({ data: insertedData, message: "Added to favorites" });
@@ -21,11 +21,11 @@ class favoritescontroller {
         }
     };
 
+    /**
+     * Removes a freelancer from client's favorites list
+     */
     public removeFavorite = async (req: Request, res: Response, next: NextFunction) => {
-
         try {
-            console.log("inside a function");
-            console.log(req.body);
             const result = await this.favoritesservices.removeFavorite(req.body);
             res.status(200).json({ message: result });
         } catch (error) {
@@ -33,16 +33,21 @@ class favoritescontroller {
         }
     };
 
+    /**
+     * Retrieves all favorite freelancers
+     */
     public listFavoriteFreelancers = async (_req: Request, res: Response): Promise<void> => {
         try {
             const favorites = await this.favoritesservices.getFavoriteFreelancers();
-
             res.status(200).json({ total: favorites.length, data: favorites, message: 'All Freelancers fetched successfully' });
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
     };
 
+    /**
+     * Gets favorite freelancers for a specific user
+     */
     public getfreelance = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { user_id } = req.body;
@@ -55,16 +60,16 @@ class favoritescontroller {
         }
     };
 
+    /**
+     * Gets detailed information about favorite freelancers
+     */
     public getfreelanceinfo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-
         try {
-
             const { user_id } = req.body;
 
             if (isNaN(user_id)) {
                 throw new HttpException(400, "Invalid user_id");
             }
-
 
             const favorites = await this.favoritesservices.getfreelanceinfo(user_id);
 
