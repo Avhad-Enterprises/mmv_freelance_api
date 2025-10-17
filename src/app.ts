@@ -98,8 +98,8 @@ class App {
     this.app.use(hpp());
     this.app.use(helmet());
     this.app.use(compression());
-    this.app.use(express.json({ limit: "10mb" })); // Reduced from 2gb
-    this.app.use(express.urlencoded({ limit: "10mb", extended: true }));
+    this.app.use(express.json({ limit: "200mb" })); // Reduced from 2gb
+    this.app.use(express.urlencoded({ limit: "200mb", extended: true }));
     this.app.use(cookieParser());
   }
 
