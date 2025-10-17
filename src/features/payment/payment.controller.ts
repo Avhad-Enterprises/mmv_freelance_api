@@ -5,6 +5,7 @@ import { TransactionDto, TransactionStatus } from "./payment.dto";
 export default class PaymentController {
     private service = new PaymentService();
 
+    // Create a new payment order
     public createOrder = async (
         req: Request,
         res: Response,
@@ -37,6 +38,7 @@ export default class PaymentController {
         }
     };
 
+    // Fetch full transaction history
     public getAllTransactions = async (
         req: Request,
         res: Response,
@@ -54,7 +56,7 @@ export default class PaymentController {
             next(error);
         }
     };
-
+    // Fetch user-specific transaction history
     public getUserTransactions = async (
         req: Request,
         res: Response,

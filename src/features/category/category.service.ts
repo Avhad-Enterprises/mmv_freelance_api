@@ -6,12 +6,14 @@ import { CATEGORY } from "../../../database/category.schema";
 
 class CategoryService {
 
+    /**
+     * Creates a new category or reactivates a deleted one
+     */
     public async addtocategory(data: CategoryDto): Promise<any> {
         if (isEmpty(data)) {
             throw new HttpException(400, "Category data is empty");
         }
         try {
-
             if (!data.value) {
                 throw new HttpException(400, "Category value is required");
             }
@@ -24,7 +26,6 @@ class CategoryService {
                 if (!existingCategory.is_deleted) {
                     throw new HttpException(400, "This category already exists in the database");
                 } else {
-
                     const updatedCategory = await DB(T.CATEGORY)
                         .where({ category_id: existingCategory.category_id })
                         .update({
@@ -54,6 +55,10 @@ class CategoryService {
             throw new HttpException(500, "Error creating category");
         }
     }
+
+    /**
+     * Retrieves a single category by ID
+     */
     public async geteditcategorybyid(category_id: number): Promise<any> {
         if (!category_id) throw new HttpException(400, "Category ID is required");
 
@@ -63,9 +68,11 @@ class CategoryService {
         return category;
     }
 
+    /**
+     * Retrieves all non-deleted categories
+     */
     public async getallcategorysbytable(): Promise<any> {
         try {
-            // Log the query being executed
             const query = DB(T.CATEGORY)
                 .where({ is_deleted: false })
                 .select(
@@ -77,7 +84,7 @@ class CategoryService {
                 .orderBy('category_id');
 
             console.log('Executing query:', query.toString());
-            
+
             const result = await query;
             console.log('Query result:', result);
 
@@ -88,7 +95,6 @@ class CategoryService {
 
             return result;
         } catch (error) {
-            // Log detailed error information
             console.error('Database error details:', {
                 message: error.message,
                 code: error.code,
@@ -101,12 +107,14 @@ class CategoryService {
                 throw error;
             }
 
-            // Include more specific error information
             const errorMessage = error.sqlMessage || error.message || 'Error fetching categories';
             throw new HttpException(500, `Database error: ${errorMessage}`);
         }
     }
 
+    /**
+     * Gets categories filtered by type
+     */
     public async getcategorytypesbytable(type: string): Promise<any> {
         try {
             if (!type) {
@@ -116,14 +124,15 @@ class CategoryService {
                 .where({ is_active: true, is_deleted: false, type: type })
                 .select("*");
             return result;
-        } catch(error) {
+        } catch (error) {
             throw new HttpException(500, 'Error fetching category');
         }
     }
 
-
+    /**
+     * Updates category details
+     */
     public async updatecategoryid(data: Partial<CategoryDto>): Promise<any> {
-
         if (isEmpty(data)) throw new HttpException(400, "Update data is empty");
 
         const updated = await DB(T.CATEGORY)
@@ -135,8 +144,11 @@ class CategoryService {
 
         return updated[0];
     }
-    public async SoftDeletecategory(data: Partial<CategoryDto>): Promise<any> {
 
+    /**
+     * Soft deletes a category (marks as deleted)
+     */
+    public async SoftDeletecategory(data: Partial<CategoryDto>): Promise<any> {
         if (isEmpty(data)) throw new HttpException(400, "Data is required");
 
         const deleted = await DB(T.CATEGORY)

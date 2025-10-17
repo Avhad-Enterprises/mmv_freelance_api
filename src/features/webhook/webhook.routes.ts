@@ -13,6 +13,7 @@ export default class WebhookRoute implements Route {
     }
 
     private initializeRoutes() {
+        // Razorpay webhook endpoint
         this.router.post(
             `${this.path}/razorpay`,
             express.json({

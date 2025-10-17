@@ -18,8 +18,11 @@ class robotstxtRoutes implements Route {
   private initializeRoutes() {
 
     //robots_txt section  , validationMiddleware(robotsDto, 'body', false, [])
+    //Public robots.txt access
     this.router.get(`${this.path}.txt`, this.robotstxtcontroller.getPublicRobots);
+    //Admin routes to view and update robots.txt
     this.router.get(`${this.path}/view`, this.robotstxtcontroller.viewRobots );
+    //Update robots.txt
     this.router.post(`${this.path}/update`, validationMiddleware(RobotsDto, 'body', false, []),this.robotstxtcontroller.updateRobots);
 
   }

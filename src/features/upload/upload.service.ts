@@ -8,6 +8,7 @@ import { uploadToAws } from '../../utils/legacy-upload';
 
 class ProjectTaskService {
 
+    // Upload a file to AWS S3
     public async uploadFileToS3(filename: string, base64String: string): Promise<string> {
         try {
             const fileUrl = await uploadToAws(filename, base64String);
