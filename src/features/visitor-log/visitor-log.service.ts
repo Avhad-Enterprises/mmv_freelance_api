@@ -4,11 +4,12 @@ import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 
 class VisitorService {
+  // Log a new visitor entry
   public async logVisitor(data: any) {
     const [inserted] = await DB(T.VISITOR_LOGS).insert(data).returning('*');
     return inserted;
   }
-
+  // Get visitor statistics
   public async getVisitorStats() {
     const totalVisits = await DB(T.VISITOR_LOGS).count('id as count').first();
 
@@ -39,7 +40,7 @@ class VisitorService {
       trafficSources,
     };
   }
-
+  // Get visitor by ID
   public async getvisitorbytable(visitor_id: number): Promise<any> {
     try {
       if (!visitor_id) {
@@ -53,7 +54,7 @@ class VisitorService {
       throw new Error('Error fetching Visitor');
     }
   }
-
+  // Get all active visitors
   public async getallvisitorbytable(): Promise<any> {
     try {
       const result = await DB(T.VISITOR_LOGS)
@@ -64,7 +65,7 @@ class VisitorService {
       throw new Error('Error fetching visitor');
     }
   }
-
+  // Get aggregated visitor log counts
   public async getallTableCounts(): Promise<any[]> {
     const result = await DB(T.VISITOR_LOGS)
       .select(
@@ -79,7 +80,7 @@ class VisitorService {
 
     return result;
   }
-
+  // Admin smart search across all visitor log fields
   public async searchAllVisitorLogs(query: string): Promise<any[]> {
     const tableName = T.VISITOR_LOGS;
 
@@ -95,7 +96,7 @@ class VisitorService {
       .limit(50);
     return result;
   }
-
+  // Get visitor logs by date range
   public async getbylogdate(start_date: string, end_date: string): Promise<any[]> {
     const tableName = T.VISITOR_LOGS;
 
@@ -109,7 +110,7 @@ class VisitorService {
 
     return result;
   }
-
+  // Get visitor logs by week
   public async getvisitorbyweek(week: string): Promise<any[]> {
     const tableName = T.VISITOR_LOGS;
 
@@ -145,6 +146,7 @@ class VisitorService {
 
     return result;
   }
+  // Get visitor logs by custom filter
   public async getvisitortimefilter(filter: string): Promise<any[]> {
     const tableName = T.VISITOR_LOGS;
     const now = new Date();
