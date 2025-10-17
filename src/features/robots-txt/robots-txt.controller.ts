@@ -6,8 +6,9 @@ import { ROBOTS_TXT } from '../../../database/robotstxt.schema';
 
 
 class robotscontroller {
-
     public robotsservice = new robotsservice();
+
+    // GET /robots.txt - Public endpoint to fetch robots.txt content
     public getPublicRobots = async (req: Request, res: Response): Promise<void> => {
         try {
             const content = await this.robotsservice.getLatestContent();
@@ -20,6 +21,7 @@ class robotscontroller {
         }
     };
 
+    // GET /api/robots - Get the current robots.txt entry (admin view)
     public viewRobots = async (req: Request, res: Response): Promise<void> => {
         try {
             const data = await this.robotsservice.getRobotsEntry();
@@ -29,20 +31,21 @@ class robotscontroller {
         }
     };
 
+    // PUT /api/robots - Update or create the robots.txt entry (admin action)
     public updateRobots = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { content, updated_by  } = req.body;
+            const { content, updated_by } = req.body;
 
             if (!content) {
                 res.status(400).json({ error: 'Content is required' });
                 return
             }
 
-            const updated = await this.robotsservice.updateOrCreate(content, updated_by );
+            const updated = await this.robotsservice.updateOrCreate(content, updated_by);
             res.status(200).json({ message: 'robots.txt updated', updated });
         } catch (err) {
             res.status(500).json({ error: 'Error updating robots.txt' });
-        
+
         }
     };
 

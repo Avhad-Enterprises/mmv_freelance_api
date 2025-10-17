@@ -5,6 +5,7 @@ import HttpException from "../../exceptions/HttpException";
 import { REPORT_TEMPLATES } from "../../../database/report_templates.schema";
 
 class ReportTemplateService {
+  // Insert a new report template
   public async Insertbyreport(data: ReportTemplateDTO): Promise<any> {
     try {
       const inserted = await DB(T.REPORT_TEMPLATES).insert(data).returning('*');
@@ -15,6 +16,7 @@ class ReportTemplateService {
     }
   }
 
+  // Retrieve all report templates
   public async getAll(): Promise<any[]> {
     return DB(REPORT_TEMPLATES)
       .select('*')
@@ -22,6 +24,7 @@ class ReportTemplateService {
       .orderBy('created_at', 'desc');
   }
 
+  // Update an existing report template
   public async update(id: number, data: Partial<any>): Promise<any> {
     try {
       const updated = await DB(T.REPORT_TEMPLATES)
@@ -43,10 +46,11 @@ class ReportTemplateService {
     }
   }
 
-  public async delete(id: number, data: Partial<any> ): Promise<any> {
-  
+  // Soft delete a report template
+  public async delete(id: number, data: Partial<any>): Promise<any> {
+
     const deleted_at = new Date();
-  
+
     const result = await DB(T.REPORT_TEMPLATES)
       .where({ id })
       .update({
@@ -57,8 +61,8 @@ class ReportTemplateService {
 
     return result[0];
   }
-    
 
+  // Fetch a report template by its ID
   public async getById(id: number): Promise<any | null> {
     if (!id) {
       throw new HttpException(400, " ID is required");

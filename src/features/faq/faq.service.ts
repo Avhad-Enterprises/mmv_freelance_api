@@ -5,7 +5,9 @@ import { isEmpty } from "../../utils/common";
 import { FAQ } from "../../../database/faq.schema";
 
 export class FaqService {
-
+    /**
+     * Retrieves a single FAQ by ID
+     */
     public async getfaq(faq_id: number): Promise<any> {
         if (!faq_id) throw new HttpException(400, "FAQ ID is required");
 
@@ -15,6 +17,9 @@ export class FaqService {
         return faq;
     }
 
+    /**
+     * Creates a new FAQ entry in the database
+     */
     public async insertfaqs(data: FaqDto): Promise<any> {
         if (isEmpty(data)) {
             throw new HttpException(400, "Faq data is empty");
@@ -24,6 +29,9 @@ export class FaqService {
         return insertedFaq[0];
     }
 
+    /**
+     * Updates an existing FAQ
+     */
     public async updatefaqs(data: Partial<FaqDto>): Promise<any> {
         if (isEmpty(data)) throw new HttpException(400, "Update data is empty");
 
@@ -37,11 +45,12 @@ export class FaqService {
         if (!updated.length) throw new HttpException(404, "Faq not found or not updated");
 
         return updated[0];
-
     }
 
+    /**
+     * Soft deletes an FAQ entry
+     */
     public async deleteFAQ(data: Partial<FaqDto>): Promise<any> {
-
         if (isEmpty(data)) throw new HttpException(400, "Data is required");
 
         const deleted = await DB(T.FAQ)
@@ -53,7 +62,10 @@ export class FaqService {
 
         return deleted[0];
     }
-    
+
+    /**
+     * Retrieves all active and non-deleted FAQs
+     */
     public async getallfaqsbytable(): Promise<any> {
         try {
             const result = await DB(T.FAQ)
