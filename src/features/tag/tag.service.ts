@@ -1,14 +1,11 @@
 import { TagsDto } from "./tag.dto";
-import { SkillsDto } from "./skill.dto";
 import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 
 class TagsService {
 
-  // Insert a new tag
+  // Create a new tag
   public async InsertTag(data: TagsDto): Promise<any> {
     if (isEmpty(data)) {
       throw new HttpException(400, "Tag data is empty");
@@ -18,6 +15,25 @@ class TagsService {
     return insertedTag[0];
   }
 
+  // Get all tags
+  public async GetAllTags(): Promise<any[]> {
+    const tags = await DB(T.TAGS_TABLE).where({ is_deleted: false });
+    return tags;
+  }
+
+  // Get tag by ID
+  public async GetTagById(tagId: number): Promise<any> {
+    const tag = await DB(T.TAGS_TABLE)
+      .where({ tag_id: tagId, is_deleted: false })
+      .first();
+
+    if (!tag) {
+      throw new HttpException(404, "Tag not found");
+    }
+
+    return tag;
+  }
+
   // Get tags by type
   public async GetTagsByType(type: string): Promise<any[]> {
     const tags = await DB(T.TAGS_TABLE)
@@ -25,47 +41,49 @@ class TagsService {
     return tags;
   }
 
-  // Get all tags
-  public async GetAllTags(): Promise<any[]> {
-    const tags = await DB(T.TAGS_TABLE).where({ is_deleted: false });
-    return tags;
-  }
-
-  //
-  public async insertskillsby(data: SkillsDto): Promise<any> {
+  // Update tag
+  public async UpdateTag(tagId: number, data: Partial<TagsDto>): Promise<any> {
     if (isEmpty(data)) {
-      throw new HttpException(400, "skill data is empty");
+      throw new HttpException(400, "Update data is empty");
     }
 
-    // Check if skill already exists (case insensitive)
-    const existingSkill = await DB(T.SKILLS)
-      .whereRaw('LOWER(skill_name) = ?', [data.skill_name.toLowerCase()])
+    // Check if tag exists
+    const existingTag = await DB(T.TAGS_TABLE)
+      .where({ tag_id: tagId, is_deleted: false })
       .first();
 
-    if (existingSkill) {
-      throw new HttpException(400, "This skill already exists in the database");
+    if (!existingTag) {
+      throw new HttpException(404, "Tag not found");
     }
 
-    const insertedskill = await DB(T.SKILLS).insert(data).returning("*");
-    return insertedskill[0];
+    const updatedTag = await DB(T.TAGS_TABLE)
+      .where({ tag_id: tagId })
+      .update({ ...data, updated_at: DB.fn.now() })
+      .returning("*");
+
+    return updatedTag[0];
   }
 
-  // Get all skills
-  public getallskillsby = async (): Promise<SkillsDto[]> => {
-    try {
-      const result = await DB(T.SKILLS)
-        .select("*")
-        .distinct(); // This ensures we get unique records
+  // Delete tag (soft delete)
+  public async DeleteTag(tagId: number, deletedBy: number): Promise<any> {
+    const existingTag = await DB(T.TAGS_TABLE)
+      .where({ tag_id: tagId, is_deleted: false })
+      .first();
 
-      // Further ensure uniqueness by skill name if needed
-      const uniqueSkills = result.filter((skill, index, self) =>
-        index === self.findIndex((s) => s.skill_name === skill.skill_name)
-      );
-
-      return uniqueSkills;
-    } catch (error) {
-      throw new Error('Error fetching SKILL');
+    if (!existingTag) {
+      throw new HttpException(404, "Tag not found");
     }
+
+    const deletedTag = await DB(T.TAGS_TABLE)
+      .where({ tag_id: tagId })
+      .update({
+        is_deleted: true,
+        deleted_by: deletedBy,
+        deleted_at: DB.fn.now()
+      })
+      .returning("*");
+
+    return deletedTag[0];
   }
 
 }

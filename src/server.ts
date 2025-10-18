@@ -38,6 +38,7 @@ import BrandingRoute from './features/branding/branding.routes';
 // Phase 9: Remaining Features
 import CategoryRoute from './features/category/category.routes';
 import TagRoute from './features/tag/tag.routes';
+import SkillsRoute from './features/skill/skill.routes';
 import ReviewRoute from './features/review/review.routes';
 import RobotsTxtRoute from './features/robots-txt/robots-txt.routes';
 import EMCRoute from './features/emc/emc.routes';
@@ -83,6 +84,7 @@ const app = new App([
     new BrandingRoute(),
     new CategoryRoute(),
     new TagRoute(),
+    new SkillsRoute(),
     new ReviewRoute(),
     new RobotsTxtRoute(),
     new EMCRoute(),

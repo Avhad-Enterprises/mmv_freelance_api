@@ -17,6 +17,9 @@ export class TagsDto {
     @IsString()
     tag_value: string;
 
+    @IsString()
+    tag_type: string;
+
     @IsOptional()
     @IsBoolean()
     is_active: boolean;

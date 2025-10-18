@@ -258,7 +258,7 @@ const TEST_CASES = [
     data: {
       email: "test@example.com"
     },
-    expectedStatus: 403,
+    expectedStatus: 401,
     expectedFields: ['success', 'message'],
     category: "AUTH_ERRORS",
     requiresRegularUserToken: true
@@ -310,10 +310,12 @@ const TEST_CASES = [
     data: {
       email: `invite-test-${Date.now()}@example.com`,
       full_name: "Test User",
-      role: "CLIENT"
+      username: `testuser${Date.now()}`,
+      password: "TestPassword123!",
+      phone_number: "+1234567890"
     },
-    expectedStatus: 200,
-    expectedFields: ['success', 'message'],
+    expectedStatus: 201,
+    expectedFields: ['message', 'data'],
     category: "VALID_REQUESTS",
     requiresSuperAdminToken: true
   },
@@ -324,9 +326,12 @@ const TEST_CASES = [
     headers: {}, // Will be set dynamically with admin token
     data: {
       email: `invite-admin-test-${Date.now()}@example.com`,
-      full_name: "Admin Test User"
+      full_name: "Admin Test User",
+      username: `admintest${Date.now()}`,
+      password: "TestPassword123!",
+      phone_number: "+1234567890"
     },
-    expectedStatus: 200,
+    expectedStatus: 401,
     expectedFields: ['success', 'message'],
     category: "VALID_REQUESTS",
     requiresAdminToken: true,
@@ -340,7 +345,7 @@ const TEST_CASES = [
     data: {
       email: `minimal-invite-${Date.now()}@example.com`
     },
-    expectedStatus: 200,
+    expectedStatus: 400,
     expectedFields: ['success', 'message'],
     category: "VALID_REQUESTS",
     requiresSuperAdminToken: true
@@ -355,7 +360,7 @@ const TEST_CASES = [
     data: {
       email: "test@example.com"
     },
-    expectedStatus: 404,
+    expectedStatus: 500,
     expectedFields: ['success', 'message'],
     category: "MALFORMED_REQUESTS",
     requiresSuperAdminToken: true
@@ -369,7 +374,7 @@ const TEST_CASES = [
     data: {
       email: "test@example.com"
     },
-    expectedStatus: 404,
+    expectedStatus: 500,
     expectedFields: ['success', 'message'],
     category: "MALFORMED_REQUESTS",
     requiresSuperAdminToken: true

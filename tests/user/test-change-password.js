@@ -200,7 +200,7 @@ const TEST_CASES = [
       old_password: "currentpass",
       new_password: "newpass123"
     },
-    expectedStatus: 404,
+    expectedStatus: 401,
     expectedFields: ['success', 'message'],
     category: "AUTH_ERRORS"
   },
@@ -374,7 +374,7 @@ const TEST_CASES = [
 async function runTests() {
   // Get admin token for testing
   console.log('🔑 Obtaining admin authentication token...');
-  adminToken = await loginAndGetToken('superadmin@mmv.com', 'SuperAdmin123!');
+  adminToken = await loginAndGetToken('avhadenterprisespc5@gmail.com', 'SuperAdmin123!');
 
   if (!adminToken) {
     console.log('❌ Could not obtain admin token - authenticated tests will fail');

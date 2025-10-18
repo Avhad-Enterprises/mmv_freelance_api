@@ -427,13 +427,16 @@ class ProjectstaskService {
   }
   public async getActiveEditorsCount(): Promise<any> {
     const result = await DB(T.PROJECTS_TASK)
+      .join(T.VIDEOEDITOR_PROFILES, `${T.PROJECTS_TASK}.freelancer_id`, `${T.VIDEOEDITOR_PROFILES}.freelancer_id`)
       .where({
-        is_deleted: false,
-        is_active: 1
+        [`${T.PROJECTS_TASK}.is_deleted`]: false,
+        [`${T.PROJECTS_TASK}.is_active`]: 1
       })
-      .whereNotNull("editor_id")
-      .countDistinct("editor_id as count")
+      .whereNotNull(`${T.PROJECTS_TASK}.freelancer_id`)
+      .countDistinct(`${T.VIDEOEDITOR_PROFILES}.editor_id as count`)
       .first();
+
+    return Number(result?.count || 0);
   }
 
   public async getCompletedProjectCount(): Promise<number> {
@@ -455,7 +458,7 @@ class ProjectstaskService {
       .where({ projects_task_id })
       .update({
         status,
-        editor_id: user_id,
+        freelancer_id: user_id,
         updated_at: new Date()
       })
       .returning("*");

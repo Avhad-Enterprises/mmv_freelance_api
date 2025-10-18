@@ -98,7 +98,7 @@ async function loginAndGetToken(email, password) {
     const loginData = JSON.stringify({ email, password });
     const options = {
       hostname: 'localhost',
-      port: 8001,
+      port: 8000,
       path: '/api/v1/auth/login',
       method: 'POST',
       headers: {
@@ -145,7 +145,7 @@ const TEST_CASES = [
     description: "Test without Authorization header",
     headers: {},
     data: { first_name: "John" },
-    expectedStatus: 404,
+    expectedStatus: 401,
     expectedFields: ['success', 'message'],
     category: "AUTH_ERRORS"
   },
@@ -362,7 +362,7 @@ const TEST_CASES = [
 async function runTests() {
   // First, try to get a valid token for authenticated tests
   console.log('🔑 Attempting to obtain authentication token...');
-  testToken = await loginAndGetToken('superadmin@mmv.com', 'SuperAdmin123!');
+  testToken = await loginAndGetToken('avhadenterprisespc5@gmail.com', 'SuperAdmin123!');
 
   if (testToken) {
     console.log('✅ Authentication token obtained');

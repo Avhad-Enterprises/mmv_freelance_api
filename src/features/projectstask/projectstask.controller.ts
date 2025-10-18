@@ -343,6 +343,11 @@ class projectstaskcontroller {
         throw new HttpException(400, "projects_task_id and status are required");
       }
 
+      // Validate status value (0: pending, 1: assigned, 2: completed)
+      if (status !== 0 && status !== 1 && status !== 2) {
+        throw new HttpException(400, "Invalid status value. Must be 0 (pending), 1 (assigned), or 2 (completed)");
+      }
+
       const updated = await this.ProjectstaskService.updateProjectTaskStatus(
         projects_task_id,
         status,

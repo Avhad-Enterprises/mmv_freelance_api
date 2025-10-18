@@ -24,33 +24,55 @@ let testUserToken = null;
 let testUserId = null;
 
 /**
- * Setup: Create a test user
+ * Setup: Create a test user using super admin
  */
 async function setupTestUser() {
   printSection('SETUP: Creating Test User');
   
   try {
+    // First get super admin token
+    const adminResponse = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'avhadenterprisespc5@gmail.com',
+      password: 'SuperAdmin123!'
+    });
+    
+    if (adminResponse.statusCode !== 200 || !adminResponse.body.data?.token) {
+      console.log('✗ Failed to get super admin token');
+      return false;
+    }
+    
+    const adminToken = adminResponse.body.data.token;
+    
+    // Create test user using super admin
     const email = randomEmail('user-test');
-    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/register/client`, {
+    const response = await makeRequest('POST', `${CONFIG.apiVersion}/users`, {
       first_name: 'Test',
       last_name: 'User',
       email: email,
       password: 'Password123!',
-      username: randomUsername('testuser'),
-      company_name: 'Test User Company',
-    });
+      roleName: 'CLIENT'
+    }, { Authorization: `Bearer ${adminToken}` });
     
     if (response.statusCode === 201 && response.body.data) {
-      testUserToken = response.body.data.token;
-      testUserId = response.body.data.user.user_id;
-      storeToken('testuser', testUserToken);
-      console.log(`✓ Test user created: ${email}`);
-      console.log(`  User ID: ${testUserId}`);
-      return true;
-    } else {
-      console.log('✗ Failed to create test user');
-      return false;
+      testUserId = response.body.data.user_id;
+      
+      // Login as the test user to get token
+      const loginResponse = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+        email: email,
+        password: 'Password123!'
+      });
+      
+      if (loginResponse.statusCode === 200 && loginResponse.body.data?.token) {
+        testUserToken = loginResponse.body.data.token;
+        storeToken('testuser', testUserToken);
+        console.log(`✓ Test user created: ${email}`);
+        console.log(`  User ID: ${testUserId}`);
+        return true;
+      }
     }
+    
+    console.log('✗ Failed to create test user');
+    return false;
   } catch (error) {
     console.log('✗ Setup failed:', error.message);
     return false;

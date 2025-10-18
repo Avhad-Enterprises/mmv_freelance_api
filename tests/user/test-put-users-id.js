@@ -8,7 +8,7 @@ const API_PREFIX = '/api/v1';
 // Test data
 const testUsers = {
   superAdmin: {
-    email: 'superadmin@mmv.com',
+    email: 'avhadenterprisespc5@gmail.com',
     password: 'SuperAdmin123!'
   }
 };
@@ -172,7 +172,7 @@ async function testUpdateUserWithoutAuth() {
   };
 
   const response = await makeRequest(options, updateData);
-  return validateResponse(response, 404, ['success', 'message'], [
+  return validateResponse(response, 401, ['success', 'message'], [
     (res) => {
       console.log(`💬 Message: "${res.data?.message}" (expected: "Authentication token missing") ${res.data?.message === 'Authentication token missing' ? '✅' : '❌'}`);
       return res.data?.message === 'Authentication token missing';
