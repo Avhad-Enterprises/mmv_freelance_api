@@ -43,43 +43,6 @@ export class VideographerRoutes implements Route {
     );
 
     /**
-     * Search videographers by availability
-     * Requires: Authentication
-     */
-    this.router.get(
-      `${this.path}/search/availability/:availability`,
-      this.videographerController.searchByAvailability
-    );
-
-    /**
-     * Search videographers by skill
-     * Requires: Authentication
-     */
-    this.router.get(
-      `${this.path}/search/skill/:skill`,
-      this.videographerController.searchBySkill
-    );
-
-    /**
-     * Search videographers by hourly rate
-     * Requires: Authentication
-     * Query params: min, max
-     */
-    this.router.get(
-      `${this.path}/search/rate`,
-      this.videographerController.searchByRate
-    );
-
-    /**
-     * Search videographers by experience level
-     * Requires: Authentication
-     */
-    this.router.get(
-      `${this.path}/search/experience/:level`,
-      this.videographerController.searchByExperience
-    );
-
-    /**
      * Get videographer by username
      * Requires: Authentication
      */

@@ -134,9 +134,13 @@ class VideoEditorService extends FreelancerService {
   }
 
   /**
-   * Search video editors by software proficiency
+   * Get top-rated video editors
    */
-  public async searchBySoftware(software: string): Promise<any[]> {
+
+  /**
+   * Search video editors by skill
+   */
+  public async searchBySkill(skill: string): Promise<any[]> {
     const videoEditors = await DB(T.USERS_TABLE)
       .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
       .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
@@ -145,13 +149,60 @@ class VideoEditorService extends FreelancerService {
       .where(`${T.ROLE}.name`, 'VIDEO_EDITOR')
       .where(`${T.USERS_TABLE}.is_active`, true)
       .where(`${T.USERS_TABLE}.is_banned`, false)
-      .whereRaw(`${T.FREELANCER_PROFILES}.skills::jsonb @> ?`, [JSON.stringify([software])])
+      .whereRaw(`${T.FREELANCER_PROFILES}.skills::jsonb @> ?`, [JSON.stringify([skill])])
       .select(
         `${T.USERS_TABLE}.*`,
         `${T.FREELANCER_PROFILES}.*`,
         `${T.VIDEOEDITOR_PROFILES}.*`
       )
       .orderBy(`${T.FREELANCER_PROFILES}.hourly_rate`, "asc");
+
+    return videoEditors;
+  }
+
+  /**
+   * Search video editors by hourly rate range
+   */
+  public async searchByHourlyRate(minRate: number, maxRate: number): Promise<any[]> {
+    const videoEditors = await DB(T.USERS_TABLE)
+      .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
+      .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
+      .join(T.FREELANCER_PROFILES, `${T.USERS_TABLE}.user_id`, `${T.FREELANCER_PROFILES}.user_id`)
+      .leftJoin(T.VIDEOEDITOR_PROFILES, `${T.FREELANCER_PROFILES}.freelancer_id`, `${T.VIDEOEDITOR_PROFILES}.freelancer_id`)
+      .where(`${T.ROLE}.name`, 'VIDEO_EDITOR')
+      .where(`${T.USERS_TABLE}.is_active`, true)
+      .where(`${T.USERS_TABLE}.is_banned`, false)
+      .where(`${T.FREELANCER_PROFILES}.hourly_rate`, '>=', minRate)
+      .where(`${T.FREELANCER_PROFILES}.hourly_rate`, '<=', maxRate)
+      .select(
+        `${T.USERS_TABLE}.*`,
+        `${T.FREELANCER_PROFILES}.*`,
+        `${T.VIDEOEDITOR_PROFILES}.*`
+      )
+      .orderBy(`${T.FREELANCER_PROFILES}.hourly_rate`, "asc");
+
+    return videoEditors;
+  }
+
+  /**
+   * Search video editors by experience level
+   */
+  public async searchByExperienceLevel(level: string): Promise<any[]> {
+    const videoEditors = await DB(T.USERS_TABLE)
+      .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
+      .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
+      .join(T.FREELANCER_PROFILES, `${T.USERS_TABLE}.user_id`, `${T.FREELANCER_PROFILES}.user_id`)
+      .leftJoin(T.VIDEOEDITOR_PROFILES, `${T.FREELANCER_PROFILES}.freelancer_id`, `${T.VIDEOEDITOR_PROFILES}.freelancer_id`)
+      .where(`${T.ROLE}.name`, 'VIDEO_EDITOR')
+      .where(`${T.USERS_TABLE}.is_active`, true)
+      .where(`${T.USERS_TABLE}.is_banned`, false)
+      .where(`${T.FREELANCER_PROFILES}.experience_level`, level)
+      .select(
+        `${T.USERS_TABLE}.*`,
+        `${T.FREELANCER_PROFILES}.*`,
+        `${T.VIDEOEDITOR_PROFILES}.*`
+      )
+      .orderBy(`${T.FREELANCER_PROFILES}.hire_count`, "desc");
 
     return videoEditors;
   }
@@ -186,16 +237,17 @@ class VideoEditorService extends FreelancerService {
     const editors = await DB(T.USERS_TABLE)
       .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
       .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
-      .leftJoin(T.PROJECTS_TASK, `${T.USERS_TABLE}.user_id`, `${T.PROJECTS_TASK}.editor_id`)
+      .leftJoin(T.PROJECTS_TASK, `${T.USERS_TABLE}.user_id`, `${T.PROJECTS_TASK}.freelancer_id`)
       .where(`${T.ROLE}.name`, 'VIDEO_EDITOR')
       .where(`${T.USERS_TABLE}.is_active`, true)
       .where(`${T.USERS_TABLE}.is_banned`, false)
       .select(
         `${T.USERS_TABLE}.user_id as editor_id`,
-        `${T.USERS_TABLE}.*`,
+        `${T.USERS_TABLE}.username`,
+        `${T.USERS_TABLE}.email`,
         DB.raw('COALESCE(COUNT(??), 0) as task_count', [`${T.PROJECTS_TASK}.projects_task_id`])
       )
-      .groupBy(`${T.USERS_TABLE}.user_id`)
+      .groupBy(`${T.USERS_TABLE}.user_id`, `${T.USERS_TABLE}.username`, `${T.USERS_TABLE}.email`)
       .orderBy('task_count', 'desc');
 
     return editors;

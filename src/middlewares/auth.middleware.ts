@@ -64,10 +64,10 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
         }
         else { next(new HttpException(401, 'UnAuthorized User')); }
       } else {
-        next(new HttpException(404, 'Authentication token missing'));
+        next(new HttpException(401, 'Authentication token missing'));
       }
     } else {
-      next(new HttpException(404, 'Authentication token missing'));
+      next(new HttpException(401, 'Authentication token missing'));
     }
 
   } catch (error) {
