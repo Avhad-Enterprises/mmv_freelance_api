@@ -1,6 +1,26 @@
 // Client Registration DTO
-import { IsString, IsOptional, IsEmail, IsNumber, IsArray, IsEnum, IsNotEmpty, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsNumber, IsArray, IsEnum, IsNotEmpty, IsBoolean, ValidateIf, registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
 import { Transform } from 'class-transformer';
+
+// Custom validator to ensure boolean is true
+function IsTrue(validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      name: 'isTrue',
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      validator: {
+        validate(value: any, args: ValidationArguments) {
+          return value === true;
+        },
+        defaultMessage(args: ValidationArguments) {
+          return `${args.property} must be true`;
+        },
+      },
+    });
+  };
+}
 
 export class ClientRegistrationDto {
   // Step 1: Basic Information (Required)
@@ -110,7 +130,7 @@ export class ClientRegistrationDto {
   project_timeline?: string;
 
   // Step 6: Additional Information (Required)
-  @IsOptional()
+  @IsNotEmpty()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       return value === 'true' || value === '1';
@@ -118,9 +138,10 @@ export class ClientRegistrationDto {
     return Boolean(value);
   })
   @IsBoolean()
-  terms_accepted?: boolean;
+  @IsTrue({ message: 'You must accept the terms and conditions' })
+  terms_accepted: boolean;
 
-  @IsOptional()
+  @IsNotEmpty()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       return value === 'true' || value === '1';
@@ -128,7 +149,8 @@ export class ClientRegistrationDto {
     return Boolean(value);
   })
   @IsBoolean()
-  privacy_policy_accepted?: boolean;
+  @IsTrue({ message: 'You must accept the privacy policy' })
+  privacy_policy_accepted: boolean;
 
   // Optional file uploads
   @IsOptional()
