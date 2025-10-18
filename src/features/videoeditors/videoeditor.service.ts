@@ -1,5 +1,5 @@
 // Video Editor Service - Specialized service for video editor operations
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import FreelancerService from "../freelancers/freelancer.service";
 

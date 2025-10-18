@@ -1,5 +1,5 @@
 import { ProjectsTaskDto } from "./projectstask.dto";
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import { IProjectTask } from './projectstask.interface';
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
@@ -58,7 +58,7 @@ class ProjectstaskService {
         .first();
 
       if (!project) {
-        throw new Error('Project not found');
+        throw new HttpException(404, 'Project not found');
       }
 
       // 2. check if new URL is unique
@@ -69,7 +69,7 @@ class ProjectstaskService {
           .first();
 
         if (existing) {
-          throw new Error('URL already exists. Please use a unique URL.');
+          throw new HttpException(409, 'URL already exists. Please use a unique URL.');
         }
       }
 
@@ -95,6 +95,14 @@ class ProjectstaskService {
   };
 
   public async softDelete(projects_task_id: number, data: Partial<any>): Promise<any> {
+    // Check if project exists
+    const project = await DB(T.PROJECTS_TASK)
+      .where({ projects_task_id })
+      .first();
+
+    if (!project) {
+      throw new HttpException(404, 'Project not found');
+    }
 
     const deleted_at = new Date();
 
@@ -161,10 +169,10 @@ class ProjectstaskService {
    */
   public getAllProjectslistingPublic = async (): Promise<any[]> => {
     const result = await DB(T.PROJECTS_TASK)
-      .leftJoin(`${T.USERS_TABLE} as client`, `${T.PROJECTS_TASK}.client_id`, 'client.user_id')
-      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.user_id`)
-      .leftJoin(`${T.USERS_TABLE} as editor`, `${T.PROJECTS_TASK}.editor_id`, 'editor.user_id')
-      .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.editor_id`, `${T.FREELANCER_PROFILES}.user_id`)
+      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.client_id`)
+      .leftJoin(`${T.USERS_TABLE} as client`, `${T.CLIENT_PROFILES}.user_id`, 'client.user_id')
+      .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.freelancer_id`, `${T.FREELANCER_PROFILES}.freelancer_id`)
+      .leftJoin(`${T.USERS_TABLE} as freelancer`, `${T.FREELANCER_PROFILES}.user_id`, 'freelancer.user_id')
       .where(`${T.PROJECTS_TASK}.is_deleted`, false)
       .where(`${T.PROJECTS_TASK}.status`, 0) // Only show active/pending jobs (not assigned or completed)
       .orderBy(`${T.PROJECTS_TASK}.created_at`, 'desc')
@@ -179,13 +187,13 @@ class ProjectstaskService {
         `${T.CLIENT_PROFILES}.company_name as client_company_name`,
         `${T.CLIENT_PROFILES}.industry as client_industry`,
 
-        // Editor Info
-        'editor.user_id as editor_user_id',
-        'editor.first_name as editor_first_name',
-        'editor.last_name as editor_last_name',
-        'editor.profile_picture as editor_profile_picture',
-        `${T.FREELANCER_PROFILES}.profile_title as editor_profile_title`,
-        `${T.FREELANCER_PROFILES}.experience_level as editor_experience_level`
+        // Freelancer Info
+        'freelancer.user_id as freelancer_user_id',
+        'freelancer.first_name as freelancer_first_name',
+        'freelancer.last_name as freelancer_last_name',
+        'freelancer.profile_picture as freelancer_profile_picture',
+        `${T.FREELANCER_PROFILES}.profile_title as freelancer_profile_title`,
+        `${T.FREELANCER_PROFILES}.experience_level as freelancer_experience_level`
       );
 
     return result;

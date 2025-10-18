@@ -1,5 +1,5 @@
 // Auth Service - RBAC-based registration with profile creation
-import DB from '../../../database/index.schema';
+import DB from '../../../database/index';
 import { USERS_TABLE } from '../../../database/users.schema';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';

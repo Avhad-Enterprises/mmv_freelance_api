@@ -12,7 +12,7 @@
 // - Links to users table via user_id foreign key
 // - Cascades delete when user is deleted
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const FREELANCER_PROFILES = 'freelancer_profiles';
 
@@ -111,10 +111,4 @@ export const migrate = async (dropFirst = false) => {
   } else {
     console.log('Freelancer Profiles Table already exists');
   }
-};
-
-export const seed = async () => {
-  console.log('Seeding Freelancer Profiles Table');
-  // No default seed data needed
-  console.log('Finished Seeding Freelancer Profiles Table');
 };

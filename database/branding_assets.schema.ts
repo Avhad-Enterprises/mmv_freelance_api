@@ -7,11 +7,11 @@
 // 2. Drop and Recreate: npm run migrate:schema -- branding_assets --drop
 //    - Completely drops and recreates the branding_assets table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const BRANDING_ASSETS = 'branding_assets';
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
 
     try {
         if (dropFirst) {
@@ -51,12 +51,6 @@ export const seed = async (dropFirst = false) => {
     } catch (error) {
         console.log(error);
     }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
 };
 
 // Version: 1.0.0 - Branding assets table for storing logos and branding elements

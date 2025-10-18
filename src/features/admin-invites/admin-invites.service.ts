@@ -2,7 +2,7 @@
 
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
-import DB, { T } from '../../../database/index.schema';
+import DB, { T } from '../../../database/index';
 import { INVITATION_TABLE } from '../../../database/admin_invites.schema';
 import { IAdminInvite } from './admin_invites.interface';
 import { CreateAdminInviteDto, AdminInviteResponseDto, AcceptInviteDto } from './admin-invites.dto';

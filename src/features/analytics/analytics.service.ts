@@ -1,4 +1,4 @@
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import { AnalyticsInterface } from './analytics.interface';
 import { AnalyticsDto } from './analytics.dto';
 import HttpException from "../../exceptions/HttpException";

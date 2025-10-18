@@ -1,5 +1,5 @@
 import { userInfo } from "os";
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import { USERS_TABLE } from "../../../database/users.schema";
 
 class dashboardservice {

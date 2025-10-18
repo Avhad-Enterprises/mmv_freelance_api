@@ -7,7 +7,7 @@
 // 2. Drop and Recreate: npm run migrate:schema -- projectstask --drop
 //    - Completely drops and recreates the projects_task table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const PROJECTS_TASK = 'projects_task';
 

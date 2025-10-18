@@ -1,6 +1,6 @@
 // Client Service - Client-specific operations
 import { ClientProfile } from './client.interface';
-import DB, { T } from '../../../database/index.schema';
+import DB, { T } from '../../../database/index';
 import UserService from "../user/user.service";
 import HttpException from '../../exceptions/HttpException';
 

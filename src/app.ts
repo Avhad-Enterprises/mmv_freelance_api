@@ -11,7 +11,7 @@ import { logger, stream } from "./utils/logger";
 import authMiddleware from "./middlewares/auth.middleware";
 import dotenv from 'dotenv';
 import multerErrorHandler from './middlewares/multer-error.middleware';
-import DB from '../database/index.schema';
+import DB from '../database/index';
 dotenv.config();
 
 

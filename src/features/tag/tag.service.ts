@@ -1,6 +1,6 @@
 import { TagsDto } from "./tag.dto";
 import { SkillsDto } from "./skill.dto";
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 import bcrypt from "bcrypt";

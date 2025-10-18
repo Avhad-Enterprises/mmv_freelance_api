@@ -1,5 +1,5 @@
 import { ReviewDto } from './review.dto';
-import DB, { T } from '../../../database/index.schema';
+import DB, { T } from '../../../database/index';
 import HttpException from '../../exceptions/HttpException';
 import { REVIEWS_TABLE } from '../../../database/review.schema';
 

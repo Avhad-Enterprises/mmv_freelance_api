@@ -7,7 +7,7 @@
  * Or: ts-node scripts/test-db-connection.ts
  */
 
-import DB from '../database/index.schema';
+import DB from '../database/index';
 import dotenv from 'dotenv';
 
 dotenv.config();

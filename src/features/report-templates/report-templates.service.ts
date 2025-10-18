@@ -1,5 +1,5 @@
 import { ReportTemplateDTO } from "./report-templates.dto";
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import { IReportTemplate } from './report-templates.interface';
 import HttpException from "../../exceptions/HttpException";
 import { REPORT_TEMPLATES } from "../../../database/report_templates.schema";

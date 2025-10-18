@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { SavedProjectsDto } from './saved_project.dto';
 import { RequestWithUser } from '../../interfaces/auth.interface';
 import Savedprojectservices from './saved_project.service';
-import DB, { T } from '../../../database/index.schema';
+import DB, { T } from '../../../database/index';
 import HttpException from '../../exceptions/HttpException';
 
 

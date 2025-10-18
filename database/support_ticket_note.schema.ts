@@ -7,11 +7,11 @@
 // 2. Drop and Recreate: npm run migrate:schema -- support_ticket_note --drop
 //    - Completely drops and recreates the ticket_notes table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const TICKET_NOTE_TABLE = 'ticket_notes';
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
   try {
     if (dropFirst) {
       await DB.schema.dropTableIfExists(TICKET_NOTE_TABLE);
@@ -37,12 +37,6 @@ table
   } catch (error) {
     console.error('Error creating ticket notes table:', error);
   }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
 };
 
 // Version: 1.0.0 - Support ticket notes table for internal admin notes

@@ -7,11 +7,11 @@
 // 2. Drop and Recreate: npm run migrate:schema -- report_templates --drop
 //    - Completely drops and recreates the report_templates table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const REPORT_TEMPLATES = 'report_templates';
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
     try {
         if (dropFirst) {
             console.log('Dropping Tables');
@@ -58,12 +58,6 @@ export const seed = async (dropFirst = false) => {
     } catch (error) {
         console.log(error);
     }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, respect the dropFirst parameter
-    await seed(dropFirst);
 };
 
 // Version: 1.0.0 - Report templates table for customizable report configurations

@@ -1,4 +1,4 @@
-import DB, { T } from '../../../database/index.schema';
+import DB, { T } from '../../../database/index';
 import { UsersDto } from '../user/user.dto';
 import HttpException from '../../exceptions/HttpException';
 import { USERS_TABLE } from '../../../database/users.schema';

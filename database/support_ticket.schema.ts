@@ -8,11 +8,11 @@
 //    - Completely drops and recreates the support_tickets table from scratch
 //
 // db/support_tickets.schema.ts
-import DB from './index.schema';
+import DB from './index';
 
 export const SUPPORT_TICKETS_TABLE = 'support_tickets';
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
   try {
     if (dropFirst) {
       console.log('Dropping Tables');
@@ -67,12 +67,6 @@ export const seed = async (dropFirst = false) => {
   } catch (error) {
     console.error(error);
   }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
 };
 
 // Version: 1.0.0 - Support tickets table for customer service

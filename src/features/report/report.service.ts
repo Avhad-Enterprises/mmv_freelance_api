@@ -1,5 +1,5 @@
 import { ReportDto } from "./report.dto";
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 import { REPORT_TABLE } from "../../../database/report_system.schema";

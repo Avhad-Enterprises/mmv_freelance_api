@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import DB from '../database/index.schema';
+import DB from '../database/index';
 
 const SCHEMA_MIGRATIONS_TABLE = 'schema_migrations';
 const DATABASE_DIR = path.join(__dirname, '../database');
@@ -12,23 +12,23 @@ const showMigrationStatus = async () => {
   try {
     console.log('📊 Schema Migration Status\n');
     
-    // Check if migrations table exists
-    const migrationsTableExists = await DB.schema.hasTable(SCHEMA_MIGRATIONS_TABLE);
-    
-    if (!migrationsTableExists) {
-      console.log('⚠️  Schema migrations table does not exist. Run a migration first.');
-      return;
-    }
-    
     // Get all schema files
     const schemaFiles = fs.readdirSync(DATABASE_DIR)
       .filter(file => file.endsWith('.schema.ts'))
       .sort();
     
-    // Get migrated schemas
-    const migratedSchemas = await DB(SCHEMA_MIGRATIONS_TABLE)
-      .select('schema_name', 'version', 'migrated_at')
-      .orderBy('migrated_at', 'desc');
+    // Check if migrations table exists
+    const migrationsTableExists = await DB.schema.hasTable(SCHEMA_MIGRATIONS_TABLE);
+    
+    let migratedSchemas: any[] = [];
+    if (migrationsTableExists) {
+      // Get migrated schemas
+      migratedSchemas = await DB(SCHEMA_MIGRATIONS_TABLE)
+        .select('schema_name', 'version', 'migrated_at')
+        .orderBy('migrated_at', 'desc');
+    } else {
+      console.log('ℹ️  Schema migrations table does not exist - all schemas shown as pending\n');
+    }
     
     const migratedMap = new Map(
       migratedSchemas.map(row => [row.schema_name, row])

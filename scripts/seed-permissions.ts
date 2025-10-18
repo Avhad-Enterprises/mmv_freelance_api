@@ -1,7 +1,7 @@
 // Script to seed predefined permissions into the permission table
 // Usage: ts-node scripts/seed-permissions.ts
 
-import DB from '../database/index.schema';
+import DB from '../database/index';
 import { PERMISSION } from '../database/permission.schema';
 
 interface PermissionData {

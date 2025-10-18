@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { favoritesDto } from './favorites.dto';
 import favoritesservices from './favorites.service';
-import DB, { T } from '../../../database/index.schema';
+import DB, { T } from '../../../database/index';
 import HttpException from '../../exceptions/HttpException';
 
 

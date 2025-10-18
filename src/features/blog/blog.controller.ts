@@ -1,4 +1,4 @@
-import DB from "../../../database/index.schema";
+import DB from "../../../database/index";
 import { BlogDto } from './blog.dto';
 import { NextFunction, Request, Response } from "express";
 import BlogService from "./blog.service";

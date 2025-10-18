@@ -1,5 +1,5 @@
 // Refactored User Service - RBAC & Profile-based Architecture
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import { Users } from "./user.interface";
 import HttpException from "../../exceptions/HttpException";
 import bcrypt from "bcrypt";

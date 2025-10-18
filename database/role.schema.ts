@@ -7,7 +7,7 @@
 // 2. Drop and Recreate: npm run migrate:schema -- role --drop
 //    - Completely drops and recreates the role table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const ROLE = 'role';
 

@@ -1,5 +1,5 @@
 import { BrandingAssetsDto } from "./branding.dto";
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 import { BrandingAssets  } from './branding.interface';
