@@ -1,4 +1,5 @@
 const http = require('http');
+const { CONFIG } = require('../test-utils');
 
 // Configuration
 const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
