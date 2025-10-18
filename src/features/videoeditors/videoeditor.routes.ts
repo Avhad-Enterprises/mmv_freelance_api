@@ -50,43 +50,6 @@ export class VideoEditorRoutes implements Route {
     );
 
     /**
-     * Search video editors by software
-     * Requires: Authentication
-     */
-    this.router.get(
-      `${this.path}/search/software/:software`,
-      this.videoEditorController.searchBySoftware
-    );
-
-    /**
-     * Search video editors by skill
-     * Requires: Authentication
-     */
-    this.router.get(
-      `${this.path}/search/skill/:skill`,
-      this.videoEditorController.searchBySkill
-    );
-
-    /**
-     * Search video editors by hourly rate
-     * Requires: Authentication
-     * Query params: min, max
-     */
-    this.router.get(
-      `${this.path}/search/rate`,
-      this.videoEditorController.searchByRate
-    );
-
-    /**
-     * Search video editors by experience level
-     * Requires: Authentication
-     */
-    this.router.get(
-      `${this.path}/search/experience/:level`,
-      this.videoEditorController.searchByExperience
-    );
-
-    /**
      * Get video editor by username
      * Requires: Authentication
      */

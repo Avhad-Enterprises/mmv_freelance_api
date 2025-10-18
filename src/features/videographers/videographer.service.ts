@@ -134,29 +134,6 @@ class VideographerService extends FreelancerService {
   }
 
   /**
-   * Search videographers by availability
-   */
-  public async searchByAvailability(availability: string): Promise<any[]> {
-    const videographers = await DB(T.USERS_TABLE)
-      .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
-      .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
-      .join(T.FREELANCER_PROFILES, `${T.USERS_TABLE}.user_id`, `${T.FREELANCER_PROFILES}.user_id`)
-      .leftJoin(T.VIDEOGRAPHER_PROFILES, `${T.FREELANCER_PROFILES}.freelancer_id`, `${T.VIDEOGRAPHER_PROFILES}.freelancer_id`)
-      .where(`${T.ROLE}.name`, 'VIDEOGRAPHER')
-      .where(`${T.USERS_TABLE}.is_active`, true)
-      .where(`${T.USERS_TABLE}.is_banned`, false)
-      .where(`${T.FREELANCER_PROFILES}.availability`, availability)
-      .select(
-        `${T.USERS_TABLE}.*`,
-        `${T.FREELANCER_PROFILES}.*`,
-        `${T.VIDEOGRAPHER_PROFILES}.*`
-      )
-      .orderBy(`${T.USERS_TABLE}.created_at`, "desc");
-
-    return videographers;
-  }
-
-  /**
    * Get top-rated videographers
    */
   public async getTopRated(limit: number = 10): Promise<any[]> {
