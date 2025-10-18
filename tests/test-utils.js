@@ -56,11 +56,15 @@ function makeRequest(method, path, data = null, formDataOrHeaders = {}) {
       requestData = formDataOrHeaders;
     } else {
       // Handle regular data with custom headers
+      requestData = data ? JSON.stringify(data) : null;
       headers = {
         'Content-Type': 'application/json',
         ...formDataOrHeaders,
       };
-      requestData = data ? JSON.stringify(data) : null;
+      // Add Content-Length for requests with body
+      if (requestData) {
+        headers['Content-Length'] = Buffer.byteLength(requestData);
+      }
     }
 
     const options = {
