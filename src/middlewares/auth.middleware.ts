@@ -11,24 +11,21 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
 
     // Public routes that don't require authentication
     const publicRoutes = [
-      '/users/login',
-      '/users/insert_user',
-      '/users/loginf',
-      '/users/get_user_by_id',
-      '/users/get_freelancer_by_id',
-      '/users/get_client_by_id',
-      '/users/get_admin_by_id',
       '/users/password-reset-request',
       '/users/password-reset',
-      '/auth/register',
       '/auth/login',
-      '/admin/invites/accept', // Public route for accepting invitations
+      '/auth/register/client',
+      '/auth/register/videographer',
+      '/auth/register/videoeditor',
+      '/admin/invites/accept',
       '/health',
       '/projectsTask/getallprojectlisting',
+      '/projects-tasks/listings',
       '/freelancers/getfreelancers',
       '/category/getallcategorys',
       '/category/getcategorytypes',
-      '/tags/getallskill'
+      '/skills',
+      '/tags'
     ];
 
     // Check if the current path matches any public route

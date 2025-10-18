@@ -2,7 +2,7 @@
 
 /**
  * Project Task Update API Test
- * Tests the PUT /projectsTask/updateprojects_taskbyid endpoint
+ * Tests the PUT /projects-tasks endpoint
  */
 
 const {
@@ -25,8 +25,8 @@ let failedTests = 0;
 async function loginAsAdmin() {
   try {
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'avhadenterprisespc5@gmail.com',
-      password: 'SuperAdmin123!'
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
     });
 
     if (response.statusCode === 200 && response.body?.data?.token) {
@@ -83,7 +83,7 @@ async function testUpdateProjectTask() {
   try {
     const createResponse = await makeRequest(
       'POST',
-      `${CONFIG.apiVersion}/projectsTask/insertprojects_task`,
+      `${CONFIG.apiVersion}/projects-tasks`,
       testData,
       { Authorization: `Bearer ${TOKENS.admin}` }
     );
@@ -105,7 +105,6 @@ async function testUpdateProjectTask() {
   // Test 1: Valid update
   try {
     const updateData = {
-      projects_task_id: createdProjectId,
       project_title: "Updated Test Video Editing Project",
       budget: 6000.00,
       additional_notes: "Updated requirements"
@@ -113,7 +112,7 @@ async function testUpdateProjectTask() {
 
     const response = await makeRequest(
       'PUT',
-      `${CONFIG.apiVersion}/projectsTask/updateprojects_taskbyid`,
+      `${CONFIG.apiVersion}/projects-tasks/${createdProjectId}`,
       updateData,
       { Authorization: `Bearer ${TOKENS.admin}` } // Use stored token
     );
@@ -148,7 +147,7 @@ async function testUpdateProjectTask() {
 
     const response = await makeRequest(
       'PUT',
-      `${CONFIG.apiVersion}/projectsTask/updateprojects_taskbyid`,
+      `${CONFIG.apiVersion}/projects-tasks`,
       updateData,
       { Authorization: `Bearer ${TOKENS.admin}` }
     );
@@ -174,24 +173,24 @@ async function testUpdateProjectTask() {
     failedTests++;
   }
 
-  // Test 3: Missing projects_task_id
+  // Test 3: Invalid ID format
   try {
     const updateData = {
-      project_title: "Missing ID update"
+      project_title: "Invalid ID update"
     };
 
     const response = await makeRequest(
       'PUT',
-      `${CONFIG.apiVersion}/projectsTask/updateprojects_taskbyid`,
+      `${CONFIG.apiVersion}/projects-tasks/abc`,
       updateData,
       { Authorization: `Bearer ${TOKENS.admin}` }
     );
 
-    const passed = response.statusCode === 400; // Should get validation error
+    const passed = response.statusCode === 400; // Should get validation error for invalid ID
     printTestResult(
-      'Missing projects_task_id',
+      'Invalid ID format',
       passed,
-      passed ? 'Properly validated missing required field' : `Expected 400, got ${response.statusCode}`,
+      passed ? 'Properly handled invalid ID format' : `Expected 400, got ${response.statusCode}`,
       response.body
     );
 

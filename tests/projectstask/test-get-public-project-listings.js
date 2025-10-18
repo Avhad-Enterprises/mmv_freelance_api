@@ -2,7 +2,7 @@
 
 /**
  * Project Task Public Listing API Test
- * Tests the GET /projectsTask/getallprojectlisting-public endpoint
+ * Tests the GET /projects-tasks/listings endpoint
  */
 
 const {
@@ -26,7 +26,7 @@ async function testGetPublicProjectListings() {
   try {
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/projectsTask/getallprojectlisting-public`,
+      `${CONFIG.apiVersion}/projects-tasks/listings`,
       null,
       {} // No authentication required for public endpoint
     );
@@ -56,7 +56,7 @@ async function testGetPublicProjectListings() {
   try {
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/projectsTask/getallprojectlisting-public`,
+      `${CONFIG.apiVersion}/projects-tasks/listings`,
       null,
       {}
     );

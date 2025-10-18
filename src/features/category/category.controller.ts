@@ -37,9 +37,10 @@ class CategoryController {
      */
     public getcategorytypesby = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const type = req.body.type as string;
+            // Support both query param and body for backward compatibility
+            const type = (req.query.type || req.body.type) as string;
             if (!type) {
-                throw new HttpException(400, "Category body is required");
+                throw new HttpException(400, "Category type is required");
             }
             const category = await this.CategoryService.getcategorytypesbytable(type);
             res.status(200).json({ data: category, success: true });
@@ -66,7 +67,18 @@ class CategoryController {
      */
     public updatecategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const categoryData: Partial<CategoryDto> = req.body;
+            // Get category_id from URL params or body
+            const categoryId = req.params.id ? Number(req.params.id) : req.body.category_id;
+            
+            if (!categoryId) {
+                throw new HttpException(400, "Category ID is required");
+            }
+
+            const categoryData: Partial<CategoryDto> = {
+                ...req.body,
+                category_id: categoryId
+            };
+            
             const updatecategory = await this.CategoryService.updatecategoryid(categoryData);
             res.status(200).json({ data: updatecategory, message: "Category updated" });
         } catch (error) {
@@ -79,7 +91,20 @@ class CategoryController {
      */
     public deletecategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const categorydata = req.body;
+            // Get category_id from URL params or body
+            const categoryId = req.params.id ? Number(req.params.id) : req.body.category_id;
+            
+            if (!categoryId || isNaN(categoryId)) {
+                throw new HttpException(400, "Valid category ID is required");
+            }
+
+            const categorydata = {
+                category_id: categoryId,
+                is_deleted: true,
+                deleted_by: req.body.deleted_by || null,
+                deleted_at: new Date()
+            };
+            
             const deletedcategory = await this.CategoryService.SoftDeletecategory(categorydata);
             res.status(200).json({ data: deletedcategory, message: "category deleted" });
         } catch (error) {

@@ -8,6 +8,17 @@
  *   node tests/projectstask/run-projectstask-tests.js           # Run all tests
  *   node tests/projectstask/run-projectstask-tests.js insert    # Run only insert test
  *   node tests/projectstask/run-projectstask-tests.js get-by-id # Run only get by id test
+ *   node tests/projectstask/run-projectstask-tests.js update    # Run only update test
+ *   node tests/projectstask/run-projectstask-tests.js delete    # Run only delete test
+ *   node tests/projectstask/run-projectstask-tests.js get-all   # Run only get all test
+ *   node tests/projectstask/run-projectstask-tests.js update-status # Run only update status test
+ *   node tests/projectstask/run-projectstask-tests.js count-active # Run only count active test
+ *   node tests/projectstask/run-projectstask-tests.js public-listing # Run only public listing test
+ *   node tests/projectstask/run-projectstask-tests.js get-by-client-id # Run only get by client id test
+ *   node tests/projectstask/run-projectstask-tests.js submit    # Run only submit project test
+ *   node tests/projectstask/run-projectstask-tests.js approve   # Run only approve submission test
+ *   node tests/projectstask/run-projectstask-tests.js active-clients # Run only active clients analytics test
+ *   node tests/projectstask/run-projectstask-tests.js active-editors # Run only active editors analytics test
  */
 
 const { spawn } = require('child_process');
@@ -19,19 +30,14 @@ const SCRIPTS = {
   'update': 'test-update-project-task.js',
   'delete': 'test-delete-project-task.js',
   'get-all': 'test-get-all-project-tasks.js',
-  'get-by-url': 'test-get-project-task-by-url.js',
-  'get-by-client': 'test-get-projects-by-client.js',
   'update-status': 'test-update-project-task-status.js',
   'count-active': 'test-count-active-project-tasks.js',
-  'count-all': 'test-count-all-project-tasks.js',
-  'get-active-deleted': 'test-get-active-deleted-project-tasks.js',
-  'tasks-with-client': 'test-get-tasks-with-client.js',
-  'get-task-by': 'test-get-task-by.js',
-  'count-by-editor': 'test-count-by-editor.js',
-  'count-by-client': 'test-count-by-client.js',
-  'completed-count': 'test-completed-projects-count.js',
-  'all-listing': 'test-get-all-project-listing.js',
-  'public-listing': 'test-get-public-project-listings.js'
+  'public-listing': 'test-get-public-project-listings.js',
+  'get-by-client-id': 'test-get-projects-by-client-id.js',
+  'submit': 'test-submit-project.js',
+  'approve': 'test-approve-submission.js',
+  'active-clients': 'test-active-clients-analytics.js',
+  'active-editors': 'test-active-editors-analytics.js'
 };
 
 function runScript(scriptName) {
