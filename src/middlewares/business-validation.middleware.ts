@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ResponseUtil } from '../utils/response.util';
-import DB from '../../database/index.schema';
+import DB from '../../database/index';
 
 /**
  * Backend business logic validation middleware

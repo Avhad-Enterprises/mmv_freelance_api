@@ -25,7 +25,7 @@ let failedTests = 0;
 async function loginAsAdmin() {
   try {
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'superadmin@mmv.com',
+      email: 'avhadenterprisespc5@gmail.com',
       password: 'SuperAdmin123!'
     });
 
@@ -55,7 +55,7 @@ async function testGetProjectTaskById() {
 
   // Test 1: Get existing project task
   try {
-    const projectId = 23; // From public listing, this project exists
+    const projectId = 4; // The project we just inserted
 
     const response = await makeRequest(
       'GET',

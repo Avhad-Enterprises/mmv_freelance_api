@@ -1,7 +1,7 @@
 // Profile Loader: Load user with their type-specific profile
 // Automatically detects user type and loads appropriate profile
 
-import DB from '../../../database/index.schema';
+import DB from '../../../database/index';
 import { USERS_TABLE } from '../../../database/users.schema';
 import { getUserRoles } from '../rbac/role-checker';
 

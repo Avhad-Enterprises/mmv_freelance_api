@@ -1,4 +1,4 @@
-import DB from "../../../database/index.schema";
+import DB from "../../../database/index";
 import { NotificationDto } from "./notification.dto";
 import { NextFunction, Request, Response } from "express";
 import { RequestWithUser } from "../../interfaces/auth.interface";

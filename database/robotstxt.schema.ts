@@ -7,7 +7,7 @@
 // 2. Drop and Recreate: npm run migrate:schema -- robotstxt --drop
 //    - Completely drops and recreates the robots_txt table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const ROBOTS_TXT = 'robots_txt';
 
@@ -40,7 +40,8 @@ export const seed = async (dropFirst = false) => {
         `);
         console.log('Finished Creating Triggers');
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for robotstxt:', error);
+        throw error;
     }
 };
 

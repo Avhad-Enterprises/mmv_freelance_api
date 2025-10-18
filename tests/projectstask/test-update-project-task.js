@@ -25,7 +25,7 @@ let failedTests = 0;
 async function loginAsAdmin() {
   try {
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'superadmin@mmv.com',
+      email: 'avhadenterprisespc5@gmail.com',
       password: 'SuperAdmin123!'
     });
 
@@ -56,7 +56,7 @@ async function testUpdateProjectTask() {
   // Test 1: Valid update
   try {
     const updateData = {
-      projects_task_id: 26, // Use the project ID we created in insert test
+      projects_task_id: 4, // Use the project ID we created in insert test
       project_title: "Updated Test Video Editing Project",
       budget: 6000.00,
       additional_notes: "Updated requirements"

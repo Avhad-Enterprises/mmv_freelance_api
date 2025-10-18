@@ -2,55 +2,14 @@
 
 import fs from 'fs';
 import path from 'path';
-import DB from '../database/index.schema';
-
-const SCHEMA_MIGRATIONS_TABLE = 'schema_migrations';
-const DATABASE_DIR = path.join(__dirname, '../database');
-
-// Ensure schema migrations table exists
-const ensureSchemaMigrationsTable = async () => {
-  const exists = await DB.schema.hasTable(SCHEMA_MIGRATIONS_TABLE);
-  if (!exists) {
-    await DB.schema.createTable(SCHEMA_MIGRATIONS_TABLE, (table) => {
-      table.increments('id').primary();
-      table.string('schema_name').notNullable().unique();
-      table.string('version').notNullable();
-      table.timestamp('migrated_at').defaultTo(DB.fn.now());
-    });
-    console.log('📋 Created schema_migrations table');
-  }
-};
-
-// Record schema migration
-const recordMigration = async (schemaName: string, version: string) => {
-  // Check if already exists
-  const existing = await DB(SCHEMA_MIGRATIONS_TABLE)
-    .where('schema_name', schemaName)
-    .first();
-    
-  if (existing) {
-    // Update existing record
-    await DB(SCHEMA_MIGRATIONS_TABLE)
-      .where('schema_name', schemaName)
-      .update({
-        version: version,
-        migrated_at: DB.fn.now()
-      });
-  } else {
-    // Insert new record
-    await DB(SCHEMA_MIGRATIONS_TABLE).insert({
-      schema_name: schemaName,
-      version: version
-    });
-  }
-};
-
-// Get schema version from file content
-const getSchemaVersion = (filePath: string): string => {
-  const content = fs.readFileSync(filePath, 'utf8');
-  const versionMatch = content.match(/\/\/ Version: (.+)/);
-  return versionMatch ? versionMatch[1] : new Date().toISOString();
-};
+import DB from '../database/index';
+import {
+  SCHEMA_MIGRATIONS_TABLE,
+  DATABASE_DIR,
+  ensureSchemaMigrationsTable,
+  recordOrUpdateMigration,
+  getSchemaVersion
+} from './migration-utils';
 
 // Main function to migrate a single schema
 const migrateSchema = async (schemaName: string, dropFirst = false) => {
@@ -84,7 +43,7 @@ const migrateSchema = async (schemaName: string, dropFirst = false) => {
       // Record migration if not dropping
       if (!dropFirst) {
         const version = getSchemaVersion(schemaPath);
-        await recordMigration(schemaName, version);
+        await recordOrUpdateMigration(schemaName, version);
       }
       
       console.log(`✅ Successfully migrated ${schemaName}`);

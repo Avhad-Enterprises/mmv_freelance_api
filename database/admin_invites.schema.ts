@@ -7,11 +7,11 @@
 // 2. Drop and Recreate: npm run migrate:schema -- admin_invites --drop
 //    - Completely drops and recreates the invitation table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const INVITATION_TABLE = 'invitation';
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
     try {
         if (dropFirst) {
             console.log('Dropping Tables');
@@ -72,14 +72,9 @@ export const seed = async (dropFirst = false) => {
             console.log('Table already exists, skipping creation');
         }
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for admin_invites:', error);
+        throw error;
     }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, respect the dropFirst parameter
-    await seed(dropFirst);
 };
 
 // Version: 2.0.0 - Updated admin invites schema to match user/role patterns

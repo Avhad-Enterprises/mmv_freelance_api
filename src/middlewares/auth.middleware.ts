@@ -2,7 +2,7 @@ import { NextFunction, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import HttpException from '../exceptions/HttpException';
 import { DataStoredInToken, RequestWithUser } from '../interfaces/auth.interface';
-import DB, { T } from '../../database/index.schema';
+import DB, { T } from '../../database/index';
 import { IsEmpty } from 'class-validator';
 
 const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFunction) => {
@@ -64,10 +64,10 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
         }
         else { next(new HttpException(401, 'UnAuthorized User')); }
       } else {
-        next(new HttpException(404, 'Authentication token missing'));
+        next(new HttpException(401, 'Authentication token missing'));
       }
     } else {
-      next(new HttpException(404, 'Authentication token missing'));
+      next(new HttpException(401, 'Authentication token missing'));
     }
 
   } catch (error) {

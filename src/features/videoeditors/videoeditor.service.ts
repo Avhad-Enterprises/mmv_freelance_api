@@ -1,5 +1,5 @@
 // Video Editor Service - Specialized service for video editor operations
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import FreelancerService from "../freelancers/freelancer.service";
 
@@ -134,27 +134,8 @@ class VideoEditorService extends FreelancerService {
   }
 
   /**
-   * Search video editors by software proficiency
+   * Get top-rated video editors
    */
-  public async searchBySoftware(software: string): Promise<any[]> {
-    const videoEditors = await DB(T.USERS_TABLE)
-      .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
-      .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
-      .join(T.FREELANCER_PROFILES, `${T.USERS_TABLE}.user_id`, `${T.FREELANCER_PROFILES}.user_id`)
-      .leftJoin(T.VIDEOEDITOR_PROFILES, `${T.FREELANCER_PROFILES}.freelancer_id`, `${T.VIDEOEDITOR_PROFILES}.freelancer_id`)
-      .where(`${T.ROLE}.name`, 'VIDEO_EDITOR')
-      .where(`${T.USERS_TABLE}.is_active`, true)
-      .where(`${T.USERS_TABLE}.is_banned`, false)
-      .whereRaw(`${T.FREELANCER_PROFILES}.skills::jsonb @> ?`, [JSON.stringify([software])])
-      .select(
-        `${T.USERS_TABLE}.*`,
-        `${T.FREELANCER_PROFILES}.*`,
-        `${T.VIDEOEDITOR_PROFILES}.*`
-      )
-      .orderBy(`${T.FREELANCER_PROFILES}.hourly_rate`, "asc");
-
-    return videoEditors;
-  }
 
   /**
    * Get top-rated video editors
@@ -186,16 +167,17 @@ class VideoEditorService extends FreelancerService {
     const editors = await DB(T.USERS_TABLE)
       .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
       .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
-      .leftJoin(T.PROJECTS_TASK, `${T.USERS_TABLE}.user_id`, `${T.PROJECTS_TASK}.editor_id`)
+      .leftJoin(T.PROJECTS_TASK, `${T.USERS_TABLE}.user_id`, `${T.PROJECTS_TASK}.freelancer_id`)
       .where(`${T.ROLE}.name`, 'VIDEO_EDITOR')
       .where(`${T.USERS_TABLE}.is_active`, true)
       .where(`${T.USERS_TABLE}.is_banned`, false)
       .select(
         `${T.USERS_TABLE}.user_id as editor_id`,
-        `${T.USERS_TABLE}.*`,
+        `${T.USERS_TABLE}.username`,
+        `${T.USERS_TABLE}.email`,
         DB.raw('COALESCE(COUNT(??), 0) as task_count', [`${T.PROJECTS_TASK}.projects_task_id`])
       )
-      .groupBy(`${T.USERS_TABLE}.user_id`)
+      .groupBy(`${T.USERS_TABLE}.user_id`, `${T.USERS_TABLE}.username`, `${T.USERS_TABLE}.email`)
       .orderBy('task_count', 'desc');
 
     return editors;

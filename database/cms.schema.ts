@@ -7,11 +7,11 @@
 // 2. Drop and Recreate: npm run migrate:schema -- cms --drop
 //    - Completely drops and recreates the cms table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const CMS = 'cms';
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
     try {
         if (dropFirst) {
             console.log('Dropping Tables');
@@ -61,14 +61,9 @@ export const seed = async (dropFirst = false) => {
         `);
         console.log('Finished Creating Triggers');
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for cms:', error);
+        throw error;
     }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
 };
 
 // Version: 1.0.0 - CMS table for managing website content and pages

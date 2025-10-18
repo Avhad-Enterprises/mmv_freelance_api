@@ -1,5 +1,5 @@
 import { FaqDto } from "./faq.dto";
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 import { FAQ } from "../../../database/faq.schema";

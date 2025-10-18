@@ -4,7 +4,7 @@
 import { NextFunction, Response } from 'express';
 import { RequestWithUser } from '../interfaces/auth.interface';
 import HttpException from '../exceptions/HttpException';
-import DB from '../../database/index.schema';
+import DB from '../../database/index';
 import { ROLE } from '../../database/role.schema';
 import { PERMISSION } from '../../database/permission.schema';
 import { USER_ROLES } from '../../database/user_role.schema';

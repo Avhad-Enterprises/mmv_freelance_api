@@ -1,5 +1,5 @@
 import { CategoryDto } from "./category.dto";
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 import { CATEGORY } from "../../../database/category.schema";

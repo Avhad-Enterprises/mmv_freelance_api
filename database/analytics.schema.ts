@@ -1,17 +1,17 @@
-// To migrate this schema: npm run migrate:schema -- analytics_setting [--drop]
+// To migrate this schema: npm run migrate:schema -- analytics_settings [--drop]
 //
 // Migration Commands:
-// 1. Standard Migration: npm run migrate:schema -- analytics_setting
+// 1. Standard Migration: npm run migrate:schema -- analytics_settings
 //    - Creates/updates the analytics_settings table while preserving existing data
 //
-// 2. Drop and Recreate: npm run migrate:schema -- analytics_setting --drop
+// 2. Drop and Recreate: npm run migrate:schema -- analytics_settings --drop
 //    - Completely drops and recreates the analytics_settings table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const ANALYTICS_SETTINGS = 'analytics_settings';
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
 
     try {
         if (dropFirst) {
@@ -41,14 +41,9 @@ export const seed = async (dropFirst = false) => {
         `);
         console.log('Finished Creating Triggers');
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for analytics:', error);
+        throw error;
     }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
 };
 
 // Version: 1.0.0 - Analytics settings table for tracking configurations

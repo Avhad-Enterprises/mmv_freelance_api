@@ -7,11 +7,11 @@
 // 2. Drop and Recreate: npm run migrate:schema -- support_ticket_reply --drop
 //    - Completely drops and recreates the ticket_replies table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const TICKET_REPLY_TABLE = 'ticket_replies';
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
   try {
     if (dropFirst) {
       await DB.schema.dropTableIfExists(TICKET_REPLY_TABLE);
@@ -39,14 +39,9 @@ export const seed = async (dropFirst = false) => {
 
     console.log('Ticket reply table created with foreign key.');
   } catch (error) {
-    console.error('Error creating ticket reply table:', error);
+    console.error('Migration failed for support_ticket_reply:', error);
+    throw error;
   }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
 };
 
 // Version: 1.0.0 - Support ticket replies table for conversation threads

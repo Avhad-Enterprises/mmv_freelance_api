@@ -3,7 +3,7 @@ import { ProjectsTaskDto } from './projectstask.dto';
 import { IProjectTask } from './projectstask.interface';
 import ProjectstaskService from './projectstask.service';
 import { RequestHandler } from 'express-serve-static-core';
-import DB, { T } from '../../../database/index.schema';
+import DB, { T } from '../../../database/index';
 import HttpException from '../../exceptions/HttpException';
 import { isEmpty } from 'class-validator';
 import { PROJECTS_TASK } from '../../../database/projectstask.schema';

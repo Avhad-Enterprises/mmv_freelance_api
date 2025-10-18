@@ -1,5 +1,5 @@
 import { ProjectsTaskDto } from "../projectstask/projectstask.dto";
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import { IProjectTask } from "../projectstask/projectstask.interface";
 import HttpException from "../../exceptions/HttpException";
 import bcrypt from "bcrypt";

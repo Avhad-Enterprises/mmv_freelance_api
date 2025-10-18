@@ -7,7 +7,7 @@
 // 2. Drop and Recreate: npm run migrate:schema -- user_role --drop
 //    - Completely drops and recreates the user_roles table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const USER_ROLES = 'user_roles';
 
@@ -45,7 +45,8 @@ export const seed = async (dropFirst = false) => {
             console.log('Table already exists, skipping creation');
         }
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for user_role:', error);
+        throw error;
     }
 };
 

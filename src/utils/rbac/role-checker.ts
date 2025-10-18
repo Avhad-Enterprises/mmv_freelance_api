@@ -1,7 +1,7 @@
 // RBAC Helper: Check user roles and permissions
 // Utility functions for role-based access control
 
-import DB from '../../../database/index.schema';
+import DB from '../../../database/index';
 import { ROLE } from '../../../database/role.schema';
 import { PERMISSION } from '../../../database/permission.schema';
 import { USER_ROLES } from '../../../database/user_role.schema';

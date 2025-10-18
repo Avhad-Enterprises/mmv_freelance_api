@@ -1,4 +1,4 @@
-import DB from "../../../database/index.schema";
+import DB from "../../../database/index";
 import { RoleDto } from "./role.dto";
 import { NextFunction, Request, Response } from "express";
 import RoleService from "./role.service";

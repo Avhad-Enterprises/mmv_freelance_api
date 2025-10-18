@@ -7,7 +7,7 @@
 // 2. Drop and Recreate: npm run migrate:schema -- report_system --drop
 //    - Completely drops and recreates the report table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const REPORT_TABLE = 'report';
 
@@ -55,7 +55,8 @@ export const seed = async (dropFirst = false) => {
         `);
         console.log('Finished Creating Triggers');
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for report_system:', error);
+        throw error;
     }
 };
 

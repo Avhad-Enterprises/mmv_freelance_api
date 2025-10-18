@@ -7,7 +7,7 @@
 // 2. Drop and Recreate: npm run migrate:schema -- subscribed_emails --drop
 //    - Completely drops and recreates the subscribed_emails table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const SUBSCRIBED_EMAILS = 'subscribed_emails';
 
@@ -41,7 +41,8 @@ export const seed = async (dropFirst = false) => {
         `);
         console.log('Finished Creating Triggers');
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for subscribed_emails:', error);
+        throw error;
     }
 };
 

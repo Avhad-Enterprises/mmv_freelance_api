@@ -1,5 +1,5 @@
 // Quick script to check existing admin invitations
-import DB, { T } from '../database/index.schema';
+import DB, { T } from '../database/index';
 
 async function checkInvitations() {
   try {

@@ -8,6 +8,7 @@
 
 const https = require('https');
 const http = require('http');
+const { CONFIG } = require('../test-utils');
 
 const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
 const API_PREFIX = '/api/v1';

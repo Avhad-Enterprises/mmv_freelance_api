@@ -1,5 +1,5 @@
 import { AppliedProjectsDto } from "./applied_projects.dto";
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 import { APPLIED_PROJECTS } from "../../../database/applied_projects.schema";

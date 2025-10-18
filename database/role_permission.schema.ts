@@ -7,7 +7,7 @@
 // 2. Drop and Recreate: npm run migrate:schema -- role_permission --drop
 //    - Completely drops and recreates the role_permission table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const ROLE_PERMISSION = 'role_permission';
 
@@ -136,7 +136,7 @@ const rolePermissionMappings = {
   ],
 };
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
     try {
         if (dropFirst) {
             console.log('Dropping Tables');
@@ -216,17 +216,8 @@ export const seed = async (dropFirst = false) => {
             console.log('Table already exists, skipping creation');
         }
     } catch (error) {
-        console.log(error);
-    }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, check if table exists first
-    if (dropFirst) {
-        await seed(true); // Drop and recreate
-    } else {
-        await seed(false); // Only create if doesn't exist
+        console.error('Migration failed for role_permission:', error);
+        throw error;
     }
 };
 
