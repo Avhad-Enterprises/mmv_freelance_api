@@ -13,27 +13,41 @@ export enum FavoriteType {
   FREELANCER = 'freelancer',
 }
 
+// DTO for creating/updating favorites (includes all fields)
 export class favoritesDto {
   @IsInt()
   @IsOptional({ groups: ['create'] })
   id?: number;
 
   @IsInt()
-  user_id: number;
+  @IsOptional() // Made optional since it's provided by auth middleware
+  user_id?: number;
 
   @IsInt()
   freelancer_id: number;
 
   @IsInt()
   @IsOptional()
-  created_by: number;
+  created_by?: number;
 
   @IsOptional()
   @IsBoolean()
-  is_active: boolean;
+  is_active?: boolean;
 
   @IsOptional()
   @IsInt()
   updated_by?: number;
 
+}
+
+// DTO for request body (only fields that come from request)
+export class CreateFavoriteDto {
+  @IsInt()
+  freelancer_id: number;
+}
+
+// DTO for removing favorites (only freelancer_id from request)
+export class RemoveFavoriteDto {
+  @IsInt()
+  freelancer_id: number;
 }
