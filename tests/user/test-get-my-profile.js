@@ -9,8 +9,11 @@
 const https = require('https');
 const http = require('http');
 
+// Import configuration from test-utils
+const { CONFIG } = require('../test-utils');
+
 const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
-const API_PREFIX = '/api/v1';
+const API_PREFIX = CONFIG.apiVersion;
 const ENDPOINT = '/users/me';
 
 const TEST_CONFIG = {
@@ -95,7 +98,7 @@ async function loginAndGetToken(email, password) {
     const loginData = JSON.stringify({ email, password });
     const options = {
       hostname: 'localhost',
-      port: 8001,
+      port: 8000,
       path: '/api/v1/auth/login',
       method: 'POST',
       headers: {
@@ -141,7 +144,7 @@ const TEST_CASES = [
     name: "No Authorization Header",
     description: "Test without Authorization header",
     headers: {},
-    expectedStatus: 404, // Auth middleware returns 404 for missing token
+    expectedStatus: 401, // Auth middleware returns 401 for missing token
     expectedFields: ['success', 'message'],
     category: "AUTH_ERRORS"
   },
@@ -230,7 +233,7 @@ const TEST_CASES = [
 async function runTests() {
   // First, try to get a valid token for authenticated tests
   console.log('🔑 Attempting to obtain authentication token...');
-  testToken = await loginAndGetToken('superadmin@mmv.com', 'SuperAdmin123!');
+  testToken = await loginAndGetToken('avhadenterprisespc5@gmail.com', 'SuperAdmin123!');
 
   if (testToken) {
     console.log('✅ Authentication token obtained');
