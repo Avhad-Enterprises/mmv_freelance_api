@@ -131,7 +131,8 @@ export const migrate = async (dropFirst = false) => {
         console.log('All categories inserted successfully');
 
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for category:', error);
+        throw error;
     }
 };
 

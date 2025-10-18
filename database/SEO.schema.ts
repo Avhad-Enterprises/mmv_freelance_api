@@ -53,7 +53,8 @@ export const migrate = async (dropFirst = false) => {
         `);
         console.log('Finished Creating Triggers');
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for seo:', error);
+        throw error;
     }
 };
 

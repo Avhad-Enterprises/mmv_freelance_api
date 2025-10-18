@@ -51,7 +51,8 @@ export const migrate = async (dropFirst = false) => {
     console.log('Finished Seeding Reviews Table');
 
   } catch (error) {
-    console.error(error);
+    console.error('Migration failed for review:', error);
+    throw error;
   }
 };
 

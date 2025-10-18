@@ -72,7 +72,8 @@ export const migrate = async (dropFirst = false) => {
             console.log('Table already exists, skipping creation');
         }
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for admin_invites:', error);
+        throw error;
     }
 };
 

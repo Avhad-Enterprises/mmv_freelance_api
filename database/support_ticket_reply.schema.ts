@@ -39,7 +39,8 @@ export const migrate = async (dropFirst = false) => {
 
     console.log('Ticket reply table created with foreign key.');
   } catch (error) {
-    console.error('Error creating ticket reply table:', error);
+    console.error('Migration failed for support_ticket_reply:', error);
+    throw error;
   }
 };
 
