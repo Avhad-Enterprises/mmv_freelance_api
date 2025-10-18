@@ -132,51 +132,6 @@ export class ClientController {
   };
 
   /**
-   * Search clients by industry
-   * GET /api/v1/clients/search/industry/:industry
-   */
-  public searchByIndustry = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const { industry } = req.params;
-      const clients = await this.clientService.searchClientsByIndustry(industry);
-      
-      res.status(200).json({
-        success: true,
-        count: clients.length,
-        data: clients
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * Search clients by company name
-   * GET /api/v1/clients/search/company/:name
-   */
-  public searchByCompanyName = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const { name } = req.params;
-      const client = await this.clientService.getClientByCompanyName(name);
-      
-      res.status(200).json({
-        success: true,
-        data: client
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
    * Get client statistics
    * GET /api/v1/clients/profile/stats
    */

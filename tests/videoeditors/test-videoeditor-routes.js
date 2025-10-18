@@ -396,7 +396,7 @@ async function testDeleteVideoEditorAccount() {
   
   // Test 1: Delete account without authentication
   try {
-    const response = await makeRequest('DELETE', `${CONFIG.apiVersion}/videoeditors/profile`);
+    const response = await makeRequest('DELETE', `${CONFIG.apiVersion}/users/me`);
     
     const passed = response.statusCode === 401;
     printTestResult(
