@@ -33,24 +33,6 @@ export class ClientRoutes implements Route {
       this.clientController.getAllClients
     );
 
-    /**
-     * Search clients by industry
-     * Requires: Authentication
-     */
-    this.router.get(
-      `${this.path}/search/industry/:industry`,
-      this.clientController.searchByIndustry
-    );
-
-    /**
-     * Search client by company name
-     * Requires: Authentication
-     */
-    this.router.get(
-      `${this.path}/search/company/:name`,
-      this.clientController.searchByCompanyName
-    );
-
     // Profile routes (CLIENT role required)
 
     /**
@@ -92,16 +74,6 @@ export class ClientRoutes implements Route {
       `${this.path}/profile/documents`,
       requireRole('CLIENT'),
       this.clientController.updateDocuments
-    );
-
-    /**
-     * Delete client account (soft delete)
-     * Requires: CLIENT role
-     */
-    this.router.delete(
-      `${this.path}/profile`,
-      requireRole('CLIENT', 'ADMIN'),
-      this.clientController.deleteAccount
     );
 
     // Admin routes

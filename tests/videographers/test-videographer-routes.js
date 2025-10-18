@@ -371,11 +371,11 @@ async function testVideographerDiscovery() {
  * Test delete videographer account
  */
 async function testDeleteVideoEditorAccount() {
-  printSection('DELETE VIDEO EDITOR ACCOUNT TESTS');
+  printSection('DELETE VIDEOGRAPHER ACCOUNT TESTS');
   
   // Test 1: Delete account without authentication
   try {
-    const response = await makeRequest('DELETE', `${CONFIG.apiVersion}/videographers/profile`);
+    const response = await makeRequest('DELETE', `${CONFIG.apiVersion}/users/me`);
     
     const passed = response.statusCode === 401;
     printTestResult(

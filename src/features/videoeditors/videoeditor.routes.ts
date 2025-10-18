@@ -91,16 +91,6 @@ export class VideoEditorRoutes implements Route {
       this.videoEditorController.getStats
     );
 
-    /**
-     * Delete video editor account (soft delete)
-     * Requires: VIDEO_EDITOR role
-     */
-    this.router.delete(
-      `${this.path}/profile`,
-      requireRole('VIDEO_EDITOR'),
-      this.videoEditorController.deleteAccount
-    );
-
     // Admin routes
 
     /**

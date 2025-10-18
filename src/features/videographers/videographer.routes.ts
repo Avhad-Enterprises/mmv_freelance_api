@@ -84,16 +84,6 @@ export class VideographerRoutes implements Route {
       this.videographerController.getStats
     );
 
-    /**
-     * Delete videographer account (soft delete)
-     * Requires: VIDEOGRAPHER role
-     */
-    this.router.delete(
-      `${this.path}/profile`,
-      requireRole('VIDEOGRAPHER'),
-      this.videographerController.deleteAccount
-    );
-
     // Admin routes
 
     /**
