@@ -7,10 +7,12 @@
 
 const {
   CONFIG,
+  TOKENS,
   makeRequest,
   printTestResult,
   printSection,
   printSummary,
+  storeToken,
   authHeader,
 } = require('../test-utils');
 
@@ -18,10 +20,38 @@ let passedTests = 0;
 let failedTests = 0;
 
 /**
+ * Login and get admin token
+ */
+async function loginAsAdmin() {
+  try {
+    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'avhadenterprisespc5@gmail.com',
+      password: 'SuperAdmin123!'
+    });
+
+    if (response.statusCode === 200 && response.body?.data?.token) {
+      storeToken('admin', response.body.data.token);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
  * Test counting active project tasks
  */
 async function testCountActiveProjectTasks() {
   printSection('PROJECT TASK COUNT ACTIVE TESTS');
+
+  // First login to get token
+  const loginSuccess = await loginAsAdmin();
+  if (!loginSuccess) {
+    console.log('❌ Failed to login as admin');
+    failedTests += 2;
+    return;
+  }
 
   // Test 1: Get count of active project tasks
   try {
@@ -29,15 +59,14 @@ async function testCountActiveProjectTasks() {
       'GET',
       `${CONFIG.apiVersion}/projectsTask/countactiveprojects_task`,
       null,
-      authHeader('admin') // Requires ADMIN or SUPER_ADMIN role
+      { Authorization: `Bearer ${TOKENS.admin}` }
     );
 
-    // NOTE: Currently failing due to authentication issues
-    const passed = response.statusCode === 404; // Auth error
+    const passed = response.statusCode === 200 && typeof response.body?.count === 'number';
     printTestResult(
       'Get active project tasks count',
       passed,
-      passed ? 'Authentication required (API logic verified separately)' : `Expected auth error, got ${response.statusCode}`,
+      passed ? 'Count retrieved successfully' : `Expected 200 with count, got ${response.statusCode}`,
       response.body
     );
 
@@ -54,21 +83,20 @@ async function testCountActiveProjectTasks() {
     failedTests++;
   }
 
-  // Test 2: Access without proper role (should fail)
+  // Test 2: Missing authentication
   try {
     const response = await makeRequest(
       'GET',
       `${CONFIG.apiVersion}/projectsTask/countactiveprojects_task`,
       null,
-      authHeader('client') // Client doesn't have permission
+      {} // No auth header
     );
 
-    // NOTE: Currently failing due to authentication
-    const passed = response.statusCode === 404; // Auth error
+    const passed = response.statusCode === 401; // Should get 401 for missing auth
     printTestResult(
-      'Access without admin role',
+      'Missing authentication',
       passed,
-      passed ? 'Correctly rejected non-admin access' : `Expected 404 auth error, got ${response.statusCode}`,
+      passed ? 'Correctly returned 401 for missing authentication' : `Expected 401, got ${response.statusCode}`,
       response.body
     );
 
@@ -77,7 +105,7 @@ async function testCountActiveProjectTasks() {
 
   } catch (error) {
     printTestResult(
-      'Access without admin role',
+      'Missing authentication',
       false,
       `Request failed: ${error.message}`,
       null

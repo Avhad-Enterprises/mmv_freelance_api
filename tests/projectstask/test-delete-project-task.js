@@ -53,15 +53,62 @@ async function testDeleteProjectTask() {
     return;
   }
 
+  // First create a project task to test deleting it
+  const testData = {
+    client_id: 2,
+    project_title: "Test Video Editing Project for Delete",
+    project_category: "Video Editing",
+    deadline: "2024-12-31",
+    project_description: "A test project for video editing services to test delete",
+    budget: 5000.00,
+    tags: JSON.stringify(["video", "editing", "test"]),
+    skills_required: ["Adobe Premiere", "After Effects"],
+    reference_links: ["https://example.com/reference1", "https://example.com/reference2"],
+    additional_notes: "Please deliver high quality work",
+    projects_type: "Video Editing",
+    project_format: "MP4",
+    audio_voiceover: "English",
+    audio_description: "Narration needed",
+    video_length: 300,
+    preferred_video_style: "Professional",
+    url: "test-video-editing-project-delete-" + Date.now(),
+    meta_title: "Test Video Editing Project",
+    meta_description: "Professional video editing services needed",
+    is_active: 1,
+    created_by: 1
+  };
+
+  let createdProjectId = null;
+
+  try {
+    const createResponse = await makeRequest(
+      'POST',
+      `${CONFIG.apiVersion}/projectsTask/insertprojects_task`,
+      testData,
+      { Authorization: `Bearer ${TOKENS.admin}` }
+    );
+
+    if (createResponse.statusCode === 201 && createResponse.body?.data?.projects_task_id) {
+      createdProjectId = createResponse.body.data.projects_task_id;
+      console.log(`✅ Created test project with ID: ${createdProjectId}`);
+    } else {
+      console.log('❌ Failed to create test project for delete test');
+      failedTests += 3;
+      return;
+    }
+  } catch (error) {
+    console.log('❌ Error creating test project:', error.message);
+    failedTests += 3;
+    return;
+  }
+
   // Test 1: Delete existing project task
   try {
-    const projectId = 5; // Use the project ID we created in insert test
-
     const response = await makeRequest(
       'DELETE',
-      `${CONFIG.apiVersion}/projectsTask/delete/${projectId}`,
+      `${CONFIG.apiVersion}/projectsTask/delete/${createdProjectId}`,
       null,
-      { Authorization: `Bearer ${TOKENS.admin}` } // Use stored token
+      { Authorization: `Bearer ${TOKENS.admin}` }
     );
 
     const passed = response.statusCode === 200 && response.body?.message;
