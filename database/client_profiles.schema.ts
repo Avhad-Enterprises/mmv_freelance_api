@@ -12,7 +12,7 @@
 // - Links to users table via user_id foreign key
 // - Cascades delete when user is deleted
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const CLIENT_PROFILES = 'client_profiles';
 

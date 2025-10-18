@@ -1,4 +1,4 @@
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { razorpay } from "../../utils/payment/razor.util";
 import { ITransaction } from "./payment.interface";

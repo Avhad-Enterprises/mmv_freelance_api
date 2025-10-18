@@ -7,11 +7,11 @@
 // 2. Drop and Recreate: npm run migrate:schema -- notification --drop
 //    - Completely drops and recreates the notification table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const NOTIFICATION = 'notification';
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
     try {
         if (dropFirst) {
             console.log('Dropping Tables');
@@ -46,12 +46,6 @@ export const seed = async (dropFirst = false) => {
     } catch (error) {
         console.log(error);
     }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
 };
 
 // Version: 1.0.0 - Notifications table for user alerts and messages

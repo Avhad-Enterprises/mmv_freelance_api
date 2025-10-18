@@ -12,7 +12,7 @@
 // - Links to users table via user_id foreign key
 // - Prepared for future admin-specific extensions
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const ADMIN_PROFILES = 'admin_profiles';
 

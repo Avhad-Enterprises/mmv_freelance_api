@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import DB from '../database/index.schema';
+import DB from '../database/index';
 
 const SCHEMA_MIGRATIONS_TABLE = 'schema_migrations';
 const DATABASE_DIR = path.join(__dirname, '../database');
@@ -45,16 +45,13 @@ const MIGRATION_ORDER = [
   'support_ticket_reply.schema.ts',
   'support_ticket_note.schema.ts',
   'branding_assets.schema.ts',
-  'analytics_setting.schema.ts',
-  'SEO.schema.ts',
+  'analytics.schema.ts',
+  'seo.schema.ts',
   'robotstxt.schema.ts',
-  'document_verification.schema.ts',
   'subscribed_emails.schema.ts',
   'admin_invites.schema.ts',
-  'application.schema.ts',
   'report_system.schema.ts',
   'report_templates.schema.ts',
-  'reports_schedules.schema.ts',
   'transactions.schema.ts', // Move transactions after projects are created
   
   // Log/audit tables last  
@@ -74,6 +71,70 @@ const ensureSchemaMigrationsTable = async () => {
     });
     console.log('📋 Created schema_migrations table');
   }
+};
+
+// Drop all tables in reverse dependency order for clean slate
+const dropAllTables = async () => {
+  console.log('🗑️  Dropping all existing tables for clean slate...');
+  
+  // Tables in reverse dependency order (most dependent first)
+  const tablesToDrop = [
+    'emailog',
+    'visitor_logs', 
+    'transactions',
+    'report_templates',
+    'report_system',
+    'admin_invites',
+    'subscribed_emails',
+    'robotstxt',
+    'seo',
+    'analytics',
+    'branding_assets',
+    'support_ticket_note',
+    'support_ticket_reply',
+    'support_ticket',
+    'notification',
+    'review',
+    'faq',
+    'cms',
+    'blog',
+    'favorites',
+    'saved_project',
+    'submitted_projects',
+    'applied_projects',
+    'projects_task',
+    'role_permission',
+    'user_role',
+    'videoeditor_profiles',
+    'videographer_profiles',
+    'admin_profiles',
+    'client_profiles',
+    'freelancer_profiles',
+    'permission',
+    'role',
+    'users',
+    'tags',
+    'category',
+    'skill',
+    SCHEMA_MIGRATIONS_TABLE // Drop migration tracking table too
+  ];
+  
+  for (const table of tablesToDrop) {
+    try {
+      await DB.schema.dropTableIfExists(table);
+      console.log(`  ✅ Dropped ${table}`);
+    } catch (error) {
+      // Try with CASCADE if regular drop fails
+      try {
+        await DB.raw(`DROP TABLE IF EXISTS "${table}" CASCADE`);
+        console.log(`  ✅ Dropped ${table} (with CASCADE)`);
+      } catch (cascadeError) {
+        console.log(`  ⚠️  Could not drop ${table}:`, error instanceof Error ? error.message : String(error));
+      }
+    }
+  }
+  
+  console.log('✅ All tables dropped successfully');
 };
 
 // Get migrated schemas from database
@@ -102,14 +163,19 @@ const migrateAll = async (dropFirst = false, verbose = false) => {
   try {
     console.log('🚀 Starting schema-based migration...');
     
+    // For clean slate, drop all existing tables first
+    if (dropFirst) {
+      await dropAllTables();
+    }
+    
     await ensureSchemaMigrationsTable();
     const migratedSchemas = await getMigratedSchemas();
     
     let migratedCount = 0;
     let skippedCount = 0;
     
-    // Use reverse order for dropping to handle dependencies
-    const migrationOrder = dropFirst ? [...MIGRATION_ORDER].reverse() : MIGRATION_ORDER;
+    // Use normal order for creating (dependencies handled)
+    const migrationOrder = MIGRATION_ORDER;
     
     for (const schemaFile of migrationOrder) {
       const schemaName = schemaFile.replace('.schema.ts', '');
@@ -143,11 +209,9 @@ const migrateAll = async (dropFirst = false, verbose = false) => {
           continue;
         }
         
-        // Record migration if not dropping
-        if (!dropFirst) {
-          const version = getSchemaVersion(schemaPath);
-          await recordMigration(schemaName, version);
-        }
+        // Record migration
+        const version = getSchemaVersion(schemaPath);
+        await recordMigration(schemaName, version);
         
         console.log(`✅ Successfully migrated ${schemaName}`);
         migratedCount++;
@@ -176,11 +240,25 @@ const migrateAll = async (dropFirst = false, verbose = false) => {
             throw createError;
           }
         } else if (error.code === '2BP01' && error.message.includes('cannot drop table')) {
-          // Foreign key constraint issue - table has dependencies, skip drop
-          console.log(`   🔗 ${schemaName} has dependencies, preserving existing table`);
-          const version = getSchemaVersion(schemaPath);
-          await recordMigration(schemaName, version);
-          migratedCount++;
+          // Foreign key constraint issue - table has dependencies, skip drop and try to create
+          console.log(`   🔗 ${schemaName} has dependencies, skipping drop but creating table`);
+          
+          try {
+            const schemaModule = await import(schemaPath);
+            if (typeof schemaModule.migrate === 'function') {
+              await schemaModule.migrate(false); // Create without drop
+            } else if (typeof schemaModule.seed === 'function') {
+              await schemaModule.seed(false);
+            }
+            
+            const version = getSchemaVersion(schemaPath);
+            await recordMigration(schemaName, version);
+            console.log(`✅ Successfully created ${schemaName}`);
+            migratedCount++;
+          } catch (createError) {
+            console.error(`❌ Failed to create ${schemaName}:`, createError);
+            throw createError;
+          }
         } else if (error.code === '42P07' && error.message.includes('already exists')) {
           // Table already exists
           console.log(`   ✨ ${schemaName} already exists, marking as migrated`);
@@ -232,7 +310,7 @@ EXAMPLES:
   npm run migrate:all --verbose          # Show detailed output
   
 FEATURES:
-  ✅ Migrates all 45+ database schemas in dependency order
+  ✅ Migrates all 35+ database schemas in dependency order
   ✅ Automatically seeds RBAC data (roles, permissions, mappings)
   ✅ Handles foreign key dependencies gracefully
   ✅ Tracks migration status to avoid duplicates

@@ -7,7 +7,7 @@
 // 2. Drop and Recreate: npm run migrate:schema -- visitor_logs --drop
 //    - Completely drops and recreates the visitor_logs table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const VISITOR_LOGS = 'visitor_logs';
 

@@ -1,4 +1,4 @@
-import DB from "../../../database/index.schema";
+import DB from "../../../database/index";
 import { CmsDto } from "./cms.dto";
 import { NextFunction, Request, Response } from "express";
 import CmsService from "./cms.service";

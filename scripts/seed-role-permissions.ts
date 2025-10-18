@@ -3,7 +3,7 @@
 //
 // This assigns permissions to roles based on the RBAC architecture
 
-import DB from '../database/index.schema';
+import DB from '../database/index';
 import { ROLE } from '../database/role.schema';
 import { PERMISSION } from '../database/permission.schema';
 import { ROLE_PERMISSION } from '../database/role_permission.schema';

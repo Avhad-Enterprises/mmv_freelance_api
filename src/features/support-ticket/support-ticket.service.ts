@@ -1,5 +1,5 @@
 // services/supportTicket.service.ts
-import DB, { T } from '../../../database/index.schema';
+import DB, { T } from '../../../database/index';
 import { SupportTicket } from './support-ticket.interface';
 import HttpException from '../../exceptions/HttpException';
 import { isEmpty } from '../../utils/common';

@@ -1,5 +1,5 @@
 // Videographer Service - Specialized service for videographer operations
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import FreelancerService from "../freelancers/freelancer.service";
 

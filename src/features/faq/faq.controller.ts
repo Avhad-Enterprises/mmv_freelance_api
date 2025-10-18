@@ -1,4 +1,4 @@
-import DB from "../../../database/index.schema";
+import DB from "../../../database/index";
 import { FaqDto } from "./faq.dto";
 import { NextFunction, Request, Response } from "express";
 import FaqService from "./faq.service";

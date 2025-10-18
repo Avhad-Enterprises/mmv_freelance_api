@@ -7,7 +7,7 @@
 // 2. Drop and Recreate: npm run migrate:schema -- applied_projects --drop
 //    - Completely drops and recreates the applied_projects table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const APPLIED_PROJECTS = 'applied_projects';
 

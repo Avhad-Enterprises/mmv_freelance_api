@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import DB from '../database/index.schema';
+import DB from '../database/index';
 
 const SCHEMA_MIGRATIONS_TABLE = 'schema_migrations';
 const DATABASE_DIR = path.join(__dirname, '../database');

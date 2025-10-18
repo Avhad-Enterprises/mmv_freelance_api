@@ -7,11 +7,11 @@
 // 2. Drop and Recreate: npm run migrate:schema -- transactions --drop
 //    - Completely drops and recreates the transactions table from scratch
 //
-import DB, { T } from "./index.schema";
+import DB, { T } from "./index";
 
 export const TRANSACTION_TABLE = "transactions";
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
     try {
         if (dropFirst) {
             console.log("Dropping Table...");
@@ -35,9 +35,10 @@ export const seed = async (dropFirst = false) => {
                 .onDelete("CASCADE");
             table
                 .integer("application_id")
+                .nullable()
                 .references("applied_projects_id")
                 .inTable(T.APPLIED_PROJECTS)
-                .onDelete("CASCADE"); //doubtful, what is this, and from where I can get this application id.
+                .onDelete("CASCADE"); // References the applied_projects record for this transaction (optional for payouts/refunds)
 
             table
                 .integer("payer_id")
@@ -61,12 +62,6 @@ export const seed = async (dropFirst = false) => {
     } catch (error) {
         console.log(error);
     }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async (dropFirst = false) => {
-    // For schema-based migrations, always ensure clean state
-    await seed(true); // Always drop and recreate for clean migrations
 };
 
 // Version: 1.0.0 - Transactions table for payment and financial records

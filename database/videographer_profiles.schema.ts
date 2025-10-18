@@ -12,7 +12,7 @@
 // - Links to freelancer_profiles table via freelancer_id foreign key
 // - Prepared for future videographer-specific extensions
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const VIDEOGRAPHER_PROFILES = 'videographer_profiles';
 

@@ -1,5 +1,5 @@
 import { favoritesDto } from "./favorites.dto";
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 import { FAVORITES_TABLE } from "../../../database/favorites.schema";

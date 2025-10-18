@@ -25,7 +25,7 @@ async function loginAsAdmin() {
   try {
     console.log('🔐 Logging in as admin...');
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'superadmin@mmv.com',
+      email: 'avhadenterprisespc5@gmail.com',
       password: 'SuperAdmin123!'
     });
 
@@ -59,7 +59,7 @@ async function testInsertProjectTask() {
   }
 
   const testData = {
-    client_id: 1, // Assume client with ID 1 exists
+    client_id: 2, // Client profile ID for super admin
     project_title: "Test Video Editing Project",
     project_category: "Video Editing",
     deadline: "2024-12-31",
@@ -79,7 +79,7 @@ async function testInsertProjectTask() {
     meta_title: "Test Video Editing Project",
     meta_description: "Professional video editing services needed",
     is_active: 1,
-    created_by: 22 // Super admin user ID
+    created_by: 1 // Super admin user ID
   };
 
   try {

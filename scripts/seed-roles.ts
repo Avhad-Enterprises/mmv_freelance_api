@@ -1,7 +1,7 @@
 // Script to seed predefined roles into the role table
 // Usage: ts-node scripts/seed-roles.ts
 
-import DB from '../database/index.schema';
+import DB from '../database/index';
 import { ROLE } from '../database/role.schema';
 
 interface RoleData {

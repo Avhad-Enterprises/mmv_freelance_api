@@ -7,11 +7,11 @@
 // 2. Drop and Recreate: npm run migrate:schema -- emailog --drop
 //    - Completely drops and recreates the email_logs table from scratch
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const EMAIL_LOG_TABLE = 'email_logs';
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
   try {
     if (dropFirst) {
       await DB.schema.dropTableIfExists(EMAIL_LOG_TABLE);
@@ -49,11 +49,6 @@ export const seed = async (dropFirst = false) => {
   } catch (error) {
     console.error('Error creating email logs table:', error);
   }
-};
-
-// Migration function - call this to migrate the schema
-export const migrate = async (dropFirst = false) => {
-  await seed(dropFirst);
 };
 
 // Version: 1.0.0 - Initial schema creation

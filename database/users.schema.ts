@@ -12,11 +12,11 @@
 // - Removed legacy fields (full_name, otp_code, account_status, tags, notes, updated_by, role, account_type)
 // - Profile-specific data now in: freelancer_profiles, client_profiles, admin_profiles
 //
-import DB from './index.schema';
+import DB from './index';
 
 export const USERS_TABLE = 'users';
 
-export const seed = async (dropFirst = false) => {
+export const migrate = async (dropFirst = false) => {
     try {
         if (dropFirst) {
             console.log('Dropping Users Table');
@@ -86,16 +86,5 @@ export const seed = async (dropFirst = false) => {
         console.log('Finished Creating Triggers');
     } catch (error) {
         console.log(error);
-    }
-};
-
-// Migration function for schema-based migrations
-export const migrate = async () => {
-    const tableExists = await DB.schema.hasTable(USERS_TABLE);
-    if (!tableExists) {
-        console.log('Users table does not exist, creating...');
-        await seed(false); // Create without dropping
-    } else {
-        console.log('Users table already exists, skipping migration');
     }
 };

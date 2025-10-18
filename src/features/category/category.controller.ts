@@ -1,4 +1,4 @@
-import DB from "../../../database/index.schema";
+import DB from "../../../database/index";
 import { CategoryDto } from "./category.dto";
 import { NextFunction, Request, Response } from "express";
 import CategoryService from "./category.service";

@@ -1,7 +1,7 @@
 // Script to create a Super Admin user
 // Usage: npx ts-node scripts/create-super-admin.ts
 
-import DB from '../database/index.schema';
+import DB from '../database/index';
 import { USERS_TABLE } from '../database/users.schema';
 import { ADMIN_PROFILES } from '../database/admin_profiles.schema';
 import bcrypt from 'bcrypt';

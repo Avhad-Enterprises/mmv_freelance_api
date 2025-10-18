@@ -25,7 +25,7 @@ let failedTests = 0;
 async function loginAsAdmin() {
   try {
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'superadmin@mmv.com',
+      email: 'avhadenterprisespc5@gmail.com',
       password: 'SuperAdmin123!'
     });
 
@@ -55,7 +55,7 @@ async function testDeleteProjectTask() {
 
   // Test 1: Delete existing project task
   try {
-    const projectId = 26; // Use the project ID we created in insert test
+    const projectId = 5; // Use the project ID we created in insert test
 
     const response = await makeRequest(
       'DELETE',

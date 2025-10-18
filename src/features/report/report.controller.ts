@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import { ReportDto } from './report.dto';
 import reportservices from './report.service';
 import { RequestHandler } from 'express-serve-static-core';
-import DB, { T } from '../../../database/index.schema';
+import DB, { T } from '../../../database/index';
 import HttpException from '../../exceptions/HttpException';
 import { isEmpty } from 'class-validator';
 

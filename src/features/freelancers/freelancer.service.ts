@@ -1,5 +1,5 @@
 // Freelancer Service - Base service for videographers and video editors
-import DB, { T } from "../../../database/index.schema";
+import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import UserService from "../user/user.service";
 

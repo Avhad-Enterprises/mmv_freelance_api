@@ -1,4 +1,4 @@
-import DB from "../../../database/index.schema";
+import DB from "../../../database/index";
 import { PermissionDto } from "./permission.dto";
 import { NextFunction, Request, Response } from "express";
 import PermissionService from "./permission.service";
