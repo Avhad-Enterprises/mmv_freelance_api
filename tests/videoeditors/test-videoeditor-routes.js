@@ -13,7 +13,7 @@ const {
   printSummary,
   randomEmail,
   randomUsername,
-} = require('./test-utils');
+} = require('../test-utils');
 
 let passedTests = 0;
 let failedTests = 0;
@@ -176,7 +176,7 @@ async function testVideoEditorDiscovery() {
   try {
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/videoeditors?page=1&limit=10`,
+      `${CONFIG.apiVersion}/videoeditors/getvideoeditors`,
       null,
       { Authorization: `Bearer ${editorToken}` }
     );
@@ -185,7 +185,7 @@ async function testVideoEditorDiscovery() {
     printTestResult(
       'Get all video editors',
       passed,
-      passed ? `Found ${response.body.data?.length || 0} video editors` : `Expected 200, got ${response.statusCode}`,
+      passed ? `Found ${response.body.count || 0} video editors` : `Expected 200, got ${response.statusCode}`,
       response.body
     );
     
@@ -195,7 +195,53 @@ async function testVideoEditorDiscovery() {
     failedTests++;
   }
   
-  // Test 2: Search video editors by skills
+  // Test 2: Get top-rated video editors
+  try {
+    const response = await makeRequest(
+      'GET',
+      `${CONFIG.apiVersion}/videoeditors/top-rated`,
+      null,
+      { Authorization: `Bearer ${editorToken}` }
+    );
+    
+    const passed = response.statusCode === 200 && response.body.success === true;
+    printTestResult(
+      'Get top-rated video editors',
+      passed,
+      passed ? `Found ${response.body.data?.length || 0} top-rated editors` : `Expected 200, got ${response.statusCode}`,
+      response.body
+    );
+    
+    passed ? passedTests++ : failedTests++;
+  } catch (error) {
+    printTestResult('Get top-rated video editors', false, error.message);
+    failedTests++;
+  }
+  
+  // Test 3: Get available editors
+  try {
+    const response = await makeRequest(
+      'GET',
+      `${CONFIG.apiVersion}/videoeditors/available`,
+      null,
+      { Authorization: `Bearer ${editorToken}` }
+    );
+    
+    const passed = response.statusCode === 200 && response.body.success === true;
+    printTestResult(
+      'Get available editors',
+      passed,
+      passed ? `Found ${response.body.data?.length || 0} available editors` : `Expected 200, got ${response.statusCode}`,
+      response.body
+    );
+    
+    passed ? passedTests++ : failedTests++;
+  } catch (error) {
+    printTestResult('Get available editors', false, error.message);
+    failedTests++;
+  }
+  
+  // Test 4: Search video editors by skills
   try {
     const response = await makeRequest(
       'GET',
@@ -218,7 +264,7 @@ async function testVideoEditorDiscovery() {
     failedTests++;
   }
   
-  // Test 3: Search by software proficiency
+  // Test 5: Search by software proficiency
   try {
     const response = await makeRequest(
       'GET',
@@ -240,176 +286,168 @@ async function testVideoEditorDiscovery() {
     printTestResult('Search video editors by software', false, error.message);
     failedTests++;
   }
-}
-
-/**
- * Test video editor availability
- */
-async function testVideoEditorAvailability() {
-  printSection('VIDEO EDITOR AVAILABILITY TESTS');
   
-  // Test 1: Update availability status
-  try {
-    const response = await makeRequest(
-      'PATCH',
-      `${CONFIG.apiVersion}/videoeditors/me/availability`,
-      {
-        is_available: true,
-        available_from: new Date().toISOString(),
-        available_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-        current_capacity: 3,
-        max_capacity: 5,
-      },
-      { Authorization: `Bearer ${editorToken}` }
-    );
-    
-    const passed = response.statusCode === 200 && response.body.success === true;
-    printTestResult(
-      'Update video editor availability',
-      passed,
-      passed ? 'Availability updated' : `Expected 200, got ${response.statusCode}`,
-      response.body
-    );
-    
-    passed ? passedTests++ : failedTests++;
-  } catch (error) {
-    printTestResult('Update video editor availability', false, error.message);
-    failedTests++;
-  }
-  
-  // Test 2: Get availability
+  // Test 6: Search by hourly rate
   try {
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/videoeditors/me/availability`,
+      `${CONFIG.apiVersion}/videoeditors/search/rate?min=50&max=200`,
       null,
       { Authorization: `Bearer ${editorToken}` }
     );
     
     const passed = response.statusCode === 200 && response.body.success === true;
     printTestResult(
-      'Get video editor availability',
+      'Search video editors by rate',
       passed,
-      passed ? 'Availability retrieved' : `Expected 200, got ${response.statusCode}`,
+      passed ? `Found ${response.body.data?.length || 0} editors in rate range` : `Expected 200, got ${response.statusCode}`,
       response.body
     );
     
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Get video editor availability', false, error.message);
-    failedTests++;
-  }
-}
-
-/**
- * Test video editor portfolio
- */
-async function testVideoEditorPortfolio() {
-  printSection('VIDEO EDITOR PORTFOLIO TESTS');
-  
-  // Test 1: Add portfolio item
-  try {
-    const response = await makeRequest(
-      'POST',
-      `${CONFIG.apiVersion}/videoeditors/me/portfolio`,
-      {
-        title: 'Corporate Video Edit',
-        description: 'Professional corporate video with motion graphics',
-        video_url: 'https://vimeo.com/987654321',
-        thumbnail_url: 'https://example.com/thumbnail.jpg',
-        category: 'corporate',
-        software_used: ['adobe_premiere', 'after_effects'],
-      },
-      { Authorization: `Bearer ${editorToken}` }
-    );
-    
-    const passed = response.statusCode === 201 && response.body.success === true;
-    printTestResult(
-      'Add portfolio item',
-      passed,
-      passed ? 'Portfolio item added' : `Expected 201, got ${response.statusCode}`,
-      response.body
-    );
-    
-    passed ? passedTests++ : failedTests++;
-  } catch (error) {
-    printTestResult('Add portfolio item', false, error.message);
+    printTestResult('Search video editors by rate', false, error.message);
     failedTests++;
   }
   
-  // Test 2: Get portfolio
+  // Test 7: Search by experience level
   try {
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/videoeditors/me/portfolio`,
+      `${CONFIG.apiVersion}/videoeditors/search/experience/intermediate`,
       null,
       { Authorization: `Bearer ${editorToken}` }
     );
     
     const passed = response.statusCode === 200 && response.body.success === true;
     printTestResult(
-      'Get video editor portfolio',
+      'Search video editors by experience',
       passed,
-      passed ? `Found ${response.body.data?.length || 0} portfolio items` : `Expected 200, got ${response.statusCode}`,
+      passed ? `Found ${response.body.data?.length || 0} intermediate editors` : `Expected 200, got ${response.statusCode}`,
       response.body
     );
     
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Get video editor portfolio', false, error.message);
+    printTestResult('Search video editors by experience', false, error.message);
+    failedTests++;
+  }
+  
+  // Test 8: Get video editor by username
+  try {
+    // First get the username from the profile
+    const profileResponse = await makeRequest(
+      'GET',
+      `${CONFIG.apiVersion}/videoeditors/profile`,
+      null,
+      { Authorization: `Bearer ${editorToken}` }
+    );
+    
+    if (profileResponse.statusCode === 200 && profileResponse.body.data?.user?.username) {
+      const username = profileResponse.body.data.user.username;
+      const response = await makeRequest(
+        'GET',
+        `${CONFIG.apiVersion}/videoeditors/username/${username}`,
+        null,
+        { Authorization: `Bearer ${editorToken}` }
+      );
+      
+      const passed = response.statusCode === 200 && response.body.success === true;
+      printTestResult(
+        'Get video editor by username',
+        passed,
+        passed ? 'Video editor found by username' : `Expected 200, got ${response.statusCode}`,
+        response.body
+      );
+      
+      passed ? passedTests++ : failedTests++;
+    } else {
+      printTestResult('Get video editor by username', false, 'Could not get username from profile');
+      failedTests++;
+    }
+  } catch (error) {
+    printTestResult('Get video editor by username', false, error.message);
     failedTests++;
   }
 }
 
 /**
- * Test video editor task management
+ * Test delete video editor account
  */
-async function testVideoEditorTaskManagement() {
-  printSection('VIDEO EDITOR TASK MANAGEMENT TESTS');
+async function testDeleteVideoEditorAccount() {
+  printSection('DELETE VIDEO EDITOR ACCOUNT TESTS');
   
-  // Test 1: Get current tasks/projects
+  // Test 1: Delete account without authentication
   try {
-    const response = await makeRequest(
-      'GET',
-      `${CONFIG.apiVersion}/videoeditors/me/tasks`,
-      null,
-      { Authorization: `Bearer ${editorToken}` }
-    );
+    const response = await makeRequest('DELETE', `${CONFIG.apiVersion}/videoeditors/profile`);
     
-    const passed = response.statusCode === 200 && response.body.success === true;
+    const passed = response.statusCode === 401;
     printTestResult(
-      'Get current tasks',
+      'Delete account without authentication',
       passed,
-      passed ? `Found ${response.body.data?.length || 0} tasks` : `Expected 200, got ${response.statusCode}`,
+      passed ? 'Unauthorized access rejected' : `Expected 401, got ${response.statusCode}`,
       response.body
     );
     
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Get current tasks', false, error.message);
+    printTestResult('Delete account without authentication', false, error.message);
     failedTests++;
   }
   
-  // Test 2: Check workload balance
+  // Note: We won't test actual account deletion to avoid breaking the test user
+  // for other tests. In a real scenario, you'd create a separate user for deletion tests.
+}
+
+/**
+ * Test get video editor by ID
+ */
+async function testGetVideoEditorById() {
+  printSection('GET VIDEO EDITOR BY ID TESTS');
+  
+  // Test 1: Get video editor by ID
   try {
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/videoeditors/me/workload`,
+      `${CONFIG.apiVersion}/videoeditors/${editorId}`,
       null,
       { Authorization: `Bearer ${editorToken}` }
     );
     
     const passed = response.statusCode === 200 && response.body.success === true;
     printTestResult(
-      'Check workload balance',
+      'Get video editor by ID',
       passed,
-      passed ? 'Workload information retrieved' : `Expected 200, got ${response.statusCode}`,
+      passed ? 'Video editor found by ID' : `Expected 200, got ${response.statusCode}`,
       response.body
     );
     
     passed ? passedTests++ : failedTests++;
   } catch (error) {
-    printTestResult('Check workload balance', false, error.message);
+    printTestResult('Get video editor by ID', false, error.message);
+    failedTests++;
+  }
+  
+  // Test 2: Get non-existent video editor
+  try {
+    const response = await makeRequest(
+      'GET',
+      `${CONFIG.apiVersion}/videoeditors/99999`,
+      null,
+      { Authorization: `Bearer ${editorToken}` }
+    );
+    
+    const passed = response.statusCode === 404;
+    printTestResult(
+      'Get non-existent video editor',
+      passed,
+      passed ? 'Non-existent editor returns 404' : `Expected 404, got ${response.statusCode}`,
+      response.body
+    );
+    
+    passed ? passedTests++ : failedTests++;
+  } catch (error) {
+    printTestResult('Get non-existent video editor', false, error.message);
     failedTests++;
   }
 }
@@ -460,10 +498,8 @@ async function runTests() {
   await testGetVideoEditorProfile();
   await testUpdateVideoEditorProfile();
   await testVideoEditorDiscovery();
-  // Skip availability, portfolio, and task management tests as these endpoints don't exist
-  // await testVideoEditorAvailability();
-  // await testVideoEditorPortfolio();
-  // await testVideoEditorTaskManagement();
+  await testDeleteVideoEditorAccount();
+  await testGetVideoEditorById();
   await testVideoEditorStatistics();
   
   printSummary(passedTests, failedTests, passedTests + failedTests);
