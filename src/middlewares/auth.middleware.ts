@@ -19,11 +19,10 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/auth/register/videoeditor',
       '/admin/invites/accept',
       '/health',
-      '/projectsTask/getallprojectlisting',
       '/projects-tasks/listings',
       '/freelancers/getfreelancers',
-      '/category/getallcategorys',
-      '/category/getcategorytypes',
+      '/categories',
+      '/categories/by-type',
       '/skills',
       '/tags'
     ];
