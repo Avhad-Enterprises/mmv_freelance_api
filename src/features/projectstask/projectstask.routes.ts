@@ -123,7 +123,7 @@ class projectstaskRoute implements Route {
       );
 
       this.router.patch(`${this.path}/updatestatus`,
-         requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR'), // Status updates by project participants
+         requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // Status updates by project participants and admins
          this.projectstaskcontroller.updateProjectTaskStatus
       );
 

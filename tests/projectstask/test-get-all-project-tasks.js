@@ -33,7 +33,7 @@ async function testGetAllProjectTasks() {
     );
 
     // NOTE: Currently failing due to authentication issues
-    const passed = response.statusCode === 404; // Auth middleware returns 404 for missing token
+    const passed = response.statusCode === 401; // Auth middleware returns 401 for missing token
     printTestResult(
       'Get all project tasks',
       passed,
@@ -64,11 +64,11 @@ async function testGetAllProjectTasks() {
     );
 
     // NOTE: Currently failing due to authentication
-    const passed = response.statusCode === 404; // Auth middleware returns 404
+    const passed = response.statusCode === 401; // Auth middleware returns 401
     printTestResult(
       'Access without authentication',
       passed,
-      passed ? 'Correctly rejected unauthenticated request' : `Expected 404 auth error, got ${response.statusCode}`,
+      passed ? 'Correctly rejected unauthenticated request' : `Expected 401 auth error, got ${response.statusCode}`,
       response.body
     );
 
