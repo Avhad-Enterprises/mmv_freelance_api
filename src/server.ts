@@ -79,9 +79,6 @@ const app = new App([
     new notificationRoute(),
     new supportTicketsRoute(),
     new EmailRoute(),
-    new UploadRoute(),
-    new WebhookRoute(),
-    new BrandingRoute(),
     new CategoryRoute(),
     new TagRoute(),
     new SkillsRoute(),
@@ -89,7 +86,7 @@ const app = new App([
     new RobotsTxtRoute(),
     new EMCRoute(),
     new ReportTemplatesRoute(),
-    new AdminInvitesRoutes(),
+    new AdminInvitesRoutes()
 ]);
 
 // Start server

@@ -2,7 +2,7 @@
 
 /**
  * Project Task Insert API Test
- * Tests the POST /projectsTask/insertprojects_task endpoint
+ * Tests the POST /projects-tasks endpoint
  */
 
 const {
@@ -25,8 +25,8 @@ async function loginAsAdmin() {
   try {
     console.log('🔐 Logging in as admin...');
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'avhadenterprisespc5@gmail.com',
-      password: 'SuperAdmin123!'
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
     });
 
     console.log('Login response:', response.statusCode, response.body);
@@ -86,7 +86,7 @@ async function testInsertProjectTask() {
     // Test 1: Valid project task insertion (requires CLIENT role, admin has SUPER_ADMIN so should work)
     const response = await makeRequest(
       'POST',
-      `${CONFIG.apiVersion}/projectsTask/insertprojects_task`,
+      `${CONFIG.apiVersion}/projects-tasks`,
       testData,
       { Authorization: `Bearer ${TOKENS.admin}` } // Use stored token
     );
@@ -121,7 +121,7 @@ async function testInsertProjectTask() {
 
     const response = await makeRequest(
       'POST',
-      `${CONFIG.apiVersion}/projectsTask/insertprojects_task`,
+      `${CONFIG.apiVersion}/projects-tasks`,
       invalidData,
       { Authorization: `Bearer ${TOKENS.admin}` }
     );

@@ -2,7 +2,7 @@
 
 /**
  * Project Task Get All API Test
- * Tests the GET /projectsTask/getallprojects_task endpoint
+ * Tests the GET /projects-tasks endpoint
  */
 
 const {
@@ -27,7 +27,7 @@ async function testGetAllProjectTasks() {
   try {
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/projectsTask/getallprojects_task`,
+      `${CONFIG.apiVersion}/projects-tasks`,
       null,
       authHeader('client') // Requires authentication
     );
@@ -58,7 +58,7 @@ async function testGetAllProjectTasks() {
   try {
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/projectsTask/getallprojects_task`,
+      `${CONFIG.apiVersion}/projects-tasks`,
       null,
       {} // No auth header
     );

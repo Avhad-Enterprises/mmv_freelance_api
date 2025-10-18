@@ -50,6 +50,23 @@ class ProjectstaskService {
     return projects || null;
   }
 
+  /**
+   * Get project by ID with optional includes
+   */
+  public async getProjectById(projects_task_id: number, options: { include?: string } = {}): Promise<any | null> {
+    if (!projects_task_id) {
+      throw new HttpException(400, "Project Task ID is required");
+    }
+
+    if (options.include === 'client') {
+      // Get project with client info
+      return await this.getTaskWithClientById(projects_task_id);
+    } else {
+      // Default: get project without client info
+      return await this.getById(projects_task_id);
+    }
+  }
+
   public update = async (projects_task_id: number, updateData: any): Promise<any> => {
     try {
       // 1. check if project exists
@@ -137,8 +154,8 @@ class ProjectstaskService {
     const result = await DB(T.PROJECTS_TASK)
       .leftJoin(`${T.USERS_TABLE} as client`, `${T.PROJECTS_TASK}.client_id`, 'client.user_id')
       .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.user_id`)
-      .leftJoin(`${T.USERS_TABLE} as editor`, `${T.PROJECTS_TASK}.editor_id`, 'editor.user_id')
-      .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.editor_id`, `${T.FREELANCER_PROFILES}.user_id`)
+      .leftJoin(`${T.USERS_TABLE} as editor`, `${T.PROJECTS_TASK}.freelancer_id`, 'editor.user_id')
+      .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.freelancer_id`, `${T.FREELANCER_PROFILES}.user_id`)
       .where(`${T.PROJECTS_TASK}.is_deleted`, false)
       .orderBy(`${T.PROJECTS_TASK}.created_at`, 'desc')
       .select(
@@ -165,48 +182,48 @@ class ProjectstaskService {
   };
 
   /**
-   * Get all active projects listing (public-safe version without sensitive client info)
+   * Get projects with various filtering options
    */
-  public getAllProjectslistingPublic = async (): Promise<any[]> => {
-    const result = await DB(T.PROJECTS_TASK)
-      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.client_id`)
-      .leftJoin(`${T.USERS_TABLE} as client`, `${T.CLIENT_PROFILES}.user_id`, 'client.user_id')
-      .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.freelancer_id`, `${T.FREELANCER_PROFILES}.freelancer_id`)
-      .leftJoin(`${T.USERS_TABLE} as freelancer`, `${T.FREELANCER_PROFILES}.user_id`, 'freelancer.user_id')
-      .where(`${T.PROJECTS_TASK}.is_deleted`, false)
-      .where(`${T.PROJECTS_TASK}.status`, 0) // Only show active/pending jobs (not assigned or completed)
-      .orderBy(`${T.PROJECTS_TASK}.created_at`, 'desc')
-      .select(
-        `${T.PROJECTS_TASK}.*`,
+  public async getProjects(filters: {
+    status?: string;
+    include?: string;
+    client_id?: string | number;
+    url?: string;
+    is_active?: string | number;
+  } = {}): Promise<any[]> {
+    const { status, include, client_id, url, is_active } = filters;
 
-        // Client Info (excluding sensitive data)
-        'client.user_id as client_user_id',
-        'client.first_name as client_first_name',
-        'client.last_name as client_last_name',
-        'client.profile_picture as client_profile_picture',
-        `${T.CLIENT_PROFILES}.company_name as client_company_name`,
-        `${T.CLIENT_PROFILES}.industry as client_industry`,
-
-        // Freelancer Info
-        'freelancer.user_id as freelancer_user_id',
-        'freelancer.first_name as freelancer_first_name',
-        'freelancer.last_name as freelancer_last_name',
-        'freelancer.profile_picture as freelancer_profile_picture',
-        `${T.FREELANCER_PROFILES}.profile_title as freelancer_profile_title`,
-        `${T.FREELANCER_PROFILES}.experience_level as freelancer_experience_level`
-      );
-
-    return result;
-  };
-
-  public getactivedeleted = async (): Promise<IProjectTask[]> => {
-    try {
-      const result = await DB(T.PROJECTS_TASK)
-        .where({ is_deleted: false })
-        .select("*");
-      return result;
-    } catch (error) {
-      throw new Error('Error fetching projects');
+    // Handle different query parameters
+    if (status === 'deleted') {
+      // Get only deleted projects
+      return await this.getDeletedprojectstask();
+    } else if (status === 'active') {
+      // Get only active (non-deleted) projects
+      return await this.getactivedeleted();
+    } else if (include === 'client') {
+      // Get all projects with client info
+      return await this.getTasksWithClientInfo();
+    } else if (client_id) {
+      // Filter by client_id
+      const idNum = typeof client_id === 'string' ? parseInt(client_id, 10) : client_id;
+      if (isNaN(idNum)) {
+        throw new HttpException(400, "client_id must be a number");
+      }
+      return await this.getProjectsByClient(idNum);
+    } else if (url) {
+      // Filter by URL
+      const project = await this.getByUrl(url);
+      return project ? [project] : [];
+    } else if (is_active !== undefined) {
+      // Filter by is_active status
+      const activeStatus = typeof is_active === 'string' ? parseInt(is_active, 10) : is_active;
+      if (isNaN(activeStatus) || (activeStatus !== 0 && activeStatus !== 1)) {
+        throw new HttpException(400, "is_active must be 0 or 1");
+      }
+      return await this.getProjectsByActiveStatus(activeStatus);
+    } else {
+      // Default: get all projects
+      return await this.getAllProjectsTask();
     }
   }
 
@@ -218,6 +235,17 @@ class ProjectstaskService {
       return result;
     } catch (error) {
       throw new Error('Error fetching projects Task');
+    }
+  }
+
+  public getactivedeleted = async (): Promise<IProjectTask[]> => {
+    try {
+      const result = await DB(T.PROJECTS_TASK)
+        .where({ is_deleted: false })
+        .select("*");
+      return result;
+    } catch (error) {
+      throw new Error('Error fetching active projects');
     }
   }
 
@@ -254,43 +282,31 @@ class ProjectstaskService {
     return submitted_project[0];
   }
 
-  public async approve(submission_id: number, status: number, data: SubmitProjectDto): Promise<any> {
-    if (!submission_id || !status) {
-      throw new HttpException(400, "Submission id and Status is required");
+  public async approve(submission_id: number, status: number, data: any = {}): Promise<any> {
+    if (!submission_id) {
+      throw new HttpException(400, "Submission ID is required");
     }
 
-    const existing = await DB(SUBMITTED_PROJECTS)
-      .where({
-        submission_id: data.submission_id,
-        status: data.status,
-        is_deleted: false
-      })
+    // Check if submission exists
+    const existingSubmission = await DB(T.SUBMITTED_PROJECTS)
+      .where({ submission_id, is_deleted: false })
       .first();
 
-    if (existing) {
-      throw new HttpException(409, "Already Updated");
+    if (!existingSubmission) {
+      throw new HttpException(404, "Submission not found");
     }
-    const submitData = {
-      ...data,
-      submission_id: submission_id,
-      status: status,
-      is_active: true,
-      is_deleted: false,
-      created_at: new Date(),
-      updated_at: new Date()
-    };
 
-    const approved = await DB(T.SUBMITTED_PROJECTS)
+    // Update the submission status
+    const [updatedSubmission] = await DB(T.SUBMITTED_PROJECTS)
       .where({ submission_id })
       .update({
         status,
-        updated_at: new Date()
+        updated_by: data.updated_by || null,
+        updated_at: DB.fn.now()
       })
       .returning('*');
-    if (!approved || approved.length === 0) {
-      throw new HttpException(404, "Submission not found");
-    }
-    return approved[0];
+
+    return updatedSubmission;
   }
 
   public async getTasksWithClientInfo(): Promise<any[]> {
@@ -336,35 +352,7 @@ class ProjectstaskService {
       .first();
 
     return projectstask;
-  }
-
-  public checkUrlInprojects = async (url: string): Promise<boolean> => {
-    try {
-      const result = await DB(T.PROJECTS_TASK)
-        .where({ url })
-        .first();
-
-      return !!result; // true if found, false if not
-    } catch (error) {
-      console.error("checkUrlInprojects projects task error:", error);
-      throw error;
-    }
   };
-  public async getBytaskId(client_id: number, is_active: number): Promise<any | null> {
-    if (!client_id) {
-      throw new HttpException(400, "projects_task_id is required");
-    }
-
-    const project = await DB(T.PROJECTS_TASK)
-      .where({
-        client_id,
-        is_deleted: false,
-        is_active,
-      })
-      .first();
-
-    return project || null;
-  }
 
   public async getProjectsByClient(client_id: number): Promise<any[]> {
     if (!client_id) {
@@ -382,20 +370,81 @@ class ProjectstaskService {
     return projects;
   }
 
-  public async getCountByEditor(editor_id: number): Promise<number> {
-    if (!editor_id) {
-      throw new HttpException(400, "editor_id is required");
+  public async getProjectsByActiveStatus(is_active: number): Promise<any[]> {
+    if (is_active !== 0 && is_active !== 1) {
+      throw new HttpException(400, "is_active must be 0 or 1");
     }
 
-    const result = await DB(T.PROJECTS_TASK)
+    const projects = await DB(T.PROJECTS_TASK)
       .where({
-        editor_id,
+        is_active,
         is_deleted: false
       })
-      .count('* as count')
-      .first();
+      .orderBy('created_at', 'desc')
+      .select('*');
 
-    return Number(result?.count || 0);
+    return projects;
+  }
+
+  /**
+   * Get project counts with various filtering options
+   */
+  public async getProjectCounts(filters: {
+    type?: string;
+    client_id?: string | number;
+    freelancer_id?: string | number;
+  } = {}): Promise<any> {
+    const { type, client_id, freelancer_id } = filters;
+
+    if (client_id) {
+      // Count projects for specific client
+      const countResult = await DB(T.PROJECTS_TASK)
+        .where({
+          client_id: typeof client_id === 'string' ? parseInt(client_id) : client_id,
+          is_deleted: false
+        })
+        .count('projects_task_id as count')
+        .first();
+
+      return {
+        success: true,
+        client_id: typeof client_id === 'string' ? parseInt(client_id) : client_id,
+        projects_count: parseInt(countResult?.count as string) || 0
+      };
+    }
+
+    if (freelancer_id) {
+      // For freelancer counts, we need to check assigned projects
+      // This is a placeholder - adjust based on your assignment logic
+      return {
+        success: true,
+        freelancer_id: typeof freelancer_id === 'string' ? parseInt(freelancer_id) : freelancer_id,
+        shortlisted_count: 0
+      };
+    }
+
+    // General project counts by type
+    let query = DB(T.PROJECTS_TASK).where({ is_deleted: false });
+
+    switch (type) {
+      case 'active':
+        query = query.where({ status: 0 }); // Assuming 0 is active/pending
+        break;
+      case 'completed':
+        query = query.where({ status: 2 }); // Assuming 2 is completed
+        break;
+      case 'all':
+      default:
+        // No additional filter for 'all'
+        break;
+    }
+
+    const countResult = await query.count('projects_task_id as count').first();
+
+    return {
+      count: parseInt(countResult?.count as string) || 0,
+      type: type || 'all'
+    };
   }
 
   public async getCountByClient(client_id: number): Promise<number> {
@@ -406,6 +455,22 @@ class ProjectstaskService {
     const result = await DB(T.PROJECTS_TASK)
       .where({
         client_id,
+        is_deleted: false
+      })
+      .count('* as count')
+      .first();
+
+    return Number(result?.count || 0);
+  }
+
+  public async getCountByFreelancer(freelancer_id: number): Promise<number> {
+    if (!freelancer_id) {
+      throw new HttpException(400, "freelancer_id is required");
+    }
+
+    const result = await DB(T.PROJECTS_TASK)
+      .where({
+        freelancer_id,
         is_deleted: false
       })
       .count('* as count')
@@ -473,9 +538,9 @@ class ProjectstaskService {
   public getAllProjectslisting = async (): Promise<any[]> => {
     const result = await DB(T.PROJECTS_TASK)
       .leftJoin(`${T.USERS_TABLE} as client`, `${T.PROJECTS_TASK}.client_id`, 'client.user_id')
-      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.user_id`)
-      .leftJoin(`${T.USERS_TABLE} as editor`, `${T.PROJECTS_TASK}.editor_id`, 'editor.user_id')
-      .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.editor_id`, `${T.FREELANCER_PROFILES}.user_id`)
+      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.client_id`)
+      .leftJoin(`${T.USERS_TABLE} as freelancer`, `${T.PROJECTS_TASK}.freelancer_id`, 'freelancer.user_id')
+      .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.freelancer_id`, `${T.FREELANCER_PROFILES}.freelancer_id`)
       .where(`${T.PROJECTS_TASK}.is_deleted`, false)
       .where(`${T.PROJECTS_TASK}.status`, 0) // Only show active/pending jobs (not assigned or completed)
       .orderBy(`${T.PROJECTS_TASK}.created_at`, 'desc')
@@ -490,18 +555,17 @@ class ProjectstaskService {
         `${T.CLIENT_PROFILES}.company_name as client_company_name`,
         `${T.CLIENT_PROFILES}.industry as client_industry`,
 
-        // Editor Info
-        'editor.user_id as editor_user_id',
-        'editor.first_name as editor_first_name',
-        'editor.last_name as editor_last_name',
-        'editor.profile_picture as editor_profile_picture',
-        `${T.FREELANCER_PROFILES}.profile_title as editor_profile_title`,
-        `${T.FREELANCER_PROFILES}.experience_level as editor_experience_level`
+        // Freelancer Info
+        'freelancer.user_id as freelancer_user_id',
+        'freelancer.first_name as freelancer_first_name',
+        'freelancer.last_name as freelancer_last_name',
+        'freelancer.profile_picture as freelancer_profile_picture',
+        `${T.FREELANCER_PROFILES}.profile_title as freelancer_profile_title`,
+        `${T.FREELANCER_PROFILES}.experience_level as freelancer_experience_level`
       );
 
     return result;
   };
-
 
 }
 export default ProjectstaskService;

@@ -14,12 +14,13 @@ class CategoryService {
             throw new HttpException(400, "Category data is empty");
         }
         try {
-            if (!data.value) {
-                throw new HttpException(400, "Category value is required");
+            if (!data.category_name) {
+                throw new HttpException(400, "Category name is required");
             }
-            data.value = data.value.trim();
+            
+            const categoryName = data.category_name.trim();
             const existingCategory = await DB(T.CATEGORY)
-                .whereRaw('LOWER(TRIM(value)) = ?', [data.value.toLowerCase()])
+                .whereRaw('LOWER(TRIM(category_name)) = ?', [categoryName.toLowerCase()])
                 .first();
 
             if (existingCategory) {
@@ -52,7 +53,8 @@ class CategoryService {
             if (error instanceof HttpException) {
                 throw error;
             }
-            throw new HttpException(500, "Error creating category");
+            console.error('Error creating category:', error);
+            throw new HttpException(500, "Error creating category: " + error.message);
         }
     }
 
@@ -118,14 +120,18 @@ class CategoryService {
     public async getcategorytypesbytable(type: string): Promise<any> {
         try {
             if (!type) {
-                throw new HttpException(400, "Category name is required");
+                throw new HttpException(400, "Category type is required");
             }
             const result = await DB(T.CATEGORY)
-                .where({ is_active: true, is_deleted: false, type: type })
+                .where({ is_active: true, is_deleted: false, category_type: type })
                 .select("*");
             return result;
         } catch (error) {
-            throw new HttpException(500, 'Error fetching category');
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            console.error('Error fetching category by type:', error);
+            throw new HttpException(500, 'Error fetching category: ' + error.message);
         }
     }
 

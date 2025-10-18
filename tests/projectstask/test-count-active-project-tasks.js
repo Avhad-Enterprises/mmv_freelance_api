@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Project Task Count Active API Test
- * Tests the GET /projectsTask/countactiveprojects_task endpoint
+ * Project Task Count API Test
+ * Tests the GET /projects-tasks/count endpoint with various query parameters
  */
 
 const {
@@ -25,8 +25,8 @@ let failedTests = 0;
 async function loginAsAdmin() {
   try {
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'avhadenterprisespc5@gmail.com',
-      password: 'SuperAdmin123!'
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
     });
 
     if (response.statusCode === 200 && response.body?.data?.token) {
@@ -40,16 +40,16 @@ async function loginAsAdmin() {
 }
 
 /**
- * Test counting active project tasks
+ * Test counting project tasks with different parameters
  */
-async function testCountActiveProjectTasks() {
-  printSection('PROJECT TASK COUNT ACTIVE TESTS');
+async function testCountProjectTasks() {
+  printSection('PROJECT TASK COUNT TESTS');
 
   // First login to get token
   const loginSuccess = await loginAsAdmin();
   if (!loginSuccess) {
     console.log('❌ Failed to login as admin');
-    failedTests += 2;
+    failedTests += 6;
     return;
   }
 
@@ -57,16 +57,16 @@ async function testCountActiveProjectTasks() {
   try {
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/projectsTask/countactiveprojects_task`,
+      `${CONFIG.apiVersion}/projects-tasks/count?type=active`,
       null,
       { Authorization: `Bearer ${TOKENS.admin}` }
     );
 
-    const passed = response.statusCode === 200 && typeof response.body?.count === 'number';
+    const passed = response.statusCode === 200 && typeof response.body?.count === 'number' && response.body?.type === 'active';
     printTestResult(
       'Get active project tasks count',
       passed,
-      passed ? 'Count retrieved successfully' : `Expected 200 with count, got ${response.statusCode}`,
+      passed ? 'Active count retrieved successfully' : `Expected 200 with count and type, got ${response.statusCode}. Body: ${JSON.stringify(response.body)}`,
       response.body
     );
 
@@ -83,11 +83,131 @@ async function testCountActiveProjectTasks() {
     failedTests++;
   }
 
-  // Test 2: Missing authentication
+  // Test 2: Get count of all project tasks
   try {
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/projectsTask/countactiveprojects_task`,
+      `${CONFIG.apiVersion}/projects-tasks/count?type=all`,
+      null,
+      { Authorization: `Bearer ${TOKENS.admin}` }
+    );
+
+    const passed = response.statusCode === 200 && typeof response.body?.count === 'number' && response.body?.type === 'all';
+    printTestResult(
+      'Get all project tasks count',
+      passed,
+      passed ? 'All count retrieved successfully' : `Expected 200 with count and type, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Get all project tasks count',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test 3: Get count of completed project tasks
+  try {
+    const response = await makeRequest(
+      'GET',
+      `${CONFIG.apiVersion}/projects-tasks/count?type=completed`,
+      null,
+      { Authorization: `Bearer ${TOKENS.admin}` }
+    );
+
+    const passed = response.statusCode === 200 && typeof response.body?.count === 'number' && response.body?.type === 'completed';
+    printTestResult(
+      'Get completed project tasks count',
+      passed,
+      passed ? 'Completed count retrieved successfully' : `Expected 200 with count and type, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Get completed project tasks count',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test 4: Get count by client ID
+  try {
+    const response = await makeRequest(
+      'GET',
+      `${CONFIG.apiVersion}/projects-tasks/count?client_id=1`,
+      null,
+      { Authorization: `Bearer ${TOKENS.admin}` }
+    );
+
+    const passed = response.statusCode === 200 && response.body?.success === true && typeof response.body?.projects_count === 'number' && response.body?.client_id === 1;
+    printTestResult(
+      'Get project count by client ID',
+      passed,
+      passed ? 'Client count retrieved successfully' : `Expected 200 with success and projects_count, got ${response.statusCode}. Body: ${JSON.stringify(response.body)}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Get project count by client ID',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test 5: Get count by editor ID
+  try {
+    const response = await makeRequest(
+      'GET',
+      `${CONFIG.apiVersion}/projects-tasks/count?freelancer_id=1`,
+      null,
+      { Authorization: `Bearer ${TOKENS.admin}` }
+    );
+
+    const passed = response.statusCode === 200 && response.body?.success === true && typeof response.body?.shortlisted_count === 'number' && response.body?.freelancer_id === 1;
+    printTestResult(
+      'Get project count by editor ID',
+      passed,
+      passed ? 'Editor count retrieved successfully' : `Expected 200 with success and shortlisted_count, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Get project count by editor ID',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test 6: Missing authentication
+  try {
+    const response = await makeRequest(
+      'GET',
+      `${CONFIG.apiVersion}/projects-tasks/count?type=active`,
       null,
       {} // No auth header
     );
@@ -118,9 +238,9 @@ async function testCountActiveProjectTasks() {
  * Main test runner
  */
 async function runTests() {
-  console.log('🧪 Testing Project Task Count Active API\n');
+  console.log('🧪 Testing Project Task Count API\n');
 
-  await testCountActiveProjectTasks();
+  await testCountProjectTasks();
 
   printSummary(passedTests, failedTests);
   process.exit(failedTests > 0 ? 1 : 0);
