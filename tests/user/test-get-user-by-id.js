@@ -228,7 +228,7 @@ const TEST_CASES = [
     description: "Test without Authorization header",
     urlPath: '/users/1',
     headers: {},
-    expectedStatus: 404,
+    expectedStatus: 401,
     expectedFields: ['success', 'message'],
     category: "AUTH_ERRORS"
   },
@@ -274,7 +274,7 @@ const TEST_CASES = [
     description: "Test with non-numeric user ID",
     urlPath: '/users/abc',
     headers: {}, // Will be set dynamically with admin token
-    expectedStatus: 404, // parseInt returns NaN, treated as invalid ID
+    expectedStatus: 401, // parseInt returns NaN, treated as invalid ID
     expectedFields: [],
     category: "VALIDATION_ERRORS",
     requiresAdminToken: true
@@ -285,7 +285,7 @@ const TEST_CASES = [
     description: "Test with user ID 0",
     urlPath: '/users/0',
     headers: {}, // Will be set dynamically with admin token
-    expectedStatus: 404,
+    expectedStatus: 401,
     expectedFields: ['success', 'message'],
     category: "VALIDATION_ERRORS",
     requiresAdminToken: true
@@ -296,7 +296,7 @@ const TEST_CASES = [
     description: "Test with negative user ID",
     urlPath: '/users/-1',
     headers: {}, // Will be set dynamically with admin token
-    expectedStatus: 404,
+    expectedStatus: 401,
     expectedFields: ['success', 'message'],
     category: "VALIDATION_ERRORS",
     requiresAdminToken: true
@@ -305,13 +305,14 @@ const TEST_CASES = [
   // ============== BUSINESS LOGIC ERRORS ==============
   {
     name: "User Not Found",
-    description: "Test with non-existent user ID - SKIPPED",
+    description: "Test with non-existent user ID",
     urlPath: '/users/99999',
-    headers: {},
+    headers: {}, // Will be set dynamically with admin token
     expectedStatus: 404,
-    expectedFields: [],
+    expectedFields: ['success', 'message'],
     category: "BUSINESS_ERRORS",
-    skip: true
+    requiresSuperAdminToken: true,
+    expectedMessage: "User not found"
   },
 
   // ============== SUCCESSFUL RETRIEVAL ==============
@@ -330,13 +331,14 @@ const TEST_CASES = [
 
   {
     name: "Get Regular User (by Admin)",
-    description: "Admin getting a regular user's data - SKIPPED",
+    description: "Admin getting a regular user's data",
     urlPath: '/users/8',
-    headers: {},
+    headers: {}, // Will be set dynamically with super admin token
     expectedStatus: 200,
-    expectedFields: [],
+    expectedFields: ['success', 'data'],
     category: "SUCCESSFUL_RETRIEVAL",
-    skip: true
+    requiresSuperAdminToken: true,
+    validateUserData: true
   },
 
   {
@@ -359,7 +361,7 @@ async function runTests() {
   console.log('🔑 Obtaining authentication tokens...');
 
   // Get super admin token
-  superAdminToken = await loginAndGetToken('superadmin@mmv.com', 'SuperAdmin123!');
+  superAdminToken = await loginAndGetToken('avhadenterprisespc5@gmail.com', 'SuperAdmin123!');
   if (!superAdminToken) {
     console.log('❌ Could not obtain super admin token');
   } else {

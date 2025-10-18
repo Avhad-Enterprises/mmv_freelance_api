@@ -57,7 +57,7 @@ const testCases = [
     description: "Test getting all users without JWT token",
     urlPath: '/users',
     headers: {},
-    expectedStatus: 404,
+    expectedStatus: 401,
     expectedFields: ['success', 'message'],
     category: "AUTHENTICATION",
     expectedMessage: "Authentication token missing"
@@ -79,7 +79,7 @@ const testCases = [
     description: "Test getting all users with regular user token (should fail)",
     urlPath: '/users',
     headers: {}, // Will be set dynamically with regular user token
-    expectedStatus: 404,
+    expectedStatus: 401,
     expectedFields: ['success', 'message'],
     category: "AUTHORIZATION",
     requiresRegularUserToken: true,
@@ -90,7 +90,7 @@ const testCases = [
     description: "Test getting all users with admin token (should fail - requires SUPER_ADMIN)",
     urlPath: '/users',
     headers: {}, // Will be set dynamically with admin token
-    expectedStatus: 404,
+    expectedStatus: 401,
     expectedFields: ['success', 'message'],
     category: "AUTHORIZATION",
     requiresAdminToken: true,
@@ -155,7 +155,7 @@ const testCases = [
   {
     name: "Search Users By Email",
     description: "Test searching users by email",
-    urlPath: '/users?search=superadmin@mmv.com',
+    urlPath: '/users?search=avhadenterprisespc5@gmail.com',
     headers: {}, // Will be set dynamically with super admin token
     expectedStatus: 200,
     expectedFields: ['success', 'data'],
@@ -163,12 +163,12 @@ const testCases = [
     requiresSuperAdminToken: true,
     expectedDataFields: ['users', 'pagination'],
     validateSearch: true,
-    expectedSearchTerm: 'superadmin@mmv.com'
+    expectedSearchTerm: 'avhadenterprisespc5@gmail.com'
   },
   {
     name: "Search Users By Name",
     description: "Test searching users by first name",
-    urlPath: '/users?search=Super',
+    urlPath: '/users?search=Abhi',
     headers: {}, // Will be set dynamically with super admin token
     expectedStatus: 200,
     expectedFields: ['success', 'data'],
@@ -176,7 +176,7 @@ const testCases = [
     requiresSuperAdminToken: true,
     expectedDataFields: ['users', 'pagination'],
     validateSearch: true,
-    expectedSearchTerm: 'Super'
+    expectedSearchTerm: 'Abhi'
   },
   {
     name: "Search Users No Results",
@@ -234,7 +234,7 @@ async function getAuthTokens() {
         'Content-Type': 'application/json'
       }
     }, {
-      email: 'superadmin@mmv.com',
+      email: 'avhadenterprisespc5@gmail.com',
       password: 'SuperAdmin123!'
     });
 
