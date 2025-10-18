@@ -14,22 +14,18 @@ export class CategoryDto {
   category_id: number;
   
   @IsString()
-  @IsNotEmpty()
-  name: string;
+  @IsNotEmpty({ groups: ['create'] })
+  @IsOptional({ groups: ['update'] })
+  category_name: string;
 
   @IsString()
-  @IsNotEmpty()
-  value: string;
+  @IsNotEmpty({ groups: ['create'] })
+  @IsOptional({ groups: ['update'] })
+  category_type: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  slug: string;
-
-  @IsOptional()
-  tags?: string[];
-
-  @IsOptional()
-  notes?: string[];
+  description?: string;
 
   @IsOptional()
   @IsBoolean()

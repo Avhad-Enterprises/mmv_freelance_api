@@ -11,7 +11,7 @@ export class ProjectsTaskDto {
 
   @IsInt()
   @IsOptional()
-  editor_id: number;
+  freelancer_id: number;
 
   @IsString()
   project_title: string;

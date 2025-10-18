@@ -2,7 +2,7 @@
 
 /**
  * Project Task Get By ID API Test
- * Tests the GET /projectsTask/getprojects_taskbyid/:id endpoint
+ * Tests the GET /projects-tasks/:id endpoint
  */
 
 const {
@@ -25,8 +25,8 @@ let failedTests = 0;
 async function loginAsAdmin() {
   try {
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'avhadenterprisespc5@gmail.com',
-      password: 'SuperAdmin123!'
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
     });
 
     if (response.statusCode === 200 && response.body?.data?.token) {
@@ -83,7 +83,7 @@ async function testGetProjectTaskById() {
   try {
     const createResponse = await makeRequest(
       'POST',
-      `${CONFIG.apiVersion}/projectsTask/insertprojects_task`,
+      `${CONFIG.apiVersion}/projects-tasks`,
       testData,
       { Authorization: `Bearer ${TOKENS.admin}` }
     );
@@ -106,7 +106,7 @@ async function testGetProjectTaskById() {
   try {
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/projectsTask/getprojects_taskbyid/${createdProjectId}`,
+      `${CONFIG.apiVersion}/projects-tasks/${createdProjectId}`,
       null,
       { Authorization: `Bearer ${TOKENS.admin}` }
     );
@@ -138,7 +138,7 @@ async function testGetProjectTaskById() {
 
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/projectsTask/getprojects_taskbyid/${nonExistentId}`,
+      `${CONFIG.apiVersion}/projects-tasks/${nonExistentId}`,
       null,
       { Authorization: `Bearer ${TOKENS.admin}` }
     );
@@ -170,7 +170,7 @@ async function testGetProjectTaskById() {
 
     const response = await makeRequest(
       'GET',
-      `${CONFIG.apiVersion}/projectsTask/getprojects_taskbyid/${invalidId}`,
+      `${CONFIG.apiVersion}/projects-tasks/${invalidId}`,
       null,
       { Authorization: `Bearer ${TOKENS.admin}` }
     );

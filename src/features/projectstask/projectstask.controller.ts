@@ -7,8 +7,8 @@ import DB, { T } from '../../../database/index';
 import HttpException from '../../exceptions/HttpException';
 import { isEmpty } from 'class-validator';
 import { PROJECTS_TASK } from '../../../database/projectstask.schema';
-import projectsservice from './projectstask.service';
-import { validateUrlFormatWithReason } from '../../utils/validation/validateUrlformat';
+import { SubmitProjectDto } from './submit-project.dto';
+import { RequestWithUser } from '../../interfaces/auth.interface';
 
 class projectstaskcontroller {
 
@@ -37,7 +37,10 @@ class projectstaskcontroller {
         res.status(400).json({ error: 'project_task_id must be a number' });
         return;
       }
-      const projects = await this.ProjectstaskService.getById(idNum);
+
+      const { include } = req.query;
+      const projects = await this.ProjectstaskService.getProjectById(idNum, { include: include as string });
+
       if (!projects) {
         res.status(404).json({ error: 'projects_task not found' });
         return;
@@ -51,16 +54,16 @@ class projectstaskcontroller {
 
   public update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = (req.body as any).projects_task_id;
+      const raw = req.params.id;
       const idNum: number = typeof raw === 'string' ? parseInt(raw, 10) : raw;
 
       if (isNaN(idNum)) {
-        res.status(400).json({ error: '  "projects_task_id" must be a number' });
+        res.status(400).json({ error: 'projects_task_id must be a number' });
         return;
       }
 
-      // Clone body and exclude code_id
-      const fieldsToUpdate = req.body;
+      // Clone body and exclude projects_task_id if present
+      const { projects_task_id, ...fieldsToUpdate } = req.body;
 
       if (Object.keys(fieldsToUpdate).length === 0) {
         res.status(400).json({ error: 'No update data provided' });
@@ -91,245 +94,35 @@ class projectstaskcontroller {
     }
   };
 
-  public countActiveprojectstask = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const count = await this.ProjectstaskService.projectstaskActive();
-      res.status(200).json({ count });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public countprojectstask = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const count = await this.ProjectstaskService.countprojectstask();
-      res.status(200).json({ count });
-    } catch (err) {
-      next(err);
-    }
-  };
-
   public getallprojectstask = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const projects = await this.ProjectstaskService.getAllProjectsTask();
+      const { status, include, client_id, url, is_active } = req.query;
+
+      const projects = await this.ProjectstaskService.getProjects({
+        status: status as string,
+        include: include as string,
+        client_id: client_id as string,
+        url: url as string,
+        is_active: is_active as string
+      });
+
       res.status(200).json({ data: projects, success: true });
     } catch (err) {
       next(err);
     }
   };
 
-  public getactivedeleted = async (req: Request, res: Response, next: NextFunction) => {
+  public getProjectCounts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const projects = await this.ProjectstaskService.getactivedeleted();
-      res.status(200).json({ data: projects, success: true });
-    } catch (err) {
-      next(err);
-    }
-  };
+      const { type, client_id, freelancer_id } = req.query;
 
-  public getDeletedprojectstask = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const projects = await this.ProjectstaskService.getDeletedprojectstask();
-      res.status(200).json({ data: projects, success: true });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  public getAllTasksWithClientInfo = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const tasks = await this.ProjectstaskService.getTasksWithClientInfo();
-      res.status(200).json({ data: tasks, success: true });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public getTaskWithClientById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { id } = req.params;
-      const tasks = await this.ProjectstaskService.getTaskWithClientById(Number(id));
-
-      res.status(200).json({ data: tasks, success: true });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public getprojectstaskbyurl = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const url = req.params.url;
-
-      if (!url) {
-        res.status(400).json({ message: "URL is required" });
-        return;
-      }
-
-      const projecttask = await this.ProjectstaskService.getByUrl(url);
-
-      if (!projecttask) {
-        res.status(404).json({ message: "projects task not found" });
-        return;
-      }
-
-      res.status(200).json({ data: projecttask });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public checkUrlExists = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { url } = req.body;
-
-      if (!url) {
-        res.status(400).json({ message: 'URL is required' });
-        return;
-      }
-
-      // 🔍 Validate format with specific error
-      const { valid, reason } = validateUrlFormatWithReason(url);
-
-      if (!valid) {
-        res.status(400).json({ message: `Invalid URL format: ${reason}` });
-        return;
-      }
-
-      const exists = await this.ProjectstaskService.checkUrlInprojects(url);
-
-      if (exists) {
-        res.status(200).json({ message: 'URL exists in projects task table', url });
-      } else {
-        res.status(404).json({ message: 'URL not found in projects task table', url });
-      }
-
-    } catch (error: any) {
-      console.error("checkUrlExists error:", error);
-      res.status(500).json({ message: 'Internal Server Error' });
-    }
-  }
-
-  public getbytasksid = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { client_id, is_active } = req.body;
-
-
-      const idNum: number = typeof client_id === 'string'
-        ? parseInt(client_id, 10)
-        : client_id;
-
-      if (isNaN(idNum)) {
-        res.status(400).json({ error: 'projects_task_id must be a number' });
-        return;
-      }
-
-
-      const activeStatus: number = typeof is_active === 'string'
-        ? parseInt(is_active, 10)
-        : is_active ? 1 : 0;
-
-      if (isNaN(activeStatus) || (activeStatus !== 0 && activeStatus !== 1)) {
-        res.status(400).json({ error: 'is_active must be 1 or 0' });
-        return;
-      }
-
-
-      const project = await this.ProjectstaskService.getBytaskId(idNum, activeStatus);
-
-      if (!project) {
-        res.status(404).json({ error: 'projects_task not found' });
-        return;
-      }
-
-      res.status(200).json({ project, success: true });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public getProjectsByClient = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { client_id } = req.params;
-
-      const idNum: number = typeof client_id === 'string'
-        ? parseInt(client_id, 10)
-        : client_id;
-
-      if (isNaN(idNum)) {
-        res.status(400).json({ error: 'client_id must be a number' });
-        return;
-      }
-
-      const projects = await this.ProjectstaskService.getProjectsByClient(idNum);
-
-      res.status(200).json({ data: projects, success: true });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public getCountBy = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { editor_id } = req.params;
-
-      const count = await this.ProjectstaskService.getCountByEditor(Number(editor_id));
-
-      res.status(200).json({
-        success: true,
-        editor_id: Number(editor_id),
-        shortlisted_count: count
+      const result = await this.ProjectstaskService.getProjectCounts({
+        type: type as string,
+        client_id: client_id as string,
+        freelancer_id: freelancer_id as string
       });
-    } catch (error) {
-      next(error);
-    }
-  };
 
-  public getClientcount = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { client_id } = req.params;
-
-      const count = await this.ProjectstaskService.getCountByClient(Number(client_id));
-
-      res.status(200).json({
-        success: true,
-        client_id: Number(client_id),
-        projects_count: count
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public getActiveclientsCount = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const count = await this.ProjectstaskService.getActiveclientsCount();
-
-      res.status(200).json({
-        success: true,
-        active_clients_count: count
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public getActiveEditorsCount = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const count = await this.ProjectstaskService.getActiveEditorsCount();
-
-      res.status(200).json({
-        success: true,
-        active_editors_count: count
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public getCompletedProjectCount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const count = await this.ProjectstaskService.getCompletedProjectCount();
-      res.status(200).json({ count, message: 'Completed projects count fetched successfully' });
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -337,7 +130,9 @@ class projectstaskcontroller {
 
   public updateProjectTaskStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { projects_task_id, status, user_id } = req.body;
+      const raw = req.params.id;
+      const projects_task_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      const { status, user_id } = req.body;
 
       if (!projects_task_id || typeof status === 'undefined') {
         throw new HttpException(400, "projects_task_id and status are required");
@@ -372,12 +167,119 @@ class projectstaskcontroller {
     }
   };
 
-  public getallprojectlistingPublic = async (req: Request, res: Response, next: NextFunction) => {
+  public getProjectsByClientId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const projects = await this.ProjectstaskService.getAllProjectslistingPublic();
+      const raw = req.params.clientId;
+      const clientId: number = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+
+      if (isNaN(clientId)) {
+        res.status(400).json({ error: 'client_id must be a number' });
+        return;
+      }
+
+      const projects = await this.ProjectstaskService.getProjectsByClient(clientId);
       res.status(200).json({ data: projects, success: true });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Submit a project
+   * POST /api/v1/projects-tasks/:id/submit
+   */
+  public submitProject = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const raw = req.params.id;
+      const projects_task_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+
+      if (isNaN(projects_task_id)) {
+        res.status(400).json({ error: 'projects_task_id must be a number' });
+        return;
+      }
+
+      const submitData: SubmitProjectDto = {
+        ...req.body,
+        projects_task_id
+      };
+
+      const submission = await this.ProjectstaskService.submit(submitData);
+      res.status(201).json({ 
+        data: submission, 
+        message: 'Project submitted successfully',
+        success: true 
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Approve/reject a project submission
+   * PATCH /api/v1/projects-tasks/submissions/:submissionId/approve
+   */
+  public approveProjectSubmission = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const raw = req.params.submissionId;
+      const submission_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      const { status } = req.body;
+
+      if (isNaN(submission_id)) {
+        res.status(400).json({ error: 'submission_id must be a number' });
+        return;
+      }
+
+      if (status === undefined || (status !== 0 && status !== 1 && status !== 2)) {
+        res.status(400).json({ 
+          error: 'status is required and must be 0 (pending), 1 (approved), or 2 (rejected)' 
+        });
+        return;
+      }
+
+      const approved = await this.ProjectstaskService.approve(submission_id, status, { 
+        updated_by: req.user?.user_id 
+      });
+      res.status(200).json({ 
+        data: approved, 
+        message: 'Submission status updated successfully',
+        success: true 
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Get active clients count
+   * GET /api/v1/projects-tasks/analytics/active-clients
+   */
+  public getActiveClientsCount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const count = await this.ProjectstaskService.getActiveclientsCount();
+      res.status(200).json({ 
+        count,
+        type: 'active_clients',
+        success: true 
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Get active editors count
+   * GET /api/v1/projects-tasks/analytics/active-editors
+   */
+  public getActiveEditorsCount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const count = await this.ProjectstaskService.getActiveEditorsCount();
+      res.status(200).json({ 
+        count,
+        type: 'active_editors',
+        success: true 
+      });
+    } catch (error) {
+      next(error);
     }
   };
 }

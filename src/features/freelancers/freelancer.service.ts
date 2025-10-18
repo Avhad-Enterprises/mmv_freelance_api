@@ -305,7 +305,7 @@ class FreelancerService extends UserService {
     const freelancers = await DB(T.USERS_TABLE)
       .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
       .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
-      .leftJoin(T.PROJECTS_TASK, `${T.USERS_TABLE}.user_id`, `${T.PROJECTS_TASK}.editor_id`)
+      .leftJoin(T.PROJECTS_TASK, `${T.USERS_TABLE}.user_id`, `${T.PROJECTS_TASK}.freelancer_id`)
       .where(`${T.ROLE}.name`, 'FREELANCER')
       .where(`${T.USERS_TABLE}.is_active`, true)
       .where(`${T.USERS_TABLE}.is_banned`, false)

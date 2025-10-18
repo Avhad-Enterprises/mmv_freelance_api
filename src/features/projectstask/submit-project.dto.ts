@@ -13,8 +13,9 @@ export class SubmitProjectDto{
     @IsInt({ groups: ['update'] })
     submission_id?: number;
 
-    @IsInt({ groups: ['create' ,'update'] })
-    projects_task_id: number;
+    @IsOptional({ groups: ['create'] })
+    @IsInt({ groups: ['update'] })
+    projects_task_id?: number;
 
     @IsInt({ groups: ['create' ,'update'] })
     user_id : number;
