@@ -1,55 +1,80 @@
 import { NextFunction, Request, Response } from "express";
 import { TagsDto } from "./tag.dto";
-import { SkillsDto } from "./skill.dto";
 import TagsService from "./tag.service";
-import { generateToken } from "../../utils/auth/jwt";
-import HttpException from "../../exceptions/HttpException";
 
 class TagsController {
     public TagsService = new TagsService();
 
-    // POST /api/tags/insertetag
+    // POST /api/tags
     // Create a new tag entry
-    public insertTag = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    public createTag = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const tagData: TagsDto = req.body;
             const insertedTag = await this.TagsService.InsertTag(tagData);
-            res.status(201).json({ data: insertedTag, message: "Inserted" });
+            res.status(201).json({ data: insertedTag, message: "Tag created successfully" });
         } catch (error) {
             next(error);
         }
     };
 
-    // GET /api/tags/geteventtags
-    // Get all event tags
+    // GET /api/tags
+    // Get all tags
+    public getAllTags = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const tags = await this.TagsService.GetAllTags();
+            res.status(200).json({ data: tags, message: "Tags fetched successfully" });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // GET /api/tags/:id
+    // Get tag by ID
+    public getTagById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const tagId = parseInt(req.params.id);
+            const tag = await this.TagsService.GetTagById(tagId);
+            res.status(200).json({ data: tag, message: "Tag fetched successfully" });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // GET /api/tags/type/:type
+    // Get tags by type
     public getTagsByType = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const tags = await this.TagsService.GetTagsByType("events");
-            res.status(200).json({ data: tags, message: "Fetched tags of type 'events'" });
-        } catch (error) {
-            next(error);
-        }
-    };
-    // POST /api/tags/insertskill
-    // Create a new skill entry
-    public insertskills = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        try {
-            const skillData: SkillsDto = req.body;
-            const insertedskill = await this.TagsService.insertskillsby(skillData);
-            res.status(201).json({ data: insertedskill, message: "Inserted" });
+            const { type } = req.params;
+            const tags = await this.TagsService.GetTagsByType(type);
+            res.status(200).json({ data: tags, message: `Tags of type '${type}' fetched successfully` });
         } catch (error) {
             next(error);
         }
     };
 
-    // GET /api/tags/getallskill
-    // Retrieve all skill entries
-    public getallskills = async (req: Request, res: Response, next: NextFunction) => {
+    // PUT /api/tags/:id
+    // Update tag
+    public updateTag = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const skill = await this.TagsService.getallskillsby();
-            res.status(200).json({ data: skill, success: true });
-        } catch (err) {
-            next(err);
+            const tagId = parseInt(req.params.id);
+            const updateData: Partial<TagsDto> = req.body;
+            const updatedTag = await this.TagsService.UpdateTag(tagId, updateData);
+            res.status(200).json({ data: updatedTag, message: "Tag updated successfully" });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // DELETE /api/tags/:id
+    // Delete tag (soft delete)
+    public deleteTag = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const tagId = parseInt(req.params.id);
+            const deletedBy = req.body.deleted_by || 1; // Use deleted_by from body or default to 1
+            const deletedTag = await this.TagsService.DeleteTag(tagId, deletedBy);
+            res.status(200).json({ data: deletedTag, message: "Tag deleted successfully" });
+        } catch (error) {
+            next(error);
         }
     };
 
