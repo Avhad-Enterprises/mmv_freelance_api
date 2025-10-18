@@ -18,7 +18,7 @@ export interface ISeo {
     status?: string;
     is_active: boolean;
     is_deleted: boolean;
-    created_at: string; // ISO timestamp
-    updated_at: string;
-  }
+    created_at: Date;
+    updated_at: Date;
+}
   
