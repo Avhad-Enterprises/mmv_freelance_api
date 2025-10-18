@@ -65,7 +65,8 @@ export const migrate = async (dropFirst = false) => {
     `);
     console.log('Finished Creating Triggers');
   } catch (error) {
-    console.error(error);
+    console.error('Migration failed for support_ticket:', error);
+    throw error;
   }
 };
 

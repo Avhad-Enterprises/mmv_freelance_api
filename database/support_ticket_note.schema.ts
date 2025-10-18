@@ -35,7 +35,8 @@ table
 
     console.log('Ticket notes table created.');
   } catch (error) {
-    console.error('Error creating ticket notes table:', error);
+    console.error('Migration failed for support_ticket_note:', error);
+    throw error;
   }
 };
 

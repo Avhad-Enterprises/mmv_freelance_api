@@ -93,7 +93,8 @@ export const seed = async (dropFirst = false) => {
             console.log('Table already exists, skipping creation');
         }
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for role:', error);
+        throw error;
     }
 };
 

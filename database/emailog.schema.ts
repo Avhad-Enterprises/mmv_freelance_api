@@ -47,7 +47,8 @@ export const migrate = async (dropFirst = false) => {
       console.log('Email logs table already exists, skipping creation');
     }
   } catch (error) {
-    console.error('Error creating email logs table:', error);
+    console.error('Migration failed for emailog:', error);
+    throw error;
   }
 };
 

@@ -56,7 +56,8 @@ export const migrate = async (dropFirst = false) => {
             console.log('Table already exists, skipping creation');
         }
     } catch (error) {
-        console.log(error);
+        console.error('Migration failed for report_templates:', error);
+        throw error;
     }
 };
 

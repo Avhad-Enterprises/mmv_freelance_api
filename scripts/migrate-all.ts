@@ -2,10 +2,14 @@
 
 import fs from 'fs';
 import path from 'path';
-import DB from '../database/index';
-
-const SCHEMA_MIGRATIONS_TABLE = 'schema_migrations';
-const DATABASE_DIR = path.join(__dirname, '../database');
+import DB, { T } from '../database/index';
+import {
+  SCHEMA_MIGRATIONS_TABLE,
+  DATABASE_DIR,
+  ensureSchemaMigrationsTable,
+  recordMigration,
+  getSchemaVersion
+} from './migration-utils';
 
 // Schema dependency order (tables that depend on others should come after)
 const MIGRATION_ORDER = [
@@ -59,63 +63,49 @@ const MIGRATION_ORDER = [
   'emailog.schema.ts'
 ];
 
-// Ensure schema migrations table exists
-const ensureSchemaMigrationsTable = async () => {
-  const exists = await DB.schema.hasTable(SCHEMA_MIGRATIONS_TABLE);
-  if (!exists) {
-    await DB.schema.createTable(SCHEMA_MIGRATIONS_TABLE, (table) => {
-      table.increments('id').primary();
-      table.string('schema_name').notNullable().unique();
-      table.string('version').notNullable();
-      table.timestamp('migrated_at').defaultTo(DB.fn.now());
-    });
-    console.log('📋 Created schema_migrations table');
-  }
-};
-
 // Drop all tables in reverse dependency order for clean slate
 const dropAllTables = async () => {
   console.log('🗑️  Dropping all existing tables for clean slate...');
   
   // Tables in reverse dependency order (most dependent first)
   const tablesToDrop = [
-    'emailog',
-    'visitor_logs', 
-    'transactions',
-    'report_templates',
-    'report_system',
-    'admin_invites',
-    'subscribed_emails',
-    'robotstxt',
-    'seo',
-    'analytics',
-    'branding_assets',
-    'support_ticket_note',
-    'support_ticket_reply',
-    'support_ticket',
-    'notification',
-    'review',
-    'faq',
-    'cms',
-    'blog',
-    'favorites',
-    'saved_project',
-    'submitted_projects',
-    'applied_projects',
-    'projects_task',
-    'role_permission',
-    'user_role',
-    'videoeditor_profiles',
-    'videographer_profiles',
-    'admin_profiles',
-    'client_profiles',
-    'freelancer_profiles',
-    'permission',
-    'role',
-    'users',
-    'tags',
-    'category',
-    'skill',
+    T.EMAIL_LOG_TABLE,
+    T.VISITOR_LOGS, 
+    T.TRANSACTION_TABLE,
+    T.REPORT_TEMPLATES,
+    T.REPORT_TABLE,
+    T.INVITATION_TABLE,
+    T.SUBSCRIBED_EMAILS,
+    T.ROBOTS_TXT,
+    T.SEO,
+    T.ANALYTICS_SETTINGS,
+    T.BRANDING_ASSETS,
+    T.TICKET_NOTE_TABLE,
+    T.TICKET_REPLY_TABLE,
+    T.SUPPORT_TICKETS_TABLE,
+    T.NOTIFICATION,
+    T.REVIEWS_TABLE,
+    T.FAQ,
+    T.CMS,
+    T.BLOG,
+    T.FAVORITES_TABLE,
+    T.SAVED_PROJECTS,
+    T.SUBMITTED_PROJECTS,
+    T.APPLIED_PROJECTS,
+    T.PROJECTS_TASK,
+    T.ROLE_PERMISSION,
+    T.USER_ROLES,
+    T.VIDEOEDITOR_PROFILES,
+    T.VIDEOGRAPHER_PROFILES,
+    T.ADMIN_PROFILES,
+    T.CLIENT_PROFILES,
+    T.FREELANCER_PROFILES,
+    T.PERMISSION,
+    T.ROLE,
+    T.USERS_TABLE,
+    T.TAGS_TABLE,
+    T.CATEGORY,
+    T.SKILLS,
     SCHEMA_MIGRATIONS_TABLE // Drop migration tracking table too
   ];
   
@@ -141,21 +131,6 @@ const dropAllTables = async () => {
 const getMigratedSchemas = async (): Promise<Set<string>> => {
   const migrated = await DB(SCHEMA_MIGRATIONS_TABLE).select('schema_name');
   return new Set(migrated.map(row => row.schema_name));
-};
-
-// Record schema migration
-const recordMigration = async (schemaName: string, version: string) => {
-  await DB(SCHEMA_MIGRATIONS_TABLE).insert({
-    schema_name: schemaName,
-    version: version
-  });
-};
-
-// Get schema version from file content
-const getSchemaVersion = (filePath: string): string => {
-  const content = fs.readFileSync(filePath, 'utf8');
-  const versionMatch = content.match(/\/\/ Version: (.+)/);
-  return versionMatch ? versionMatch[1] : new Date().toISOString();
 };
 
 // Main migration function
