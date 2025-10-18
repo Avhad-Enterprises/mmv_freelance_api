@@ -102,7 +102,7 @@ async function loginAndGetToken(email, password) {
     const loginData = JSON.stringify({ email, password });
     const options = {
       hostname: 'localhost',
-      port: 8001,
+      port: 8000,
       path: '/api/v1/auth/login',
       method: 'POST',
       headers: {
@@ -154,7 +154,7 @@ async function registerTestUser(email, password = 'TestPassword123!') {
 
     const options = {
       hostname: 'localhost',
-      port: 8001,
+      port: 8000,
       path: '/api/v1/users',
       method: 'POST',
       headers: {
@@ -195,7 +195,7 @@ async function getUserByEmail(email) {
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'localhost',
-      port: 8001,
+      port: 8000,
       path: `/api/v1/admin/users/search?email=${encodeURIComponent(email)}`,
       method: 'GET',
       headers: {
@@ -235,7 +235,7 @@ const TEST_CASES = [
     name: "No Authorization Header",
     description: "Test without Authorization header",
     headers: {},
-    expectedStatus: 404,
+    expectedStatus: 401,
     expectedFields: ['success', 'message'],
     category: "AUTH_ERRORS"
   },
@@ -290,7 +290,7 @@ const TEST_CASES = [
 async function runTests() {
   // Get admin token for user management
   console.log('🔑 Obtaining admin authentication token...');
-  adminToken = await loginAndGetToken('superadmin@mmv.com', 'SuperAdmin123!');
+  adminToken = await loginAndGetToken('avhadenterprisespc5@gmail.com', 'SuperAdmin123!');
 
   if (!adminToken) {
     console.log('❌ Could not obtain admin token - some tests will be skipped');

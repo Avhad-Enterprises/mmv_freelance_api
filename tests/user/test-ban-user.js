@@ -233,7 +233,7 @@ const TEST_CASES = [
     urlPath: '/users/1/ban',
     headers: {},
     data: { reason: "Test ban" },
-    expectedStatus: 404,
+    expectedStatus: 401, // Authentication middleware returns 401 before route handler
     expectedFields: ['success', 'message'],
     category: "AUTH_ERRORS"
   },
@@ -317,18 +317,6 @@ const TEST_CASES = [
     expectedMessage: "User not found"
   },
 
-  {
-    name: "Ban Already Banned User",
-    description: "Test banning a user who is already banned - SKIPPED (user creation issue)",
-    urlPath: '/users/1/ban',
-    headers: {},
-    data: { reason: "Already banned" },
-    expectedStatus: 200,
-    expectedFields: [],
-    category: "BUSINESS_ERRORS",
-    skip: true
-  },
-
   // ============== SUCCESSFUL BANNING ==============
   {
     name: "Ban User with Reason",
@@ -385,7 +373,7 @@ async function runTests() {
   console.log('🔑 Obtaining authentication tokens...');
 
   // Get super admin token
-  superAdminToken = await loginAndGetToken('superadmin@mmv.com', 'SuperAdmin123!');
+  superAdminToken = await loginAndGetToken('avhadenterprisespc5@gmail.com', 'SuperAdmin123!');
   if (!superAdminToken) {
     console.log('❌ Could not obtain super admin token');
   } else {
@@ -466,6 +454,13 @@ async function runTests() {
     console.log(`${i + 1}. ${testCase.name}`);
     console.log(`   Description: ${testCase.description}`);
     console.log(`   Category: ${testCase.category}`);
+
+    // Skip test if marked as skip
+    if (testCase.skip) {
+      console.log(`   ⏭️  SKIPPED`);
+      console.log('');
+      continue;
+    }
 
     try {
       // Prepare headers and URL

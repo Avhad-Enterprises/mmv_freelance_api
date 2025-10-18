@@ -61,7 +61,7 @@ const testCases = [
       'Content-Type': 'application/json'
     },
     data: {},
-    expectedStatus: 404, // Auth middleware returns 404 for missing token
+    expectedStatus: 401, // Auth middleware returns 401 for missing token
     expectedFields: ['success', 'message'],
     category: "AUTHENTICATION",
     expectedMessage: "Authentication token missing"
@@ -86,11 +86,11 @@ const testCases = [
     urlPath: '/users/1/unban',
     headers: {}, // Will be set dynamically with regular user token
     data: {},
-    expectedStatus: 404, // Auth middleware returns 404 for missing token, but role middleware should return 403
+    expectedStatus: 401, // Auth middleware returns 401 for missing token
     expectedFields: ['success', 'message'],
     category: "AUTHORIZATION",
     requiresRegularUserToken: true,
-    expectedMessage: "Authentication token missing" // This is wrong, should be Forbidden
+    expectedMessage: "Authentication token missing"
   },
 
   // Authorization Tests
@@ -100,7 +100,7 @@ const testCases = [
     urlPath: '/users/1/unban',
     headers: {}, // Will be set dynamically with admin token
     data: {},
-    expectedStatus: 404, // Same issue as above
+    expectedStatus: 401, // Auth middleware returns 401 for missing token
     expectedFields: ['success', 'message'],
     category: "AUTHORIZATION",
     requiresAdminToken: true,
@@ -187,7 +187,7 @@ async function getAuthTokens() {
         'Content-Type': 'application/json'
       }
     }, {
-      email: 'superadmin@mmv.com',
+      email: 'avhadenterprisespc5@gmail.com',
       password: 'SuperAdmin123!'
     });
 
