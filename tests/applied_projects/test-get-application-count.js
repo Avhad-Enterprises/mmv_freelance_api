@@ -15,7 +15,7 @@ async function testGetApplicationCount() {
   try {
     // Login as client
     console.log('\nLogging in as client...');
-    const clientEmail = 'harshalv4@gmail.com';
+    const clientEmail = 'test.client@example.com';
     const clientPassword = 'TestPass123!';
 
     const clientLoginResponse = await makeRequest(
@@ -109,8 +109,8 @@ async function testGetApplicationCount() {
 
     // Test 4: Try to access with admin role (should succeed)
     console.log('\nTest 4: Access with admin role (should succeed)');
-    const adminEmail = 'superadmin@mmv.com';
-    const adminPassword = 'SuperAdmin123!';
+    const adminEmail = 'testadmin@example.com';
+    const adminPassword = 'TestAdmin123!';
 
     const adminLoginResponse = await makeRequest(
       'POST',

@@ -130,7 +130,7 @@ async function testWithdrawApplication() {
 
     // Test 5: Try to access with unauthorized role (should fail)
     console.log('\nTest 5: Access with unauthorized role (should fail)');
-    const clientEmail = 'harshalv4@gmail.com';
+    const clientEmail = 'test.client@example.com';
     const clientPassword = 'TestPass123!';
 
     const clientLoginResponse = await makeRequest(
@@ -166,8 +166,8 @@ async function testWithdrawApplication() {
       {} // No auth header
     );
 
-    if (unauthenticatedResponse.statusCode === 404) {
-      printTestResult('Unauthenticated access check', true, 'Correctly denied access without authentication', { statusCode: 404 });
+    if (unauthenticatedResponse.statusCode === 401) {
+      printTestResult('Unauthenticated access check', true, 'Correctly denied access without authentication', { statusCode: 401 });
     } else {
       printTestResult('Unauthenticated access check', false, 'Should have denied access without authentication', {
         statusCode: unauthenticatedResponse.statusCode,

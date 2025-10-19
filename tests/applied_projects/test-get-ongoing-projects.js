@@ -87,7 +87,7 @@ async function testGetOngoingProjects() {
 
     // Test 3: Get ongoing projects as client
     console.log('\nTest 3: Get ongoing projects as client');
-    const clientEmail = 'harshalv4@gmail.com';
+    const clientEmail = 'test.client@example.com';
     const clientPassword = 'TestPass123!';
 
     const clientLoginResponse = await makeRequest(
@@ -123,8 +123,8 @@ async function testGetOngoingProjects() {
 
     // Test 4: Get ongoing projects as admin
     console.log('\nTest 4: Get ongoing projects as admin');
-    const adminEmail = 'superadmin@mmv.com';
-    const adminPassword = 'SuperAdmin123!';
+    const adminEmail = 'testadmin@example.com';
+    const adminPassword = 'TestAdmin123!';
 
     const adminLoginResponse = await makeRequest(
       'POST',
@@ -166,8 +166,8 @@ async function testGetOngoingProjects() {
       {} // No auth header
     );
 
-    if (unauthenticatedResponse.statusCode === 404) {
-      printTestResult('Unauthenticated access check', true, 'Correctly denied access without authentication', { statusCode: 404 });
+    if (unauthenticatedResponse.statusCode === 401) {
+      printTestResult('Unauthenticated access check', true, 'Correctly denied access without authentication', { statusCode: 401 });
     } else {
       printTestResult('Unauthenticated access check', false, 'Should have denied access without authentication', {
         statusCode: unauthenticatedResponse.statusCode,

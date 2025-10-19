@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Complete Auth API Test Suite Runner
+ * Complete Client Routes API Test Suite Runner
  *
- * This script runs all authentication-related tests:
- * - Client Registration
- * - Videographer Registration
- * - Video Editor Registration
- * - Login
+ * This script runs all client routes-related tests:
+ * - Client Profile Management
+ * - Client Statistics
+ * - Client Data Retrieval
  *
- * Usage: node tests/auth/run-auth-tests.js
+ * Usage: node tests/clients/run-clients-tests.js
  */
 
 const { printSection, printSummary, getTestCounters, resetTestCounters } = require('../test-utils');
@@ -56,22 +55,16 @@ async function runTestModule(name, testModule) {
 /**
  * Main test runner
  */
-async function runAllAuthTests() {
-  console.log('🔐 Starting Complete Auth API Test Suite...\n');
+async function runAllClientTests() {
+  console.log('👤 Starting Complete Client Routes API Test Suite...\n');
   console.log('=' .repeat(60));
 
   try {
     // Import test modules
-    const clientTests = require('./test-client-registration');
-    const videographerTests = require('./test-videographer-registration');
-    const videoEditorTests = require('./test-videoeditor-registration');
-    const loginTests = require('./test-login');
+    const clientRoutesTests = require('./test-client-routes');
 
     // Run all test suites
-    await runTestModule('Client Registration Tests', clientTests);
-    await runTestModule('Videographer Registration Tests', videographerTests);
-    await runTestModule('Video Editor Registration Tests', videoEditorTests);
-    await runTestModule('Login Tests', loginTests);
+    await runTestModule('Client Routes Tests', clientRoutesTests);
 
     // Get final counters
     const finalCounters = getTestCounters();
@@ -80,17 +73,17 @@ async function runAllAuthTests() {
 
     // Final summary
     console.log('\n' + '='.repeat(60));
-    console.log('🏁 AUTH TEST SUITE COMPLETE');
+    console.log('🏁 CLIENT ROUTES TEST SUITE COMPLETE');
     console.log('='.repeat(60));
 
     printSummary(totalPassed, totalFailed, totalPassed + totalFailed);
 
     // Exit with appropriate code
     if (totalFailed === 0) {
-      console.log('\n✅ All auth tests passed!');
+      console.log('\n✅ All client routes tests passed!');
       process.exit(0);
     } else {
-      console.log('\n❌ Some auth tests failed!');
+      console.log('\n❌ Some client routes tests failed!');
       process.exit(1);
     }
 
@@ -102,9 +95,9 @@ async function runAllAuthTests() {
 
 // Run tests if called directly
 if (require.main === module) {
-  runAllAuthTests();
+  runAllClientTests();
 }
 
 module.exports = {
-  runAllAuthTests
+  runAllClientTests
 };

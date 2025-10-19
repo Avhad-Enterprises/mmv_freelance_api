@@ -1,27 +1,31 @@
 #!/usr/bin/env node
 
 /**
- * Saved Project API Test Runner
- * Runs all saved project-related tests
+ * Skills API Test Runner
+ * Runs all skills-related tests
  *
  * Usage:
- *   node tests/saved_project/run-saved-project-tests.js           # Run all tests
- *   node tests/saved_project/run-saved-project-tests.js save      # Run only save project test
- *   node tests/saved_project/run-saved-project-tests.js get-all   # Run only get all saved test
- *   node tests/saved_project/run-saved-project-tests.js unsave    # Run only unsave project test
- *   node tests/saved_project/run-saved-project-tests.js get-my    # Run only get my saved projects test
+ *   node tests/skill/run-skills-tests.js           # Run all tests
+ *   node tests/skill/run-skills-tests.js create    # Run only create skill test
+ *   node tests/skill/run-skills-tests.js get-all   # Run only get all skills test
+ *   node tests/skill/run-skills-tests.js get-id    # Run only get skill by id test
+ *   node tests/skill/run-skills-tests.js update    # Run only update skill test
+ *   node tests/skill/run-skills-tests.js delete    # Run only delete skill test
+ *   node tests/skill/run-skills-tests.js all       # Run only test all skills test
  */
 
-const { printSection, printSummary, getTestCounters, resetTestCounters } = require('../test-utils');
+const { printSection, printSummary, getTestCounters, resetTestCounters } = require('./test-utils');
 
 let totalPassed = 0;
 let totalFailed = 0;
 
 const SCRIPTS = {
-  'save': 'test-save-project.js',
-  'get-all': 'test-get-all-saved.js',
-  'unsave': 'test-unsave-project.js',
-  'get-my': 'test-get-my-saved-projects.js'
+  'create': 'test-create-skill.js',
+  'get-all': 'test-get-all-skills.js',
+  'get-id': 'test-get-skill-by-id.js',
+  'update': 'test-update-skill.js',
+  'delete': 'test-delete-skill.js',
+  'all': 'test-all-skills.js'
 };
 
 /**
@@ -66,32 +70,36 @@ async function runTestModule(name, testModule) {
 }
 
 async function runAllTests() {
-  console.log('🧪 Starting Saved Project API Tests...\n');
+  console.log('🧪 Starting Skills API Tests...\n');
   console.log('Available tests:', Object.keys(SCRIPTS).join(', '));
   console.log('');
 
   try {
     // Import test modules
-    const saveTests = require('./test-save-project');
-    const getAllTests = require('./test-get-all-saved');
-    const unsaveTests = require('./test-unsave-project');
-    const getMyTests = require('./test-get-my-saved-projects');
+    const createTests = require('./skill/test-create-skill');
+    const getAllTests = require('./skill/test-get-all-skills');
+    const getByIdTests = require('./skill/test-get-skill-by-id');
+    const updateTests = require('./skill/test-update-skill');
+    const deleteTests = require('./skill/test-delete-skill');
+    const allTests = require('./skill/test-all-skills');
 
     // Run all test suites
-    await runTestModule('Save Project Tests', saveTests);
-    await runTestModule('Get All Saved Tests', getAllTests);
-    await runTestModule('Unsave Project Tests', unsaveTests);
-    await runTestModule('Get My Saved Projects Tests', getMyTests);
+    await runTestModule('Create Skill Tests', createTests);
+    await runTestModule('Get All Skills Tests', getAllTests);
+    await runTestModule('Get Skill by ID Tests', getByIdTests);
+    await runTestModule('Update Skill Tests', updateTests);
+    await runTestModule('Delete Skill Tests', deleteTests);
+    await runTestModule('All Skills Tests', allTests);
 
     // Final summary
     console.log('\n' + '='.repeat(60));
-    console.log('🏆 SAVED PROJECT API TESTS SUMMARY');
+    console.log('🏆 SKILLS API TESTS SUMMARY');
     console.log('='.repeat(60));
 
     printSummary(totalPassed, totalFailed, totalPassed + totalFailed);
 
     if (totalFailed === 0) {
-      console.log('\n🎉 ALL TESTS PASSED! Saved Project APIs are working correctly.');
+      console.log('\n🎉 ALL TESTS PASSED! Skills APIs are working correctly.');
       process.exit(0);
     } else {
       console.log(`\n⚠️  ${totalFailed} test(s) failed. Please review the results above.`);
@@ -112,7 +120,7 @@ async function runSpecificTest(testName) {
   }
 
   try {
-    const testModule = require(`./${SCRIPTS[testName].replace('.js', '')}`);
+    const testModule = require(`./skill/${SCRIPTS[testName].replace('.js', '')}`);
     const result = await runTestModule(`${testName} Test`, testModule);
     process.exit(result.failed > 0 ? 1 : 0);
   } catch (error) {

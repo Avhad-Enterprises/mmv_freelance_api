@@ -221,6 +221,16 @@ async function runTests() {
 }
 
 // Run tests
+if (require.main === module) {
+  runTests().catch(error => {
+    console.error('💥 Test runner failed:', error);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  runTests
+};
 runTests().catch(error => {
   console.error('💥 Test runner failed:', error);
   process.exit(1);

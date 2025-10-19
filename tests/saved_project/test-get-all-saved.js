@@ -13,6 +13,7 @@ const {
   printSummary,
   storeToken,
   TOKENS,
+  authHeader
 } = require('../test-utils');
 
 let passedTests = 0;
@@ -25,8 +26,8 @@ async function loginAsClient() {
   try {
     console.log('🔐 Logging in as client...');
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'test.client@example.com',
-      password: 'TestPass123!'
+      email: 'login-test@example.com',
+      password: 'Password123!'
     });
 
     if (response.statusCode === 200 && response.body?.data?.token) {
@@ -82,9 +83,7 @@ async function testGetAllSaved() {
 
   // Test 2: Get all saved projects with client auth (should fail)
   console.log('\nTest 2: Get all saved projects with client authentication');
-  const response2 = await makeRequest('GET', `${CONFIG.apiVersion}/saved/listsave`, null, {
-    'Authorization': `Bearer ${TOKENS.client}`
-  });
+  const response2 = await makeRequest('GET', `${CONFIG.apiVersion}/saved/listsave`, null, authHeader('client'));
 
   const test2Passed = response2.statusCode === 403 || response2.statusCode === 401;
   printTestResult('Get all saved with client auth', test2Passed, `Status: ${response2.statusCode}`, response2);
@@ -92,9 +91,7 @@ async function testGetAllSaved() {
 
   // Test 3: Get all saved projects with admin auth
   console.log('\nTest 3: Get all saved projects with admin authentication');
-  const response3 = await makeRequest('GET', `${CONFIG.apiVersion}/saved/listsave`, null, {
-    'Authorization': `Bearer ${TOKENS.admin}`
-  });
+  const response3 = await makeRequest('GET', `${CONFIG.apiVersion}/saved/listsave`, null, authHeader('admin'));
 
   const test3Passed = response3.statusCode === 200 && response3.body?.success === true;
   printTestResult('Get all saved with admin auth', test3Passed, `Status: ${response3.statusCode}`, response3);

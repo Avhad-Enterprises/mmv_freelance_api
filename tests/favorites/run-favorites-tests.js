@@ -1,103 +1,110 @@
 #!/usr/bin/env node
 
 /**
- * Favorites API Test Runner
- * Runs all favorites-related tests sequentially
+ * Complete Favorites API Test Suite Runner
+ *
+ * This script runs all favorites-related tests:
+ * - Add Favorite
+ * - Get My Favorites
+ * - Remove Favorite
+ * - Get My Favorites Details
+ *
+ * Usage: node tests/favorites/run-favorites-tests.js
  */
 
-const { spawn } = require('child_process');
-const path = require('path');
+const { printSection, printSummary, getTestCounters, resetTestCounters } = require('../test-utils');
 
-// Test files in order
-const tests = [
-  'test-add-favorite.js',
-  'test-get-my-favorites.js',
-  'test-remove-favorite.js',
-  'test-get-my-favorites-details.js',
-];
-
-const results = {
-  passed: [],
-  failed: []
-};
+let totalPassed = 0;
+let totalFailed = 0;
 
 /**
- * Run a single test file
+ * Run a test module and collect results
  */
-function runTest(testFile) {
-  return new Promise((resolve) => {
-    const testPath = path.join(__dirname, testFile);
-    console.log(`\n🚀 Running ${testFile}...`);
-    console.log(`Script: ${testPath}`);
-    console.log('='.repeat(50));
+async function runTestModule(name, testModule) {
+  console.log(`\n🏃 Running ${name}...\n`);
 
-    const child = spawn('node', [testPath], {
-      stdio: 'inherit',
-      cwd: __dirname
-    });
+  try {
+    // Reset counters for this module
+    resetTestCounters();
 
-    child.on('close', (code) => {
-      if (code === 0) {
-        results.passed.push(testFile);
-        console.log(`\n✅ ${testFile} completed successfully\n`);
-      } else {
-        results.failed.push(testFile);
-        console.log(`\n❌ ${testFile} failed with exit code ${code}\n`);
-      }
-      resolve(code);
-    });
+    // Override process.exit to prevent individual tests from terminating the suite
+    const originalProcessExit = process.exit;
+    process.exit = function(code) {
+      // Don't actually exit, just return the code
+      return code;
+    };
 
-    child.on('error', (error) => {
-      console.log(`\n❌ ${testFile} failed with error: ${error.message}\n`);
-      results.failed.push(testFile);
-      resolve(1);
-    });
-  });
+    // Run the test
+    await testModule.runTests();
+
+    // Restore process.exit
+    process.exit = originalProcessExit;
+
+    // Get the counters after running the test
+    const counters = getTestCounters();
+
+    console.log(`\n✅ ${name} completed: ${counters.passed} passed, ${counters.failed} failed\n`);
+
+    return counters;
+
+  } catch (error) {
+    console.error(`❌ ${name} failed:`, error.message);
+    return { passed: 0, failed: 1 };
+  }
 }
 
 /**
- * Run all tests sequentially
+ * Main test runner
  */
-async function runAllTests() {
-  console.log('🧪 FAVORITES API TEST SUITE');
-  console.log('=====================================\n');
-  console.log(`Running ${tests.length} test files...\n`);
+async function runAllFavoritesTests() {
+  console.log('⭐ Starting Complete Favorites API Test Suite...\n');
+  console.log('=' .repeat(60));
 
-  for (const test of tests) {
-    await runTest(test);
-  }
+  try {
+    // Import test modules
+    const addFavoriteTests = require('./test-add-favorite');
+    const getMyFavoritesTests = require('./test-get-my-favorites');
+    const removeFavoriteTests = require('./test-remove-favorite');
+    const getMyFavoritesDetailsTests = require('./test-get-my-favorites-details');
 
-  // Print final summary
-  console.log('\n🏆 FAVORITES API TESTS SUMMARY');
-  console.log('=====================================');
-  console.log(`✅ Total Passed: ${results.passed.length}`);
-  console.log(`❌ Total Failed: ${results.failed.length}`);
-  console.log(`📊 Success Rate: ${((results.passed.length / tests.length) * 100).toFixed(1)}%\n`);
+    // Run all test suites
+    await runTestModule('Add Favorite Tests', addFavoriteTests);
+    await runTestModule('Get My Favorites Tests', getMyFavoritesTests);
+    await runTestModule('Remove Favorite Tests', removeFavoriteTests);
+    await runTestModule('Get My Favorites Details Tests', getMyFavoritesDetailsTests);
 
-  if (results.passed.length > 0) {
-    console.log('✅ PASSED TESTS:');
-    results.passed.forEach(test => console.log(`   • ${test}`));
-  }
+    // Get final counters
+    const finalCounters = getTestCounters();
+    totalPassed = finalCounters.passed;
+    totalFailed = finalCounters.failed;
 
-  if (results.failed.length > 0) {
-    console.log('\n❌ FAILED TESTS:');
-    results.failed.forEach(test => console.log(`   • ${test}`));
-  }
+    // Final summary
+    console.log('\n' + '='.repeat(60));
+    console.log('🏁 FAVORITES TEST SUITE COMPLETE');
+    console.log('='.repeat(60));
 
-  const overallSuccess = results.failed.length === 0;
-  console.log(`\n${overallSuccess ? '🎉 ALL TESTS PASSED!' : '⚠️  SOME TESTS FAILED!'}`);
-  console.log(`${overallSuccess ? 'Favorites APIs are working correctly.' : 'Please check the failed tests above.'}`);
+    printSummary(totalPassed, totalFailed, totalPassed + totalFailed);
 
-  // Exit with appropriate code
-  process.exit(overallSuccess ? 0 : 1);
-}
+    // Exit with appropriate code
+    if (totalFailed === 0) {
+      console.log('\n✅ All favorites tests passed!');
+      process.exit(0);
+    } else {
+      console.log('\n❌ Some favorites tests failed!');
+      process.exit(1);
+    }
 
-// Run if called directly
-if (require.main === module) {
-  runAllTests().catch(error => {
-    console.error('Test runner failed:', error);
+  } catch (error) {
+    console.error('\n❌ Test suite failed:', error.message);
     process.exit(1);
-  });
+  }
 }
 
-module.exports = { runAllTests };
+// Run tests if called directly
+if (require.main === module) {
+  runAllFavoritesTests();
+}
+
+module.exports = {
+  runAllFavoritesTests
+};

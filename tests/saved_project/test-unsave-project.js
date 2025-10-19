@@ -13,6 +13,7 @@ const {
   printSummary,
   storeToken,
   TOKENS,
+  authHeader
 } = require('../test-utils');
 
 let passedTests = 0;
@@ -25,8 +26,8 @@ async function loginAsClient() {
   try {
     console.log('🔐 Logging in as client...');
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'test.client@example.com',
-      password: 'TestPass123!'
+      email: 'login-test@example.com',
+      password: 'Password123!'
     });
 
     if (response.statusCode === 200 && response.body?.data?.token) {
@@ -50,9 +51,7 @@ async function saveProjectForTesting() {
     console.log('💾 Saving a project for testing unsave...');
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/saved/save-project`, {
       projects_task_id: 58
-    }, {
-      'Authorization': `Bearer ${TOKENS.client}`
-    });    if (response.statusCode === 201 || response.statusCode === 400) {
+    }, authHeader('client'));    if (response.statusCode === 201 || response.statusCode === 400) {
       // 201 = successfully saved, 400 = already saved (duplicate)
       console.log('✅ Project is available for testing (either just saved or already saved)');
       return true;
@@ -99,9 +98,7 @@ async function testUnsaveProject() {
   try {
     const ensureSaved = await makeRequest('POST', `${CONFIG.apiVersion}/saved/save-project`, {
       projects_task_id: 58
-    }, {
-      'Authorization': `Bearer ${TOKENS.client}`
-    });
+    }, authHeader('client'));
     console.log('📥 Ensure saved response:', { status: ensureSaved.statusCode, message: ensureSaved.body?.message });
     
     // If already saved (400), that's fine, continue with the unsave test
@@ -124,9 +121,7 @@ async function testUnsaveProject() {
   try {
     response2 = await makeRequest('DELETE', `${CONFIG.apiVersion}/saved/unsave-project`, {
       projects_task_id: 58
-    }, {
-      'Authorization': `Bearer ${TOKENS.client}`
-    });
+    }, authHeader('client'));
     console.log('📥 Response Status:', response2.statusCode);
     console.log('📥 Response Body:', JSON.stringify(response2.body, null, 2));
   } catch (error) {
@@ -146,9 +141,7 @@ async function testUnsaveProject() {
   
   const response3 = await makeRequest('DELETE', `${CONFIG.apiVersion}/saved/unsave-project`, {
     projects_task_id: 58
-  }, {
-    'Authorization': `Bearer ${TOKENS.client}`
-  });
+  }, authHeader('client'));
   
   console.log('📥 Response Status:', response3.statusCode);
   console.log('📥 Response Body:', JSON.stringify(response3.body, null, 2));
@@ -165,9 +158,7 @@ async function testUnsaveProject() {
   
   const response4 = await makeRequest('DELETE', `${CONFIG.apiVersion}/saved/unsave-project`, {
     // Missing projects_task_id
-  }, {
-    'Authorization': `Bearer ${TOKENS.client}`
-  });
+  }, authHeader('client'));
   
   console.log('📥 Response Status:', response4.statusCode);
   console.log('📥 Response Body:', JSON.stringify(response4.body, null, 2));
@@ -184,9 +175,7 @@ async function testUnsaveProject() {
   
   const response5 = await makeRequest('DELETE', `${CONFIG.apiVersion}/saved/unsave-project`, {
     projects_task_id: 99999
-  }, {
-    'Authorization': `Bearer ${TOKENS.client}`
-  });
+  }, authHeader('client'));
   
   console.log('📥 Response Status:', response5.statusCode);
   console.log('📥 Response Body:', JSON.stringify(response5.body, null, 2));

@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * Saved Project API Test Runner
- * Runs all saved project-related tests
+ * RBAC (Role-Based Access Control) Tests Runner
+ * Runs all RBAC-related tests
  *
  * Usage:
- *   node tests/saved_project/run-saved-project-tests.js           # Run all tests
- *   node tests/saved_project/run-saved-project-tests.js save      # Run only save project test
- *   node tests/saved_project/run-saved-project-tests.js get-all   # Run only get all saved test
- *   node tests/saved_project/run-saved-project-tests.js unsave    # Run only unsave project test
- *   node tests/saved_project/run-saved-project-tests.js get-my    # Run only get my saved projects test
+ *   node tests/rbac/run-rbac-tests.js           # Run all tests
+ *   node tests/rbac/run-rbac-tests.js complete  # Run only complete RBAC test
+ *   node tests/rbac/run-rbac-tests.js role-based # Run only role-based access test
  */
 
 const { printSection, printSummary, getTestCounters, resetTestCounters } = require('../test-utils');
@@ -18,10 +16,8 @@ let totalPassed = 0;
 let totalFailed = 0;
 
 const SCRIPTS = {
-  'save': 'test-save-project.js',
-  'get-all': 'test-get-all-saved.js',
-  'unsave': 'test-unsave-project.js',
-  'get-my': 'test-get-my-saved-projects.js'
+  'complete': 'test-rbac-complete.js',
+  'role-based': 'test-role-based-access.js'
 };
 
 /**
@@ -42,7 +38,7 @@ async function runTestModule(name, testModule) {
     };
 
     // Run the test
-    await testModule.runTests();
+    await testModule.runAllTests();
 
     // Restore process.exit
     process.exit = originalProcessExit;
@@ -66,32 +62,28 @@ async function runTestModule(name, testModule) {
 }
 
 async function runAllTests() {
-  console.log('🧪 Starting Saved Project API Tests...\n');
+  console.log('🚀 Starting RBAC (Role-Based Access Control) API Tests...\n');
   console.log('Available tests:', Object.keys(SCRIPTS).join(', '));
   console.log('');
 
   try {
     // Import test modules
-    const saveTests = require('./test-save-project');
-    const getAllTests = require('./test-get-all-saved');
-    const unsaveTests = require('./test-unsave-project');
-    const getMyTests = require('./test-get-my-saved-projects');
+    const completeTests = require('./test-rbac-complete');
+    const roleBasedTests = require('./test-role-based-access');
 
     // Run all test suites
-    await runTestModule('Save Project Tests', saveTests);
-    await runTestModule('Get All Saved Tests', getAllTests);
-    await runTestModule('Unsave Project Tests', unsaveTests);
-    await runTestModule('Get My Saved Projects Tests', getMyTests);
+    await runTestModule('Complete RBAC Tests', completeTests);
+    await runTestModule('Role-Based Access Tests', roleBasedTests);
 
     // Final summary
     console.log('\n' + '='.repeat(60));
-    console.log('🏆 SAVED PROJECT API TESTS SUMMARY');
+    console.log('🏆 RBAC API TESTS SUMMARY');
     console.log('='.repeat(60));
 
     printSummary(totalPassed, totalFailed, totalPassed + totalFailed);
 
     if (totalFailed === 0) {
-      console.log('\n🎉 ALL TESTS PASSED! Saved Project APIs are working correctly.');
+      console.log('\n🎉 ALL TESTS PASSED! RBAC system is working correctly.');
       process.exit(0);
     } else {
       console.log(`\n⚠️  ${totalFailed} test(s) failed. Please review the results above.`);

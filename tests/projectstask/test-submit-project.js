@@ -23,6 +23,32 @@ let passedTests = 0;
 let failedTests = 0;
 
 /**
+ * Login and get admin token
+ */
+async function loginAsAdmin() {
+  try {
+    console.log('🔐 Logging in as admin...');
+    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
+    });
+
+    console.log('Login response:', response.statusCode, response.body);
+
+    if (response.statusCode === 200 && response.body?.data?.token) {
+      storeToken('admin', response.body.data.token);
+      console.log('✅ Admin token stored');
+      return true;
+    }
+    console.log('❌ Login failed');
+    return false;
+  } catch (error) {
+    console.log('❌ Login error:', error.message);
+    return false;
+  }
+}
+
+/**
  * Login and get videographer token
  */
 async function loginAsVideographer() {
@@ -55,9 +81,10 @@ async function testSubmitProject() {
   printSection('Testing Project Submission');
 
   // First, create a test project to submit
+  const timestamp = Date.now();
   const createProjectResponse = await makeRequest('POST', `${CONFIG.apiVersion}/projects-tasks`, {
     client_id: 2,
-    project_title: "Test Submission Project",
+    project_title: "Test Submission Project " + timestamp,
     project_category: "Video Editing",
     deadline: "2024-12-31",
     project_description: "A test project for submission",
@@ -72,13 +99,13 @@ async function testSubmitProject() {
     audio_description: "Test",
     video_length: 60,
     preferred_video_style: "Professional",
-    url: "test-submission-project-" + Date.now(),
+    url: "test-submission-project-" + timestamp,
     meta_title: "Test Submission",
     meta_description: "Test project for submission",
     is_active: 1,
     created_by: 1
   }, {
-    'Authorization': `Bearer ${TOKENS.videographer}` // Use videographer token since they can create projects too
+    'Authorization': `Bearer ${TOKENS.admin}` // Use admin token to create project
   });
 
   let testProjectId = null;
@@ -157,9 +184,11 @@ async function testSubmitProject() {
 async function runTests() {
   console.log('🚀 Starting Project Task Submit API Tests\n');
 
-  // Login first
-  const loginSuccess = await loginAsVideographer();
-  if (!loginSuccess) {
+  // Login as both admin and videographer
+  const adminLoginSuccess = await loginAsAdmin();
+  const videographerLoginSuccess = await loginAsVideographer();
+
+  if (!adminLoginSuccess || !videographerLoginSuccess) {
     console.log('❌ Cannot proceed without authentication');
     process.exit(1);
   }

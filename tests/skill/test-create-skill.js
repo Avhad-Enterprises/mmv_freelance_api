@@ -1,113 +1,140 @@
-const http = require('http');
-const { CONFIG, makeRequest, COLORS } = require('../test-utils');
-
-// Configuration
-const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
-const API_PREFIX = '/api/v1';
-
-// Test data
-const testUsers = {
-  superAdmin: {
-    email: 'avhadenterprisespc5@gmail.com',
-    password: 'SuperAdmin123!'
-  }
-};
-
-// Global variables
-let superAdminToken = '';
+#!/usr/bin/env node
 
 /**
- * Test: Create Skill (POST /api/v1/skills)
+ * Skills Create API Test
+ * Tests the POST /skills endpoint
+ */
+
+const {
+  CONFIG,
+  makeRequest,
+  printTestResult,
+  printSection,
+  printSummary,
+  storeToken,
+  TOKENS,
+  authHeader
+} = require('../test-utils');
+
+let passedTests = 0;
+let failedTests = 0;
+
+/**
+ * Login and get super admin token
+ */
+async function loginAsSuperAdmin() {
+  try {
+    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
+    });
+
+    if (response.statusCode === 200 && response.body?.data?.token) {
+      storeToken('superAdmin', response.body.data.token);
+      printTestResult('Super admin login', true, 'SUCCESS', null);
+      return true;
+    } else {
+      printTestResult('Super admin login', false, `Expected success, got ${response.statusCode}`, response.body);
+      return false;
+    }
+  } catch (error) {
+    printTestResult('Super admin login', false, `Request failed: ${error.message}`, null);
+    return false;
+  }
+}
+
+/**
+ * Test creating skills
  */
 async function testCreateSkill() {
-  console.log('\n🧪 Testing: Create Skill (POST /api/v1/skills)');
-  console.log('='.repeat(50));
+  printSection('Testing Create Skill');
 
-  try {
-    // First, login as super admin to get token
-    console.log('🔐 Logging in as super admin...');
-    const loginResponse = await makeRequest('POST', `${BASE_URL}/auth/login`, {
-      email: testUsers.superAdmin.email,
-      password: testUsers.superAdmin.password
-    });
+  // Test 1: Create skill without authentication
+  console.log('\nTest 1: Create skill without authentication');
+  const response1 = await makeRequest('POST', `${CONFIG.apiVersion}/skills`, {
+    skill_name: 'Test Skill',
+    created_by: 1
+  });
 
-    if (loginResponse.statusCode !== 200) {
-      throw new Error(`Login failed: ${loginResponse.statusCode} - ${JSON.stringify(loginResponse.body)}`);
-    }
+  if (response1.statusCode === 401) {
+    printTestResult('Create skill without auth', true, `Status: ${response1.statusCode}, Expected: 401`, null);
+    passedTests++;
+  } else {
+    printTestResult('Create skill without auth', false, `Status: ${response1.statusCode}, Expected: 401`, response1.body);
+    failedTests++;
+  }
 
-    superAdminToken = loginResponse.body.data.token;
-    console.log('✅ Super admin login successful');
+  // Test 2: Create skill with valid data
+  console.log('\nTest 2: Create skill with valid data');
+  const response2 = await makeRequest('POST', `${CONFIG.apiVersion}/skills`, {
+    skill_name: 'Test Skill',
+    created_by: 1
+  }, authHeader('superAdmin'));
 
-    // Test data for creating a skill
-    const skillData = {
-      skill_name: 'Test Skill',
-      created_by: 1
-    };
+  if (response2.statusCode === 201 && response2.body?.data?.skill_name === 'Test Skill') {
+    printTestResult('Create skill with valid data', true, `Status: ${response2.statusCode}, Expected: 201`, null);
+    passedTests++;
+  } else {
+    printTestResult('Create skill with valid data', false, `Status: ${response2.statusCode}, Expected: 201`, response2.body);
+    failedTests++;
+  }
 
-    console.log('📝 Creating new skill...');
-    const createResponse = await makeRequest('POST', `${BASE_URL}/skills`, skillData, {
-      'Authorization': `Bearer ${superAdminToken}`,
-      'Content-Type': 'application/json'
-    });
+  // Test 3: Create skill with invalid data (empty name)
+  console.log('\nTest 3: Create skill with invalid data (empty name)');
+  const response3 = await makeRequest('POST', `${CONFIG.apiVersion}/skills`, {
+    skill_name: '',
+    created_by: 1
+  }, authHeader('superAdmin'));
 
-    console.log(`📊 Response Status: ${createResponse.statusCode}`);
-    console.log(`📊 Response Data: ${JSON.stringify(createResponse.body, null, 2)}`);
+  if (response3.statusCode === 400) {
+    printTestResult('Create skill with invalid data', true, `Status: ${response3.statusCode}, Expected: 400`, null);
+    passedTests++;
+  } else {
+    printTestResult('Create skill with invalid data', false, `Status: ${response3.statusCode}, Expected: 400`, response3.body);
+    failedTests++;
+  }
 
-    if (createResponse.statusCode === 201) {
-      console.log(`${COLORS.green}✅ PASS: Skill created successfully${COLORS.reset}`);
+  // Test 4: Create skill with missing required fields
+  console.log('\nTest 4: Create skill with missing required fields');
+  const response4 = await makeRequest('POST', `${CONFIG.apiVersion}/skills`, {}, authHeader('superAdmin'));
 
-      // Validate response structure
-      if (createResponse.body && createResponse.body.data) {
-        const skill = createResponse.body.data;
-        if (skill.skill_name === skillData.skill_name &&
-            skill.created_by === skillData.created_by) {
-          console.log(`${COLORS.green}✅ PASS: Response data structure is correct${COLORS.reset}`);
-          return { success: true, skillId: skill.skill_id };
-        } else {
-          console.log(`${COLORS.red}❌ FAIL: Response data structure is incorrect${COLORS.reset}`);
-          return { success: false };
-        }
-      } else {
-        console.log(`${COLORS.red}❌ FAIL: Response missing data field${COLORS.reset}`);
-        return { success: false };
-      }
-    } else {
-      console.log(`${COLORS.red}❌ FAIL: Expected status 201, got ${createResponse.statusCode}${COLORS.reset}`);
-      return { success: false };
-    }
-
-  } catch (error) {
-    console.error(`${COLORS.red}💥 ERROR: ${error.message}${COLORS.reset}`);
-    return { success: false };
+  if (response4.statusCode === 400) {
+    printTestResult('Create skill with missing fields', true, `Status: ${response4.statusCode}, Expected: 400`, null);
+    passedTests++;
+  } else {
+    printTestResult('Create skill with missing fields', false, `Status: ${response4.statusCode}, Expected: 400`, response4.body);
+    failedTests++;
   }
 }
 
-// Main test runner
+/**
+ * Main test runner
+ */
 async function runTests() {
-  console.log('🚀 Starting Skill Creation Tests');
-  console.log('=====================================');
+  console.log('🧪 SKILLS CREATE API TESTS');
+  console.log('==========================\n');
 
-  const result = await testCreateSkill();
-
-  // Summary
-  console.log('\n📊 Test Results Summary:');
-  console.log('='.repeat(50));
-
-  if (result.success) {
-    console.log(`${COLORS.green}✅ PASS: Create Skill${COLORS.reset}`);
-    console.log(`\n📈 Test passed! Skill created with ID: ${result.skillId}`);
-    console.log(`${COLORS.green}🎉 Skills API is working!${COLORS.reset}`);
-    process.exit(0);
-  } else {
-    console.log(`${COLORS.red}❌ FAIL: Create Skill${COLORS.reset}`);
-    console.log(`${COLORS.red}💥 Test failed${COLORS.reset}`);
+  // Login first
+  const loginSuccess = await loginAsSuperAdmin();
+  if (!loginSuccess) {
+    console.error('❌ Failed to login as super admin');
     process.exit(1);
   }
+  console.log('');
+
+  // Run tests
+  await testCreateSkill();
+
+  // Summary
+  printSummary(passedTests, failedTests, passedTests + failedTests);
 }
 
-// Run tests if called directly
+// Run if called directly
 if (require.main === module) {
-  runTests();
+  runTests().catch(error => {
+    console.error('Test runner failed:', error);
+    process.exit(1);
+  });
 }
 
-module.exports = { testCreateSkill };
+module.exports = { runTests };
