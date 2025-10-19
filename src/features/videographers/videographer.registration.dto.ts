@@ -1,6 +1,26 @@
 // Videographer Registration DTO
-import { IsString, IsOptional, IsEmail, IsNumber, IsArray, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsNumber, IsArray, IsEnum, IsNotEmpty, IsBoolean, ValidateIf, registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
 import { Transform } from 'class-transformer';
+
+// Custom validator to ensure boolean is true
+function IsTrue(validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      name: 'isTrue',
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      validator: {
+        validate(value: any, args: ValidationArguments) {
+          return value === true;
+        },
+        defaultMessage(args: ValidationArguments) {
+          return `${args.property} must be true`;
+        },
+      },
+    });
+  };
+}
 
 const AVAILABILITY_OPTIONS = ['part-time', 'full-time', 'flexible', 'on-demand'] as const;
 const ID_TYPE_OPTIONS = ['passport', 'driving_license', 'national_id'] as const;
@@ -54,9 +74,9 @@ export class VideographerRegistrationDto {
   @IsString()
   country: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  city: string;
+  city?: string;
 
   @IsOptional()
   @IsString()
@@ -170,6 +190,29 @@ export class VideographerRegistrationDto {
   })
   @IsArray()
   base_skills?: string[];
+
+  // Terms and Conditions (Required)
+  @IsNotEmpty()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value === 'true' || value === '1';
+    }
+    return Boolean(value);
+  })
+  @IsBoolean()
+  @IsTrue({ message: 'You must accept the terms and conditions' })
+  terms_accepted: boolean;
+
+  @IsNotEmpty()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value === 'true' || value === '1';
+    }
+    return Boolean(value);
+  })
+  @IsBoolean()
+  @IsTrue({ message: 'You must accept the privacy policy' })
+  privacy_policy_accepted: boolean;
 
   // Note: File uploads (profile_photo, id_document) are handled separately by multer
   // and validated in the service layer, not in the DTO

@@ -143,13 +143,15 @@ async function testSuccessfulVideoEditorRegistration() {
       state: 'California',
       country: 'United States',
       role: 'Senior Video Editor',
-      base_skills: JSON.stringify(['editing', 'color correction', 'audio mixing'])
+      base_skills: JSON.stringify(['editing', 'color correction', 'audio mixing']),
+      terms_accepted: true,
+      privacy_policy_accepted: true
     };
 
     // Add JSON fields
     Object.keys(videoEditorData).forEach(key => {
       const value = videoEditorData[key];
-      formData.append(key, value);
+      formData.append(key, typeof value === 'boolean' ? value.toString() : value);
     });
 
     // Add files
@@ -203,12 +205,14 @@ async function testSuccessfulVideoEditorRegistration() {
       id_type: 'passport',
       short_description: 'Freelance video editor',
       availability: 'part-time',
-      languages: JSON.stringify(['English'])
+      languages: JSON.stringify(['English']),
+      terms_accepted: true,
+      privacy_policy_accepted: true
     };
 
     Object.keys(minimalData).forEach(key => {
       const value = minimalData[key];
-      formData.append(key, value);
+      formData.append(key, typeof value === 'boolean' ? value.toString() : value);
     });
 
     // Add required files
@@ -296,7 +300,7 @@ async function testVideoEditorRegistrationValidation() {
 
     Object.keys(invalidData).forEach(key => {
       const value = invalidData[key];
-      formData.append(key, value);
+      formData.append(key, typeof value === 'boolean' ? value.toString() : value);
     });
 
     const response = await makeRequest(
@@ -346,12 +350,14 @@ async function testDuplicateVideoEditorRegistration() {
       id_type: 'passport',
       short_description: 'Duplicate test video editor',
       availability: 'part-time',
-      languages: JSON.stringify(['English'])
+      languages: JSON.stringify(['English']),
+      terms_accepted: true,
+      privacy_policy_accepted: true
     };
 
     Object.keys(videoEditorData).forEach(key => {
       const value = videoEditorData[key];
-      formData.append(key, value);
+      formData.append(key, typeof value === 'boolean' ? value.toString() : value);
     });
 
     // Add required files
@@ -388,12 +394,14 @@ async function testDuplicateVideoEditorRegistration() {
         id_type: 'driving_license',
         short_description: 'Second duplicate test video editor',
         availability: 'full-time',
-        languages: JSON.stringify(['English', 'French'])
+        languages: JSON.stringify(['English', 'French']),
+        terms_accepted: true,
+        privacy_policy_accepted: true
       };
 
       Object.keys(duplicateData).forEach(key => {
         const value = duplicateData[key];
-        formData2.append(key, value);
+        formData2.append(key, typeof value === 'boolean' ? value.toString() : value);
       });
 
       // Add required files for second registration
