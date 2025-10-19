@@ -84,8 +84,8 @@ export class AuthService {
     }
 
     const [user] = await DB(USERS_TABLE).insert({
-      first_name: data.full_name.split(' ')[0] || data.full_name,
-      last_name: data.full_name.split(' ').slice(1).join(' ') || '',
+      first_name: data.first_name,
+      last_name: data.last_name,
       username: data.email.split('@')[0],
       email: data.email,
       password: hashedPassword,
@@ -187,8 +187,8 @@ export class AuthService {
     }
 
     const [user] = await DB(USERS_TABLE).insert({
-      first_name: data.full_name.split(' ')[0] || data.full_name,
-      last_name: data.full_name.split(' ').slice(1).join(' ') || '',
+      first_name: data.first_name,
+      last_name: data.last_name,
       username: data.email.split('@')[0],
       email: data.email,
       password: hashedPassword,
@@ -210,7 +210,7 @@ export class AuthService {
 
     const [freelancerProfile] = await DB('freelancer_profiles').insert({
       user_id: user.user_id,
-      profile_title: data.full_name,
+      profile_title: `${data.first_name} ${data.last_name}`,
       skills: Array.isArray(data.skill_tags) ? JSON.stringify(data.skill_tags) : data.skill_tags,
       skill_tags: Array.isArray(data.skill_tags) ? JSON.stringify(data.skill_tags) : data.skill_tags,
       superpowers: Array.isArray(data.superpowers) ? JSON.stringify(data.superpowers) : data.superpowers,
@@ -297,8 +297,8 @@ export class AuthService {
     }
 
     const [user] = await DB(USERS_TABLE).insert({
-      first_name: data.full_name.split(' ')[0] || data.full_name,
-      last_name: data.full_name.split(' ').slice(1).join(' ') || '',
+      first_name: data.first_name,
+      last_name: data.last_name,
       username: data.email.split('@')[0],
       email: data.email,
       password: hashedPassword,
@@ -320,7 +320,7 @@ export class AuthService {
 
     const [freelancerProfile] = await DB('freelancer_profiles').insert({
       user_id: user.user_id,
-      profile_title: data.full_name,
+      profile_title: `${data.first_name} ${data.last_name}`,
       skills: Array.isArray(data.skill_tags) ? JSON.stringify(data.skill_tags) : data.skill_tags,
       skill_tags: Array.isArray(data.skill_tags) ? JSON.stringify(data.skill_tags) : data.skill_tags,
       superpowers: Array.isArray(data.superpowers) ? JSON.stringify(data.superpowers) : data.superpowers,

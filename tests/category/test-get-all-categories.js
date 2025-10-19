@@ -44,11 +44,11 @@ async function loginAsAdmin() {
 async function testGetAllCategories() {
   printSection('Testing Get All Categories');
 
-  // Test 1: Get all categories without authentication
+  // Test 1: Get all categories without authentication (should work since it's public)
   const test1 = await makeRequest('GET', `${CONFIG.apiVersion}/categories`);
 
-  const passed1 = test1.statusCode === 401;
-  printTestResult('Get categories without auth', passed1, `Status: ${test1.statusCode}`, test1);
+  const passed1 = test1.statusCode === 200 && Array.isArray(test1.body?.data);
+  printTestResult('Get categories without auth', passed1, `Status: ${test1.statusCode}, Expected: 200`, test1);
   if (passed1) passedTests++; else failedTests++;
 
   // Test 2: Get all categories with authentication

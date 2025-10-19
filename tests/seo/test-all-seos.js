@@ -1,8 +1,65 @@
-const { testCreateSeo, testCreateSeoInvalidData, testCreateSeoNoAuth } = require('./test-create-seo');
-const { testGetAllSeos, testGetAllSeosNoAuth } = require('./test-get-all-seos');
-const { testGetSeoById, testGetSeoByIdNotFound, testGetSeoByIdNoAuth } = require('./test-get-seo-by-id');
-const { testUpdateSeo, testUpdateSeoNotFound, testUpdateSeoNoAuth, testUpdateSeoInvalidData } = require('./test-update-seo');
-const { testDeleteSeo, testDeleteSeoNotFound, testDeleteSeoNoAuth, testSoftDeleteVerification } = require('./test-delete-seo');
+#!/usr/bin/env node
+
+/**
+ * SEO All Tests
+ * Runs all SEO API tests
+ */
+
+const createTests = require('./test-create-seo');
+const getAllTests = require('./test-get-all-seos');
+const getByIdTests = require('./test-get-seo-by-id');
+const updateTests = require('./test-update-seo');
+const deleteTests = require('./test-delete-seo');
+
+let passedTests = 0;
+let failedTests = 0;
+
+/**
+ * Main test runner
+ */
+async function runTests() {
+  console.log('🧪 SEO ALL API TESTS');
+  console.log('====================\n');
+
+  try {
+    // Run all test suites
+    console.log('🏃 Running Create SEO Tests...');
+    await createTests.runTests();
+    console.log('');
+
+    console.log('🏃 Running Get All SEO Tests...');
+    await getAllTests.runTests();
+    console.log('');
+
+    console.log('🏃 Running Get SEO by ID Tests...');
+    await getByIdTests.runTests();
+    console.log('');
+
+    console.log('🏃 Running Update SEO Tests...');
+    await updateTests.runTests();
+    console.log('');
+
+    console.log('🏃 Running Delete SEO Tests...');
+    await deleteTests.runTests();
+    console.log('');
+
+    console.log('✅ All SEO test suites completed');
+
+  } catch (error) {
+    console.error('❌ Test suite failed:', error);
+    process.exit(1);
+  }
+}
+
+// Run if called directly
+if (require.main === module) {
+  runTests().catch(error => {
+    console.error('Test runner failed:', error);
+    process.exit(1);
+  });
+}
+
+module.exports = { runTests };
 
 /**
  * Run all SEO API tests
@@ -155,4 +212,4 @@ if (require.main === module) {
   runAllSeoTests();
 }
 
-module.exports = { runAllSeoTests };
+module.exports = { runTests };

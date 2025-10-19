@@ -12,32 +12,66 @@ const {
   printSection,
   printSummary,
   authHeader,
+  storeToken,
 } = require('../test-utils');
 
 let passedTests = 0;
 let failedTests = 0;
 
 /**
+ * Login and get admin token
+ */
+async function loginAsAdmin() {
+  try {
+    console.log('🔐 Logging in as admin...');
+    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
+    });
+
+    console.log('Login response:', response.statusCode, response.body);
+
+    if (response.statusCode === 200 && response.body?.data?.token) {
+      storeToken('admin', response.body.data.token);
+      console.log('✅ Admin token stored');
+      return true;
+    }
+    console.log('❌ Login failed');
+    return false;
+  } catch (error) {
+    console.log('❌ Login error:', error.message);
+    return false;
+  }
+}
+
+/**
  * Test getting all project tasks
  */
 async function testGetAllProjectTasks() {
+  // Login as admin first
+  const loginSuccess = await loginAsAdmin();
+  if (!loginSuccess) {
+    console.log('❌ Cannot proceed without admin authentication');
+    failedTests += 2; // Both tests will fail
+    return;
+  }
+
   printSection('PROJECT TASK GET ALL TESTS');
 
-  // Test 1: Get all project tasks
+  // Test 1: Get all project tasks with admin authentication
   try {
     const response = await makeRequest(
       'GET',
       `${CONFIG.apiVersion}/projects-tasks`,
       null,
-      authHeader('client') // Requires authentication
+      authHeader('admin') // Requires admin authentication
     );
 
-    // NOTE: Currently failing due to authentication issues
-    const passed = response.statusCode === 401; // Auth middleware returns 401 for missing token
+    const passed = response.statusCode === 200 && response.body?.success === true;
     printTestResult(
-      'Get all project tasks',
+      'Get all project tasks with admin auth',
       passed,
-      passed ? 'Authentication required (API logic verified via public endpoint)' : `Expected auth error, got ${response.statusCode}`,
+      passed ? 'Successfully retrieved project tasks' : `Expected success, got ${response.statusCode}`,
       response.body
     );
 
@@ -46,7 +80,7 @@ async function testGetAllProjectTasks() {
 
   } catch (error) {
     printTestResult(
-      'Get all project tasks',
+      'Get all project tasks with admin auth',
       false,
       `Request failed: ${error.message}`,
       null
@@ -99,6 +133,16 @@ async function runTests() {
 }
 
 // Run tests
+if (require.main === module) {
+  runTests().catch(error => {
+    console.error('💥 Test runner failed:', error);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  runTests
+};
 runTests().catch(error => {
   console.error('💥 Test runner failed:', error);
   process.exit(1);

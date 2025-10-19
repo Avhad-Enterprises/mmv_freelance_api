@@ -140,8 +140,8 @@ async function testGetApplicationsByStatus() {
 
     // Test 6: Try to access with unauthorized role (should fail)
     console.log('\nTest 6: Access with unauthorized role (should fail)');
-    const adminEmail = 'superadmin@mmv.com';
-    const adminPassword = 'SuperAdmin123!';
+    const adminEmail = 'testadmin@example.com';
+    const adminPassword = 'TestAdmin123!';
 
     const adminLoginResponse = await makeRequest(
       'POST',

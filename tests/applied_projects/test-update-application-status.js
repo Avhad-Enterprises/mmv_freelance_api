@@ -15,7 +15,7 @@ async function testUpdateApplicationStatus() {
   try {
     // Login as client
     console.log('\nLogging in as client...');
-    const clientEmail = 'harshalv4@gmail.com';
+    const clientEmail = 'test.client@example.com';
     const clientPassword = 'TestPass123!';
 
     const clientLoginResponse = await makeRequest(

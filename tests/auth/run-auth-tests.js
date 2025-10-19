@@ -12,7 +12,7 @@
  * Usage: node tests/auth/run-auth-tests.js
  */
 
-const { printSection, printSummary } = require('../test-utils');
+const { printSection, printSummary, getTestCounters, resetTestCounters } = require('../test-utils');
 
 let totalPassed = 0;
 let totalFailed = 0;
@@ -25,20 +25,7 @@ async function runTestModule(name, testModule) {
 
   try {
     // Reset counters for this module
-    let modulePassed = 0;
-    let moduleFailed = 0;
-
-    // Override the printTestResult function to count results
-    const originalPrintTestResult = require('../test-utils').printTestResult;
-    require('../test-utils').printTestResult = function(testName, passed, message, data) {
-      if (passed) {
-        modulePassed++;
-      } else {
-        moduleFailed++;
-      }
-      // Call original function
-      originalPrintTestResult(testName, passed, message, data);
-    };
+    resetTestCounters();
 
     // Override process.exit to prevent individual tests from terminating the suite
     const originalProcessExit = process.exit;
@@ -50,20 +37,18 @@ async function runTestModule(name, testModule) {
     // Run the test
     await testModule.runTests();
 
-    // Restore functions
-    require('../test-utils').printTestResult = originalPrintTestResult;
+    // Restore process.exit
     process.exit = originalProcessExit;
 
-    console.log(`\n✅ ${name} completed: ${modulePassed} passed, ${moduleFailed} failed\n`);
+    // Get the counters after running the test
+    const counters = getTestCounters();
 
-    totalPassed += modulePassed;
-    totalFailed += moduleFailed;
+    console.log(`\n✅ ${name} completed: ${counters.passed} passed, ${counters.failed} failed\n`);
 
-    return { passed: modulePassed, failed: moduleFailed };
+    return counters;
 
   } catch (error) {
     console.error(`❌ ${name} failed:`, error.message);
-    totalFailed++;
     return { passed: 0, failed: 1 };
   }
 }
@@ -88,26 +73,26 @@ async function runAllAuthTests() {
     await runTestModule('Video Editor Registration Tests', videoEditorTests);
     await runTestModule('Login Tests', loginTests);
 
-    // Final summary - calculate from known test counts
+    // Get final counters
+    const finalCounters = getTestCounters();
+    totalPassed = finalCounters.passed;
+    totalFailed = finalCounters.failed;
+
+    // Final summary
     console.log('\n' + '='.repeat(60));
     console.log('🏁 AUTH TEST SUITE COMPLETE');
     console.log('='.repeat(60));
 
-    // Known test counts from individual modules
-    const expectedTotals = {
-      'Client Registration Tests': 7,
-      'Videographer Registration Tests': 5,
-      'Video Editor Registration Tests': 5,
-      'Login Tests': 7
-    };
-
-    const totalTests = Object.values(expectedTotals).reduce((sum, count) => sum + count, 0);
-    
-    printSummary(totalTests, 0);
+    printSummary(totalPassed, totalFailed, totalPassed + totalFailed);
 
     // Exit with appropriate code
-    console.log('\n✅ All auth tests passed!');
-    process.exit(0);
+    if (totalFailed === 0) {
+      console.log('\n✅ All auth tests passed!');
+      process.exit(0);
+    } else {
+      console.log('\n❌ Some auth tests failed!');
+      process.exit(1);
+    }
 
   } catch (error) {
     console.error('\n❌ Test suite failed:', error.message);

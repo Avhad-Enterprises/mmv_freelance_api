@@ -13,17 +13,45 @@ class favoritesservices {
     if (isEmpty(data)) {
       throw new HttpException(400, "Data Invalid");
     }
+
+    // Check if freelancer exists
+    const freelancerExists = await DB(T.USERS_TABLE)
+      .where({ user_id: data.freelancer_id })
+      .first();
+
+    if (!freelancerExists) {
+      throw new HttpException(404, "Freelancer not found");
+    }
+
+    // Check if already exists (including deleted records)
     const existing = await DB(T.FAVORITES_TABLE)
       .where({
-        user_id: data.user_id
-        , freelancer_id: data.freelancer_id
+        user_id: data.user_id,
+        freelancer_id: data.freelancer_id
       })
       .first();
 
-    if (existing) {
+    if (existing && !existing.is_deleted) {
       throw new HttpException(409, "This freelancer is already in favorites");
     }
 
+    // If previously deleted, reactivate it
+    if (existing && existing.is_deleted) {
+      const updated = await DB(T.FAVORITES_TABLE)
+        .where({ id: existing.id })
+        .update({
+          is_deleted: false,
+          deleted_by: null,
+          deleted_at: null,
+          is_active: true,
+          updated_by: data.user_id,
+          updated_at: new Date(),
+        })
+        .returning("*");
+      return updated[0];
+    }
+
+    // Create new favorite
     const res = await DB(T.FAVORITES_TABLE).insert(data).returning("*");
     return res[0];
   }
@@ -32,14 +60,30 @@ class favoritesservices {
    * Removes a favorite relationship
    */
   public async removeFavorite(dto: favoritesDto): Promise<string> {
-    const { id } = dto;
+    const { user_id, freelancer_id } = dto;
 
+    // Check if the favorite exists
+    const existing = await DB(T.FAVORITES_TABLE)
+      .where({ user_id, freelancer_id, is_deleted: false })
+      .first();
+
+    if (!existing) {
+      throw new HttpException(404, 'Favorite not found');
+    }
+
+    // Soft delete
     const deleted = await DB(T.FAVORITES_TABLE)
-      .where({ id: id })
-      .del();
+      .where({ user_id, freelancer_id })
+      .update({
+        is_deleted: true,
+        deleted_by: user_id,
+        deleted_at: new Date(),
+        updated_by: user_id,
+        updated_at: new Date(),
+      });
 
     if (deleted === 0) {
-      throw new Error('Favorite not found.');
+      throw new HttpException(500, 'Failed to remove favorite');
     }
 
     return 'Removed from favorites';
@@ -63,10 +107,10 @@ class favoritesservices {
    */
   public async getFavoritesByUser(user_id: number): Promise<any> {
     const favorites = await DB(T.FAVORITES_TABLE)
-      .where({ user_id, is_active: true })
-      .select("*");
+      .where({ user_id, is_active: true, is_deleted: false })
+      .select("*")
+      .orderBy('created_at', 'desc');
 
-    if (!favorites) throw new HttpException(404, "User not found");
     return favorites;
   }
 
@@ -81,21 +125,25 @@ class favoritesservices {
     const results = await DB(T.FAVORITES_TABLE)
       .where({
         [`${T.FAVORITES_TABLE}.user_id`]: user_id,
+        [`${T.FAVORITES_TABLE}.is_deleted`]: false,
       })
       .leftJoin(
         `${T.USERS_TABLE}`,
         `${T.USERS_TABLE}.user_id`,
         '=',
-        `${T.FAVORITES_TABLE}.id`
+        `${T.FAVORITES_TABLE}.freelancer_id` // Fixed: was incorrectly joining on id
       )
       .select(
         `${T.FAVORITES_TABLE}.*`,
         `${T.USERS_TABLE}.username`,
         `${T.USERS_TABLE}.email`,
-        `${T.USERS_TABLE}.skill`,
+        `${T.USERS_TABLE}.first_name`,
+        `${T.USERS_TABLE}.last_name`,
+        `${T.USERS_TABLE}.profile_picture`,
         `${T.USERS_TABLE}.city`,
         `${T.USERS_TABLE}.country`,
-      );
+      )
+      .orderBy(`${T.FAVORITES_TABLE}.created_at`, 'desc');
     return results;
   }
 }

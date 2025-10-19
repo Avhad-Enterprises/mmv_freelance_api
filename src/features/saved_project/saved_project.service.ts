@@ -11,6 +11,29 @@ class Savedprojectservices {
     if (isEmpty(data)) {
       throw new HttpException(400, "Data Invalid");
     }
+
+    // Validate that the project exists
+    const projectExists = await DB('projects_task')
+      .where({ projects_task_id: data.projects_task_id })
+      .first();
+
+    if (!projectExists) {
+      throw new HttpException(400, "Project not found");
+    }
+
+    // Check if already saved
+    const alreadySaved = await DB(T.SAVED_PROJECTS)
+      .where({
+        user_id: data.user_id,
+        projects_task_id: data.projects_task_id,
+        is_deleted: false
+      })
+      .first();
+
+    if (alreadySaved) {
+      throw new HttpException(400, "Project already saved");
+    }
+
     const res = await DB(T.SAVED_PROJECTS)
       .insert(data)
       .returning("*");

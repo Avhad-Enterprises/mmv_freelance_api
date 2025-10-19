@@ -147,13 +147,15 @@ async function testSuccessfulVideographerRegistration() {
       equipment_owned: JSON.stringify(['Sony A7S III', 'DJI Mavic 3', 'Rode NTG5']),
       experience_level: 'expert',
       role: 'Lead Videographer',
-      base_skills: JSON.stringify(['camera operation', 'lighting', 'sound'])
+      base_skills: JSON.stringify(['camera operation', 'lighting', 'sound']),
+      terms_accepted: true,
+      privacy_policy_accepted: true
     };
 
     // Add JSON fields
     Object.keys(videographerData).forEach(key => {
       const value = videographerData[key];
-      formData.append(key, value);
+      formData.append(key, typeof value === 'boolean' ? value.toString() : value);
     });
 
     // Add files
@@ -207,12 +209,14 @@ async function testSuccessfulVideographerRegistration() {
       phone_number: '+1-555-0124',
       id_type: 'passport',
       short_description: 'Freelance videographer',
-      languages: JSON.stringify(['English'])
+      languages: JSON.stringify(['English']),
+      terms_accepted: true,
+      privacy_policy_accepted: true
     };
 
     Object.keys(minimalData).forEach(key => {
       const value = minimalData[key];
-      formData.append(key, value);
+      formData.append(key, typeof value === 'boolean' ? value.toString() : value);
     });
 
     // Add profile photo (required for videographers)
@@ -301,7 +305,7 @@ async function testVideographerRegistrationValidation() {
 
     Object.keys(invalidData).forEach(key => {
       const value = invalidData[key];
-      formData.append(key, value);
+      formData.append(key, typeof value === 'boolean' ? value.toString() : value);
     });
 
     const response = await makeRequest(
@@ -351,12 +355,14 @@ async function testDuplicateVideographerRegistration() {
       phone_number: '+1-555-0125',
       id_type: 'passport',
       short_description: 'Duplicate test videographer',
-      languages: JSON.stringify(['English'])
+      languages: JSON.stringify(['English']),
+      terms_accepted: true,
+      privacy_policy_accepted: true
     };
 
     Object.keys(videographerData).forEach(key => {
       const value = videographerData[key];
-      formData.append(key, value);
+      formData.append(key, typeof value === 'boolean' ? value.toString() : value);
     });
 
     // Add required files
@@ -396,12 +402,14 @@ async function testDuplicateVideographerRegistration() {
         phone_number: '+1-555-0126',
         id_type: 'driving_license',
         short_description: 'Second duplicate test videographer',
-        languages: JSON.stringify(['English', 'French'])
+        languages: JSON.stringify(['English', 'French']),
+        terms_accepted: true,
+        privacy_policy_accepted: true
       };
 
       Object.keys(duplicateData).forEach(key => {
         const value = duplicateData[key];
-        formData2.append(key, value);
+        formData2.append(key, typeof value === 'boolean' ? value.toString() : value);
       });
 
       // Add required files for second registration

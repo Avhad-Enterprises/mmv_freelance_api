@@ -19,13 +19,8 @@ export const requireRole = (...roles: string[]) => {
         throw new HttpException(401, 'Authentication required');
       }
 
-      // Get user's roles
-      const userRoles = await DB(USER_ROLES)
-        .join(ROLE, `${ROLE}.role_id`, `${USER_ROLES}.role_id`)
-        .where(`${USER_ROLES}.user_id`, req.user.user_id)
-        .select(`${ROLE}.name`);
-
-      const userRoleNames = userRoles.map((r: any) => r.name);
+      // Use roles from JWT (attached by auth middleware)
+      const userRoleNames = req.user.roles || [];
 
       // Check if user has any of the required roles
       const hasRole = roles.some(role => userRoleNames.includes(role));
@@ -34,8 +29,6 @@ export const requireRole = (...roles: string[]) => {
         throw new HttpException(403, `Access denied. Required role: ${roles.join(' or ')}`);
       }
 
-      // Attach roles to request for further use
-      req.user.roles = userRoleNames;
       next();
     } catch (error) {
       next(error);
@@ -54,12 +47,7 @@ export const requireAllRoles = (...roles: string[]) => {
         throw new HttpException(401, 'Authentication required');
       }
 
-      const userRoles = await DB(USER_ROLES)
-        .join(ROLE, `${ROLE}.role_id`, `${USER_ROLES}.role_id`)
-        .where(`${USER_ROLES}.user_id`, req.user.user_id)
-        .select(`${ROLE}.name`);
-
-      const userRoleNames = userRoles.map((r: any) => r.name);
+      const userRoleNames = req.user.roles || [];
 
       // Check if user has ALL required roles
       const hasAllRoles = roles.every(role => userRoleNames.includes(role));
@@ -68,7 +56,6 @@ export const requireAllRoles = (...roles: string[]) => {
         throw new HttpException(403, `Access denied. Required roles: ${roles.join(' and ')}`);
       }
 
-      req.user.roles = userRoleNames;
       next();
     } catch (error) {
       next(error);

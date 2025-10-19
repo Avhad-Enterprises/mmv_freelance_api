@@ -3,7 +3,7 @@ import Route from '../../interfaces/route.interface';
 import { requireRole } from '../../middlewares/role.middleware';
 import validationMiddleware from '../../middlewares/validation.middleware';
 import favoritescontroller from './favorites.controller';
-import { favoritesDto } from './favorites.dto';
+import { favoritesDto, CreateFavoriteDto, RemoveFavoriteDto } from './favorites.dto';
 
 class favoritesRoute implements Route {
 
@@ -17,34 +17,57 @@ class favoritesRoute implements Route {
 
   private initializeRoutes() {
     /**
-     *    POST /favorites/add
+     *    POST /favorites/add-freelancer
      *    Add a freelancer to user's favorites list
+     *    🔐 Authentication required
      */
-    this.router.post(`${this.path}/add`, validationMiddleware(favoritesDto, 'body', false, []), this.favoritescontroller.addFavorite);
+    this.router.post(
+      `${this.path}/add-freelancer`, 
+      validationMiddleware(CreateFavoriteDto, 'body', false, []), 
+      this.favoritescontroller.addFavorite
+    );
 
     /**
-     *    POST /favorites/remove
+     *    DELETE /favorites/remove-freelancer
      *    Remove a freelancer from user's favorites list
+     *    🔐 Authentication required
      */
-    this.router.post(`${this.path}/remove`, this.favoritescontroller.removeFavorite);
+    this.router.delete(
+      `${this.path}/remove-freelancer`, 
+      validationMiddleware(RemoveFavoriteDto, 'body', false, []), 
+      this.favoritescontroller.removeFavorite
+    );
 
     /**
-     *   GET /favorites/listfreelancers
-     *   Get list of all favorite freelancers for a client
+     *   GET /favorites/all
+     *   Get list of all favorites (admin only)
+     *   ⚠️ Admin operation
      */
-    this.router.get(`${this.path}/listfreelancers`, this.favoritescontroller.listFavoriteFreelancers);
+    this.router.get(
+      `${this.path}/all`, 
+      requireRole('ADMIN', 'SUPER_ADMIN'), 
+      this.favoritescontroller.listFavoriteFreelancers
+    );
 
     /**
-     *    POST /favorites/getfreelancebyid
-     *    Get specific favorite freelancer details by ID
+     *    GET /favorites/my-favorites
+     *    Get user's favorite freelancers
+     *    🔐 Authentication required
      */
-    this.router.post(`${this.path}/getfreelancebyid`, this.favoritescontroller.getfreelance);
+    this.router.get(
+      `${this.path}/my-favorites`, 
+      this.favoritescontroller.getMyFavorites
+    );
 
     /**
-     *    POST /favorites/freelance-info
-     *    Get comprehensive freelancer information including portfolio and reviews
+     *    GET /favorites/my-favorites-details
+     *    Get comprehensive information about user's favorite freelancers
+     *    🔐 Authentication required
      */
-    this.router.post(`${this.path}/freelance-info`, this.favoritescontroller.getfreelanceinfo);
+    this.router.get(
+      `${this.path}/my-favorites-details`, 
+      this.favoritescontroller.getMyFavoritesDetails
+    );
   }
 }
 

@@ -25,7 +25,12 @@ function IsTrue(validationOptions?: ValidationOptions) {
 export class ClientRegistrationDto {
   // Step 1: Basic Information (Required)
   @IsNotEmpty()
-  full_name: string;
+  @IsString()
+  first_name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  last_name: string;
 
   @IsNotEmpty()
   @IsEmail()
@@ -73,11 +78,11 @@ export class ClientRegistrationDto {
   @IsNotEmpty()
   country: string;
 
-  @IsNotEmpty()
-  state: string;
+  @IsOptional()
+  state?: string;
 
-  @IsNotEmpty()
-  city: string;
+  @IsOptional()
+  city?: string;
 
   // Step 3: Contact Information (Required)
   @IsNotEmpty()

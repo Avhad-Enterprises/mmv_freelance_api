@@ -28,7 +28,7 @@ class categoryRoute implements Route {
      * Create a new category
      * Requires authentication
      */
-    this.router.post(`${this.path}`, validationMiddleware(CategoryDto, 'body', false, ['create']), (req, res, next) => this.categoryController.addcategory(req, res, next));
+    this.router.post(`${this.path}`, requireRole('ADMIN', 'SUPER_ADMIN'), validationMiddleware(CategoryDto, 'body', false, ['create']), (req, res, next) => this.categoryController.addcategory(req, res, next));
 
     /**
      * GET /categories/by-type
@@ -48,14 +48,14 @@ class categoryRoute implements Route {
      * Update an existing category
      * Requires authentication
      */
-    this.router.put(`${this.path}/:id`, validationMiddleware(CategoryDto, 'body', true, ['update']), (req, res, next) => this.categoryController.updatecategory(req, res, next));
+    this.router.put(`${this.path}/:id`, requireRole('ADMIN', 'SUPER_ADMIN'), validationMiddleware(CategoryDto, 'body', true, ['update']), (req, res, next) => this.categoryController.updatecategory(req, res, next));
 
     /**
      * DELETE /categories/:id
      * Soft delete a category (marks as deleted but keeps in database)
      * Requires authentication
      */
-    this.router.delete(`${this.path}/:id`, (req, res, next) => this.categoryController.deletecategory(req, res, next));
+    this.router.delete(`${this.path}/:id`, requireRole('ADMIN', 'SUPER_ADMIN'), (req, res, next) => this.categoryController.deletecategory(req, res, next));
 
   }
 }

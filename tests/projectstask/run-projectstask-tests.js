@@ -21,8 +21,10 @@
  *   node tests/projectstask/run-projectstask-tests.js active-editors # Run only active editors analytics test
  */
 
-const { spawn } = require('child_process');
-const path = require('path');
+const { printSection, printSummary, getTestCounters, resetTestCounters } = require('../test-utils');
+
+let totalPassed = 0;
+let totalFailed = 0;
 
 const SCRIPTS = {
   'insert': 'test-insert-project-task.js',
@@ -40,34 +42,45 @@ const SCRIPTS = {
   'active-editors': 'test-active-editors-analytics.js'
 };
 
-function runScript(scriptName) {
-  return new Promise((resolve, reject) => {
-    const scriptPath = path.join(__dirname, SCRIPTS[scriptName]);
+/**
+ * Run a test module and collect results
+ */
+async function runTestModule(name, testModule) {
+  console.log(`\n🏃 Running ${name}...\n`);
 
-    console.log(`\n🚀 Running ${scriptName} test...`);
-    console.log(`Script: ${scriptPath}`);
-    console.log('='.repeat(50));
+  try {
+    // Reset counters for this module
+    resetTestCounters();
 
-    const child = spawn('node', [scriptPath], {
-      stdio: 'inherit',
-      cwd: process.cwd()
-    });
+    // Override process.exit to prevent individual tests from terminating the suite
+    const originalProcessExit = process.exit;
+    process.exit = function(code) {
+      // Don't actually exit, just return the code
+      return code;
+    };
 
-    child.on('close', (code) => {
-      if (code === 0) {
-        console.log(`\n✅ ${scriptName} test completed successfully`);
-        resolve({ script: scriptName, success: true, code });
-      } else {
-        console.log(`\n❌ ${scriptName} test failed with exit code ${code}`);
-        resolve({ script: scriptName, success: false, code });
-      }
-    });
+    // Run the test
+    await testModule.runTests();
 
-    child.on('error', (error) => {
-      console.error(`\n💥 Error running ${scriptName} test:`, error);
-      reject({ script: scriptName, error });
-    });
-  });
+    // Restore process.exit
+    process.exit = originalProcessExit;
+
+    // Get the counters after running the test
+    const counters = getTestCounters();
+
+    console.log(`\n✅ ${name} completed: ${counters.passed} passed, ${counters.failed} failed\n`);
+
+    // Accumulate totals
+    totalPassed += counters.passed;
+    totalFailed += counters.failed;
+
+    return counters;
+
+  } catch (error) {
+    console.error(`❌ ${name} failed:`, error.message);
+    totalFailed += 1; // Count as 1 failure
+    return { passed: 0, failed: 1 };
+  }
 }
 
 async function runAllTests() {
@@ -75,50 +88,56 @@ async function runAllTests() {
   console.log('Available tests:', Object.keys(SCRIPTS).join(', '));
   console.log('');
 
-  const results = [];
-  let totalPassed = 0;
-  let totalFailed = 0;
+  try {
+    // Import test modules
+    const insertTests = require('./test-insert-project-task');
+    const getByIdTests = require('./test-get-project-task-by-id');
+    const updateTests = require('./test-update-project-task');
+    const deleteTests = require('./test-delete-project-task');
+    const getAllTests = require('./test-get-all-project-tasks');
+    const updateStatusTests = require('./test-update-project-task-status');
+    const countActiveTests = require('./test-count-active-project-tasks');
+    const publicListingTests = require('./test-get-public-project-listings');
+    const getByClientIdTests = require('./test-get-projects-by-client-id');
+    const submitTests = require('./test-submit-project');
+    const approveTests = require('./test-approve-submission');
+    const activeClientsTests = require('./test-active-clients-analytics');
+    const activeEditorsTests = require('./test-active-editors-analytics');
 
-  for (const testName of Object.keys(SCRIPTS)) {
-    try {
-      const result = await runScript(testName);
-      results.push(result);
-      if (result.success) {
-        totalPassed++;
-      } else {
-        totalFailed++;
-      }
-    } catch (error) {
-      console.error(`Failed to run ${testName}:`, error);
-      results.push({ script: testName, success: false, error: error.message });
-      totalFailed++;
+    // Run all test suites
+    await runTestModule('Insert Project Task Tests', insertTests);
+    await runTestModule('Get Project Task by ID Tests', getByIdTests);
+    await runTestModule('Update Project Task Tests', updateTests);
+    await runTestModule('Delete Project Task Tests', deleteTests);
+    await runTestModule('Get All Project Tasks Tests', getAllTests);
+    await runTestModule('Update Project Task Status Tests', updateStatusTests);
+    await runTestModule('Count Active Project Tasks Tests', countActiveTests);
+    await runTestModule('Get Public Project Listings Tests', publicListingTests);
+    await runTestModule('Get Projects by Client ID Tests', getByClientIdTests);
+    await runTestModule('Submit Project Tests', submitTests);
+    await runTestModule('Approve Submission Tests', approveTests);
+    await runTestModule('Active Clients Analytics Tests', activeClientsTests);
+    await runTestModule('Active Editors Analytics Tests', activeEditorsTests);
+
+    // Final summary
+    console.log('\n' + '='.repeat(60));
+    console.log('🏆 PROJECT TASK API TESTS SUMMARY');
+    console.log('='.repeat(60));
+
+    printSummary(totalPassed, totalFailed, totalPassed + totalFailed);
+
+    if (totalFailed === 0) {
+      console.log('\n🎉 ALL TESTS PASSED! Project Task APIs are working correctly.');
+      process.exit(0);
+    } else {
+      console.log(`\n⚠️  ${totalFailed} test(s) failed. Please review the results above.`);
+      process.exit(1);
     }
+
+  } catch (error) {
+    console.error('\n❌ Test suite failed:', error.message);
+    process.exit(1);
   }
-
-  // Print summary
-  console.log('\n' + '='.repeat(60));
-  console.log('🏆 PROJECT TASK API TESTS SUMMARY');
-  console.log('='.repeat(60));
-
-  results.forEach(result => {
-    const status = result.success ? '✅' : '❌';
-    console.log(`${status} ${result.script}`);
-  });
-
-  console.log('\n📊 OVERALL RESULTS:');
-  console.log(`✅ Total Passed: ${totalPassed}`);
-  console.log(`❌ Total Failed: ${totalFailed}`);
-  console.log(`📈 Success Rate: ${((totalPassed / (totalPassed + totalFailed)) * 100).toFixed(1)}%`);
-
-  if (totalFailed === 0) {
-    console.log('\n🎉 ALL TESTS PASSED! Project Task APIs are working correctly.');
-  } else {
-    console.log(`\n⚠️  ${totalFailed} test(s) failed. Please review the results above.`);
-  }
-
-  console.log('='.repeat(60));
-
-  process.exit(totalFailed > 0 ? 1 : 0);
 }
 
 async function runSpecificTest(testName) {
@@ -129,8 +148,9 @@ async function runSpecificTest(testName) {
   }
 
   try {
-    const result = await runScript(testName);
-    process.exit(result.success ? 0 : 1);
+    const testModule = require(`./${SCRIPTS[testName].replace('.js', '')}`);
+    const result = await runTestModule(`${testName} Test`, testModule);
+    process.exit(result.failed > 0 ? 1 : 0);
   } catch (error) {
     console.error('💥 Test runner failed:', error);
     process.exit(1);
