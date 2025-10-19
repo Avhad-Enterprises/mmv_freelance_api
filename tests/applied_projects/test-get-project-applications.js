@@ -15,9 +15,7 @@ async function testGetProjectApplications() {
   try {
     // Try different client credentials
     const clientCredentials = [
-      { email: 'harshalv4@gmail.com', password: 'TestPass123!' }, // Updated password
-      { email: 'vaishnavi@example.com', password: 'password' },
-      { email: 'vaishnavi@example.com', password: 'Password123!' }
+      { email: 'test.client@example.com', password: 'TestPass123!' }
     ];
 
     let clientToken = null;

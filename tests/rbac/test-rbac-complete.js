@@ -1,131 +1,303 @@
-const axios = require('axios');
+#!/usr/bin/env node
 
-const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
+/**
+ * Complete RBAC (Role-Based Access Control) Test
+ * Tests the complete RBAC system functionality
+ */
+
+const {
+  CONFIG,
+  makeRequest,
+  printTestResult,
+  printSection,
+  printSummary,
+  storeToken,
+  TOKENS,
+  authHeader
+} = require('../test-utils');
+
+let passedTests = 0;
+let failedTests = 0;
 
 console.log('🚀 Testing Role-Based Access Control System');
 console.log('==========================================');
 
-async function testSuperAdminLogin() {
-    try {
-        console.log('\n🔐 Testing Super Admin Login...');
-        const response = await axios.post(`${BASE_URL}/auth/login`, {
-            email: 'superadmin@mmv.com',
-            password: 'SuperAdmin123!'
-        });
-        
-        console.log('✅ Super Admin login successful');
-        console.log(`User: ${response.data.data.user.first_name} ${response.data.data.user.last_name}`);
-        console.log(`Roles: ${response.data.data.user.roles.join(', ')}`);
-        return response.data.data.token;
-    } catch (error) {
-        console.log('❌ Super Admin login failed:', error.response?.data?.message || error.message);
-        return null;
+/**
+ * Login and get super admin token
+ */
+async function loginAsSuperAdmin() {
+  try {
+    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
+    });
+
+    if (response.statusCode === 200 && response.body?.data?.token) {
+      storeToken('superAdmin', response.body.data.token);
+      printTestResult('Super admin login', true, 'SUCCESS', null);
+      return true;
+    } else {
+      printTestResult('Super admin login', false, `Expected success, got ${response.statusCode}`, response.body);
+      return false;
     }
+  } catch (error) {
+    printTestResult('Super admin login', false, `Request failed: ${error.message}`, null);
+    return false;
+  }
 }
 
-async function testAuthenticatedEndpoints(token) {
-    console.log('\n👥 Testing Authenticated Endpoints...');
-    
-    // Test user management (should work for SUPER_ADMIN)
-    try {
-        const response = await axios.get(`${BASE_URL}/users`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        console.log(`✅ User management access: SUCCESS (${response.data.data.users.length} users found)`);
-    } catch (error) {
-        console.log(`❌ User management access: FAILED (${error.response?.status})`);
+/**
+ * Login and get admin token
+ */
+async function loginAsAdmin() {
+  try {
+    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
+    });
+
+    if (response.statusCode === 200 && response.body?.data?.token) {
+      storeToken('admin', response.body.data.token);
+      printTestResult('Admin login', true, 'SUCCESS', null);
+      return true;
+    } else {
+      printTestResult('Admin login', false, `Expected success, got ${response.statusCode}`, response.body);
+      return false;
     }
-    
-    // Test project analytics (should work for SUPER_ADMIN)
-    try {
-        const response = await axios.get(`${BASE_URL}/projectsTask/countactiveprojects_task`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        console.log(`✅ Project analytics access: SUCCESS (${response.data.count} active projects)`);
-    } catch (error) {
-        console.log(`❌ Project analytics access: FAILED (${error.response?.status})`);
-    }
-    
-    // Test general project listing (should work for all authenticated users)
-    try {
-        const response = await axios.get(`${BASE_URL}/projectsTask/getallprojects_task`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        console.log(`✅ Project listing access: SUCCESS`);
-    } catch (error) {
-        console.log(`❌ Project listing access: FAILED (${error.response?.status})`);
-    }
+  } catch (error) {
+    printTestResult('Admin login', false, `Request failed: ${error.message}`, null);
+    return false;
+  }
 }
 
+/**
+ * Login and get client token
+ */
+async function loginAsClient() {
+  try {
+    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'login-test@example.com',
+      password: 'Password123!'
+    });
+
+    if (response.statusCode === 200 && response.body?.data?.token) {
+      storeToken('client', response.body.data.token);
+      printTestResult('Client login', true, 'SUCCESS', null);
+      return true;
+    } else {
+      printTestResult('Client login', false, `Expected success, got ${response.statusCode}`, response.body);
+      return false;
+    }
+  } catch (error) {
+    printTestResult('Client login', false, `Request failed: ${error.message}`, null);
+    return false;
+  }
+}
+
+/**
+ * Test authenticated endpoints with super admin token
+ */
+/**
+ * Test authenticated endpoints with different user roles
+ */
+async function testAuthenticatedEndpoints() {
+  printSection('TESTING AUTHENTICATED ENDPOINTS');
+
+  // Test with super admin
+  try {
+    const response = await makeRequest('GET', `${CONFIG.apiVersion}/users`, null, authHeader('superAdmin'));
+
+    const passed = response.statusCode === 200;
+    printTestResult(
+      'Super admin access to users endpoint',
+      passed,
+      passed ? 'SUCCESS' : `Expected success, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Super admin access to users endpoint',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test with regular admin
+  try {
+    const response = await makeRequest('GET', `${CONFIG.apiVersion}/users`, null, authHeader('admin'));
+
+    const passed = response.statusCode === 200;
+    printTestResult(
+      'Admin access to users endpoint',
+      passed,
+      passed ? 'SUCCESS' : `Expected success, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Admin access to users endpoint',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test with client (should be forbidden)
+  try {
+    const response = await makeRequest('GET', `${CONFIG.apiVersion}/users`, null, authHeader('client'));
+
+    const passed = response.statusCode === 403;
+    printTestResult(
+      'Client forbidden from users endpoint',
+      passed,
+      passed ? 'SUCCESS (correctly forbidden)' : `Expected 403, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Client forbidden from users endpoint',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+}/**
+ * Test unauthenticated access (should fail)
+ */
+/**
+ * Test unauthenticated access to protected endpoints
+ */
 async function testUnauthenticatedAccess() {
-    console.log('\n🚫 Testing Unauthenticated Access (should fail)...');
-    
-    // Test without token
-    try {
-        const response = await axios.get(`${BASE_URL}/users`);
-        console.log('❌ Unauthenticated access should have failed but succeeded');
-    } catch (error) {
-        if (error.response?.status === 401 || error.response?.data?.message?.includes('token')) {
-            console.log('✅ Unauthenticated access correctly blocked');
-        } else {
-            console.log(`⚠️ Unexpected error: ${error.response?.status} - ${error.response?.data?.message}`);
-        }
-    }
-    
-    // Test with invalid token
-    try {
-        const response = await axios.get(`${BASE_URL}/users`, {
-            headers: { 'Authorization': 'Bearer invalid_token' }
-        });
-        console.log('❌ Invalid token should have failed but succeeded');
-    } catch (error) {
-        if (error.response?.status === 401 || error.response?.data?.message?.includes('token')) {
-            console.log('✅ Invalid token correctly blocked');
-        } else {
-            console.log(`⚠️ Unexpected error: ${error.response?.status} - ${error.response?.data?.message}`);
-        }
-    }
+  printSection('TESTING UNAUTHENTICATED ACCESS');
+
+  // Test without token
+  try {
+    const response = await makeRequest('GET', `${CONFIG.apiVersion}/users`);
+
+    const passed = response.statusCode === 401;
+    printTestResult(
+      'No token access to users endpoint',
+      passed,
+      passed ? 'SUCCESS (correctly unauthorized)' : `Expected 401, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'No token access to users endpoint',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test with invalid token
+  try {
+    const response = await makeRequest('GET', `${CONFIG.apiVersion}/users`, {
+      headers: { 'Authorization': 'Bearer invalid-token' }
+    });
+
+    const passed = response.statusCode === 401;
+    printTestResult(
+      'Invalid token access to users endpoint',
+      passed,
+      passed ? 'SUCCESS (correctly unauthorized)' : `Expected 401, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Invalid token access to users endpoint',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
 }
 
+/**
+ * Test public endpoints
+ */
 async function testPublicEndpoints() {
-    console.log('\n🌐 Testing Public Endpoints...');
-    
-    // Test health endpoint
-    try {
-        const response = await axios.get('http://localhost:8000/health');
-        console.log(`✅ Health endpoint accessible: ${response.data.status}`);
-    } catch (error) {
-        console.log('❌ Health endpoint failed');
-    }
+  printSection('TESTING PUBLIC ENDPOINTS');
+
+  // Test health endpoint
+  try {
+    const response = await makeRequest('GET', '/health');
+
+    const passed = response.statusCode === 200;
+    printTestResult(
+      'Health endpoint access',
+      passed,
+      passed ? `SUCCESS (${response.body?.status || 'OK'})` : `Expected success, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Health endpoint access',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
 }
 
+/**
+ * Run all RBAC tests
+ */
 async function runAllTests() {
-    // Test 1: Public endpoints
+  printSection('STARTING RBAC TESTS');
+
+  try {
+    // Login as different users
+    await loginAsSuperAdmin();
+    await loginAsAdmin();
+    await loginAsClient();
+
+    // Run all test suites
     await testPublicEndpoints();
-    
-    // Test 2: Super admin login
-    const token = await testSuperAdminLogin();
-    
-    if (!token) {
-        console.log('\n❌ Cannot continue without valid token');
-        return;
-    }
-    
-    // Test 3: Authenticated endpoints
-    await testAuthenticatedEndpoints(token);
-    
-    // Test 4: Unauthenticated access
+    await testAuthenticatedEndpoints();
     await testUnauthenticatedAccess();
-    
-    console.log('\n🎉 Role-Based Access Control Tests Completed!');
-    console.log('\nSummary:');
-    console.log('✅ Authentication system is working');
-    console.log('✅ Role-based access control is active');
-    console.log('✅ Permission system has been simplified to role-only');
-    console.log('✅ Protected endpoints are secure');
-    console.log('\n👍 Your backend is ready for production with role-based access control!');
+
+    // Print final summary
+    printSummary('RBAC Tests', passedTests, failedTests);
+
+  } catch (error) {
+    console.error('❌ Test suite failed:', error.message);
+    printSummary('RBAC Tests', passedTests, failedTests);
+  }
 }
 
-runAllTests().catch(error => {
-    console.error('❌ Test suite failed:', error.message);
-});
+// Export for test runner
+module.exports = {
+  runAllTests
+};

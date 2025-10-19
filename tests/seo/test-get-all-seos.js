@@ -1,167 +1,125 @@
-const http = require('http');
-const { CONFIG, makeRequest, COLORS } = require('../test-utils');
-
-// Configuration
-const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
-const API_PREFIX = '/api/v1';
-
-// Test data
-const testUsers = {
-  superAdmin: {
-    email: 'avhadenterprisespc5@gmail.com',
-    password: 'SuperAdmin123!'
-  }
-};
-
-// Global variables
-let superAdminToken = '';
+#!/usr/bin/env node
 
 /**
- * Test: Get All SEO (GET /api/v1/seos)
+ * SEO Get All API Test
+ * Tests the GET /seos endpoint
  */
+
+const {
+  CONFIG,
+  makeRequest,
+  printTestResult,
+  printSection,
+  printSummary,
+  storeToken,
+  TOKENS,
+  authHeader
+} = require('../test-utils');
+
+let passedTests = 0;
+let failedTests = 0;
+
+/**
+ * Login and get super admin token
+ */
+async function loginAsSuperAdmin() {
+  try {
+    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
+    });
+
+    if (response.statusCode === 200 && response.body?.data?.token) {
+      storeToken('superAdmin', response.body.data.token);
+      printTestResult('Super admin login', true, 'SUCCESS', null);
+      return true;
+    } else {
+      printTestResult('Super admin login', false, `Expected success, got ${response.statusCode}`, response.body);
+      return false;
+    }
+  } catch (error) {
+    printTestResult('Super admin login', false, `Request failed: ${error.message}`, null);
+    return false;
+  }
+}
 async function testGetAllSeos() {
-  console.log('\n🧪 Testing: Get All SEO (GET /api/v1/seos)');
-  console.log('='.repeat(50));
+  printSection('Testing Get All SEO');
 
-  try {
-    // First, login as super admin to get token
-    console.log('🔐 Logging in as super admin...');
-    const loginResponse = await makeRequest('POST', `${BASE_URL}/auth/login`, {
-      email: testUsers.superAdmin.email,
-      password: testUsers.superAdmin.password
-    });
+  // Test 1: Get all SEO without auth
+  console.log('Test 1: Get all SEO without authentication');
+  console.log('� Request: GET /seos');
+  console.log('🔑 Auth: None');
 
-    if (loginResponse.statusCode !== 200) {
-      throw new Error(`Login failed: ${loginResponse.statusCode} - ${JSON.stringify(loginResponse.body)}`);
-    }
+  const response1 = await makeRequest('GET', `${CONFIG.apiVersion}/seos`);
 
-    superAdminToken = loginResponse.body.data.token;
-    console.log('✅ Super admin login successful');
+  console.log('📥 Response Status:', response1.statusCode);
+  console.log('📥 Response Body:', JSON.stringify(response1.body, null, 2));
 
-    // Get all SEO entries
-    console.log('📝 Fetching all SEO entries...');
-    const getResponse = await makeRequest('GET', `${BASE_URL}/seos`, null, {
-      'Authorization': `Bearer ${superAdminToken}`
-    });
+  const test1Passed = response1.statusCode === 401;
+  printTestResult('Get all SEO without auth', test1Passed, `Status: ${response1.statusCode}, Expected: 401`, response1);
+  if (test1Passed) passedTests++; else failedTests++;
 
-    console.log(`📊 Response Status: ${getResponse.statusCode}`);
-    console.log(`📊 Response Data: ${JSON.stringify(getResponse.body, null, 2)}`);
+  // Test 2: Get all SEO with valid auth
+  console.log('\nTest 2: Get all SEO with valid authentication');
+  console.log('📤 Request: GET /seos');
+  console.log('� Auth: Bearer token (super admin)');
 
-    if (getResponse.statusCode === 200) {
-      console.log(`${COLORS.green}✅ PASS: SEO entries fetched successfully${COLORS.reset}`);
+  const response2 = await makeRequest('GET', `${CONFIG.apiVersion}/seos`, null, authHeader('superAdmin'));
 
-      // Validate response structure
-      if (getResponse.body && getResponse.body.data) {
-        const seos = getResponse.body.data;
+  console.log('� Response Status:', response2.statusCode);
+  console.log('� Response Body:', JSON.stringify(response2.body, null, 2));
 
-        if (Array.isArray(seos)) {
-          console.log(`${COLORS.green}✅ PASS: Response data is an array${COLORS.reset}`);
-          console.log(`📊 Found ${seos.length} SEO entries`);
+  const test2Passed = response2.statusCode === 200 && response2.body?.data;
+  printTestResult('Get all SEO with auth', test2Passed, `Status: ${response2.statusCode}, Expected: 200`, response2);
+  if (test2Passed) passedTests++; else failedTests++;
 
-          // Validate each SEO has required fields (only check non-deleted entries)
-          let validSeos = 0;
-          seos.forEach((seo, index) => {
-            if (seo.id && seo.meta_title && seo.meta_description) {
-              validSeos++;
-            } else {
-              console.log(`${COLORS.yellow}⚠️  SEO at index ${index} missing required fields${COLORS.reset}`);
-            }
-          });
+  // Test 3: Verify response structure
+  if (test2Passed && response2.body?.data) {
+    console.log('\nTest 3: Verify response structure');
+    const data = response2.body.data;
+    const isArray = Array.isArray(data);
+    const hasValidStructure = isArray && data.every(item =>
+      item.hasOwnProperty('id') &&
+      item.hasOwnProperty('meta_title') &&
+      item.hasOwnProperty('meta_description')
+    );
 
-          if (validSeos === seos.length) {
-            console.log(`${COLORS.green}✅ PASS: All SEO entries have required fields${COLORS.reset}`);
-            return { success: true, count: seos.length };
-          } else {
-            console.log(`${COLORS.red}❌ FAIL: Some SEO entries missing required fields${COLORS.reset}`);
-            return { success: false };
-          }
-        } else {
-          console.log(`${COLORS.red}❌ FAIL: Response data is not an array${COLORS.reset}`);
-          return { success: false };
-        }
-      } else {
-        console.log(`${COLORS.red}❌ FAIL: Response missing data field${COLORS.reset}`);
-        return { success: false };
-      }
-    } else {
-      console.log(`${COLORS.red}❌ FAIL: Expected status 200, got ${getResponse.statusCode}${COLORS.reset}`);
-      return { success: false };
-    }
-
-  } catch (error) {
-    console.error(`${COLORS.red}💥 ERROR: ${error.message}${COLORS.reset}`);
-    return { success: false };
+    const test3Passed = isArray && hasValidStructure;
+    printTestResult('Verify response structure', test3Passed, `Array: ${isArray}, Valid items: ${hasValidStructure}`, { dataLength: data.length, sampleItem: data[0] });
+    if (test3Passed) passedTests++; else failedTests++;
   }
 }
 
 /**
- * Test: Get All SEO without Authentication
+ * Main test runner
  */
-async function testGetAllSeosNoAuth() {
-  console.log('\n🧪 Testing: Get All SEO without Authentication');
-  console.log('='.repeat(50));
-
-  try {
-    console.log(`📝 Attempting to fetch all SEO entries without authentication...`);
-    const getResponse = await makeRequest('GET', `${BASE_URL}/seos`);
-
-    console.log(`📊 Response Status: ${getResponse.statusCode}`);
-
-    if (getResponse.statusCode === 401 || getResponse.statusCode === 403) {
-      console.log(`${COLORS.green}✅ PASS: Correctly rejected unauthenticated request${COLORS.reset}`);
-      return { success: true };
-    } else {
-      console.log(`${COLORS.red}❌ FAIL: Should have rejected unauthenticated request${COLORS.reset}`);
-      return { success: false };
-    }
-
-  } catch (error) {
-    console.error(`${COLORS.red}💥 ERROR: ${error.message}${COLORS.reset}`);
-    return { success: false };
-  }
-}
-
-// Main test runner
 async function runTests() {
-  console.log('🚀 Starting Get All SEO Tests');
-  console.log('=====================================');
+  console.log('🧪 SEO GET ALL API TESTS');
+  console.log('=========================\n');
 
-  const results = [];
-
-  // Test successful get all
-  const getAllResult = await testGetAllSeos();
-  results.push({ test: 'Get All SEO - Success', ...getAllResult });
-
-  // Test no authentication
-  const noAuthResult = await testGetAllSeosNoAuth();
-  results.push({ test: 'Get All SEO - No Auth', ...noAuthResult });
-
-  // Summary
-  console.log('\n📊 Test Results Summary:');
-  console.log('='.repeat(50));
-
-  const passed = results.filter(r => r.success).length;
-  const total = results.length;
-
-  results.forEach(result => {
-    const status = result.success ? `${COLORS.green}✅ PASS${COLORS.reset}` : `${COLORS.red}❌ FAIL${COLORS.reset}`;
-    console.log(`${status} ${result.test}`);
-  });
-
-  console.log(`\n📈 Total: ${passed}/${total} tests passed`);
-
-  if (passed === total) {
-    console.log(`${COLORS.green}🎉 All tests passed!${COLORS.reset}`);
-    process.exit(0);
-  } else {
-    console.log(`${COLORS.red}💥 Some tests failed${COLORS.reset}`);
+  // Login first
+  const loginSuccess = await loginAsSuperAdmin();
+  if (!loginSuccess) {
+    console.log('❌ Cannot proceed without super admin authentication');
     process.exit(1);
   }
+
+  // Run tests
+  await testGetAllSeos();
+
+  // Print summary
+  printSummary(passedTests, failedTests, passedTests + failedTests);
+
+  // Exit with appropriate code
+  process.exit(failedTests > 0 ? 1 : 0);
 }
 
-// Run tests if called directly
+// Run if called directly
 if (require.main === module) {
-  runTests();
+  runTests().catch(error => {
+    console.error('Test runner failed:', error);
+    process.exit(1);
+  });
 }
 
-module.exports = { testGetAllSeos, testGetAllSeosNoAuth };
+module.exports = { runTests };

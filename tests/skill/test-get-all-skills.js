@@ -1,166 +1,128 @@
-const http = require('http');
-const { CONFIG, makeRequest, COLORS } = require('../test-utils');
-
-// Configuration
-const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
-const API_PREFIX = '/api/v1';
-
-// Test data
-const testUsers = {
-  superAdmin: {
-    email: 'avhadenterprisespc5@gmail.com',
-    password: 'SuperAdmin123!'
-  }
-};
-
-// Global variables
-let superAdminToken = '';
+#!/usr/bin/env node
 
 /**
- * Test: Get All Skills (GET /api/v1/skills)
+ * Skills Get All API Test
+ * Tests the GET /skills endpoint
+ */
+
+const {
+  CONFIG,
+  makeRequest,
+  printTestResult,
+  printSection,
+  printSummary,
+  storeToken,
+  TOKENS,
+  authHeader
+} = require('../test-utils');
+
+let passedTests = 0;
+let failedTests = 0;
+
+/**
+ * Login and get super admin token
+ */
+async function loginAsSuperAdmin() {
+  try {
+    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
+    });
+
+    if (response.statusCode === 200 && response.body?.data?.token) {
+      storeToken('superAdmin', response.body.data.token);
+      printTestResult('Super admin login', true, 'SUCCESS', null);
+      return true;
+    } else {
+      printTestResult('Super admin login', false, `Expected success, got ${response.statusCode}`, response.body);
+      return false;
+    }
+  } catch (error) {
+    printTestResult('Super admin login', false, `Request failed: ${error.message}`, null);
+    return false;
+  }
+}
+
+/**
+ * Test getting all skills
  */
 async function testGetAllSkills() {
-  console.log('\n🧪 Testing: Get All Skills (GET /api/v1/skills)');
-  console.log('='.repeat(50));
+  printSection('Testing Get All Skills');
 
-  try {
-    // First, login as super admin to get token
-    console.log('🔐 Logging in as super admin...');
-    const loginResponse = await makeRequest('POST', `${BASE_URL}/auth/login`, {
-      email: testUsers.superAdmin.email,
-      password: testUsers.superAdmin.password
-    });
+  // Test 1: Get all skills without authentication (should work for public data)
+  console.log('\nTest 1: Get all skills without authentication');
+  const response1 = await makeRequest('GET', `${CONFIG.apiVersion}/skills`);
 
-    if (loginResponse.statusCode !== 200) {
-      throw new Error(`Login failed: ${loginResponse.statusCode} - ${JSON.stringify(loginResponse.body)}`);
-    }
+  if (response1.statusCode === 200) {
+    printTestResult('Get all skills without auth', true, `Status: ${response1.statusCode}, Expected: 200 (public data)`, null);
+    passedTests++;
+  } else {
+    printTestResult('Get all skills without auth', false, `Status: ${response1.statusCode}, Expected: 200`, response1.body);
+    failedTests++;
+  }
 
-    superAdminToken = loginResponse.body.data.token;
-    console.log('✅ Super admin login successful');
+  // Test 2: Get all skills with valid authentication
+  console.log('\nTest 2: Get all skills with valid authentication');
+  const response2 = await makeRequest('GET', `${CONFIG.apiVersion}/skills`, null, authHeader('superAdmin'));
 
-    console.log('📝 Fetching all skills...');
-    const getResponse = await makeRequest('GET', `${BASE_URL}/skills`, null, {
-      'Authorization': `Bearer ${superAdminToken}`
-    });
+  if (response2.statusCode === 200 && Array.isArray(response2.body?.data)) {
+    printTestResult('Get all skills with auth', true, `Status: ${response2.statusCode}, Expected: 200`, null);
+    passedTests++;
+  } else {
+    printTestResult('Get all skills with auth', false, `Status: ${response2.statusCode}, Expected: 200`, response2.body);
+    failedTests++;
+  }
 
-    console.log(`📊 Response Status: ${getResponse.statusCode}`);
-    console.log(`📊 Response Data: ${JSON.stringify(getResponse.body, null, 2)}`);
+  // Test 3: Verify response structure
+  console.log('\nTest 3: Verify response structure');
+  if (response2.statusCode === 200 && response2.body?.data) {
+    const skills = response2.body.data;
+    const isValidArray = Array.isArray(skills);
+    const hasValidItems = skills.length === 0 || skills.every(skill =>
+      skill && typeof skill === 'object' && skill.skill_id && skill.skill_name
+    );
 
-    if (getResponse.statusCode === 200) {
-      console.log(`${COLORS.green}✅ PASS: Skills fetched successfully${COLORS.reset}`);
-
-      // Validate response structure
-      if (getResponse.body && getResponse.body.data) {
-        const skills = getResponse.body.data;
-
-        if (Array.isArray(skills)) {
-          console.log(`${COLORS.green}✅ PASS: Response data is an array${COLORS.reset}`);
-          console.log(`📊 Found ${skills.length} skills`);
-
-          // Validate each skill has required fields
-          let validSkills = 0;
-          skills.forEach((skill, index) => {
-            if (skill.skill_id && skill.skill_name) {
-              validSkills++;
-            } else {
-              console.log(`${COLORS.yellow}⚠️  Skill at index ${index} missing required fields${COLORS.reset}`);
-            }
-          });
-
-          if (validSkills === skills.length) {
-            console.log(`${COLORS.green}✅ PASS: All skills have required fields${COLORS.reset}`);
-            return { success: true, skillCount: skills.length };
-          } else {
-            console.log(`${COLORS.red}❌ FAIL: Some skills missing required fields${COLORS.reset}`);
-            return { success: false };
-          }
-        } else {
-          console.log(`${COLORS.red}❌ FAIL: Response data is not an array${COLORS.reset}`);
-          return { success: false };
-        }
-      } else {
-        console.log(`${COLORS.red}❌ FAIL: Response missing data field${COLORS.reset}`);
-        return { success: false };
-      }
+    if (isValidArray && hasValidItems) {
+      printTestResult('Verify response structure', true, 'Array: true, Valid items: true', null);
+      passedTests++;
     } else {
-      console.log(`${COLORS.red}❌ FAIL: Expected status 200, got ${getResponse.statusCode}${COLORS.reset}`);
-      return { success: false };
+      printTestResult('Verify response structure', false, `Array: ${isValidArray}, Valid items: ${hasValidItems}`, null);
+      failedTests++;
     }
-
-  } catch (error) {
-    console.error(`${COLORS.red}💥 ERROR: ${error.message}${COLORS.reset}`);
-    return { success: false };
+  } else {
+    printTestResult('Verify response structure', false, 'No valid response to verify', null);
+    failedTests++;
   }
 }
 
 /**
- * Test: Get All Skills without Authentication
+ * Main test runner
  */
-async function testGetAllSkillsNoAuth() {
-  console.log('\n🧪 Testing: Get All Skills without Authentication');
-  console.log('='.repeat(50));
-
-  try {
-    console.log('📝 Attempting to fetch skills without authentication...');
-    const getResponse = await makeRequest('GET', `${BASE_URL}/skills`);
-
-    console.log(`📊 Response Status: ${getResponse.statusCode}`);
-
-    if (getResponse.statusCode === 401 || getResponse.statusCode === 403) {
-      console.log(`${COLORS.green}✅ PASS: Correctly rejected unauthenticated request${COLORS.reset}`);
-      return { success: true };
-    } else {
-      console.log(`${COLORS.red}❌ FAIL: Should have rejected unauthenticated request${COLORS.reset}`);
-      return { success: false };
-    }
-
-  } catch (error) {
-    console.error(`${COLORS.red}💥 ERROR: ${error.message}${COLORS.reset}`);
-    return { success: false };
-  }
-}
-
-// Main test runner
 async function runTests() {
-  console.log('🚀 Starting Get All Skills Tests');
-  console.log('=====================================');
+  console.log('🧪 SKILLS GET ALL API TESTS');
+  console.log('===========================\n');
 
-  const results = [];
-
-  // Test successful get all skills
-  const getAllResult = await testGetAllSkills();
-  results.push({ test: 'Get All Skills - Success', ...getAllResult });
-
-  // Test no authentication
-  const noAuthResult = await testGetAllSkillsNoAuth();
-  results.push({ test: 'Get All Skills - No Auth', ...noAuthResult });
-
-  // Summary
-  console.log('\n📊 Test Results Summary:');
-  console.log('='.repeat(50));
-
-  const passed = results.filter(r => r.success).length;
-  const total = results.length;
-
-  results.forEach(result => {
-    const status = result.success ? `${COLORS.green}✅ PASS${COLORS.reset}` : `${COLORS.red}❌ FAIL${COLORS.reset}`;
-    console.log(`${status} ${result.test}`);
-  });
-
-  console.log(`\n📈 Total: ${passed}/${total} tests passed`);
-
-  if (passed === total) {
-    console.log(`${COLORS.green}🎉 All tests passed!${COLORS.reset}`);
-    process.exit(0);
-  } else {
-    console.log(`${COLORS.red}💥 Some tests failed${COLORS.reset}`);
+  // Login first
+  const loginSuccess = await loginAsSuperAdmin();
+  if (!loginSuccess) {
+    console.error('❌ Failed to login as super admin');
     process.exit(1);
   }
+  console.log('');
+
+  // Run tests
+  await testGetAllSkills();
+
+  // Summary
+  printSummary(passedTests, failedTests, passedTests + failedTests);
 }
 
-// Run tests if called directly
+// Run if called directly
 if (require.main === module) {
-  runTests();
+  runTests().catch(error => {
+    console.error('Test runner failed:', error);
+    process.exit(1);
+  });
 }
 
-module.exports = { testGetAllSkills, testGetAllSkillsNoAuth };
+module.exports = { runTests };

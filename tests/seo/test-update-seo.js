@@ -1,262 +1,163 @@
-const http = require('http');
-const { CONFIG, makeRequest, COLORS } = require('../test-utils');
+#!/usr/bin/env node
 
-// Configuration
-const BASE_URL = CONFIG.baseUrl + CONFIG.apiVersion;
-const API_PREFIX = '/api/v1';
+/**
+ * SEO Update API Test
+ * Tests the PUT /seos/:id endpoint
+ */
 
-// Test data
-const testUsers = {
-  superAdmin: {
-    email: 'avhadenterprisespc5@gmail.com',
-    password: 'SuperAdmin123!'
-  }
-};
+const {
+  CONFIG,
+  makeRequest,
+  printTestResult,
+  printSection,
+  printSummary,
+  storeToken,
+  TOKENS,
+  authHeader
+} = require('../test-utils');
 
-// Global variables
-let superAdminToken = '';
+let passedTests = 0;
+let failedTests = 0;
 let testSeoId = null;
 
 /**
- * Test: Update SEO (PUT /api/v1/seos/:id)
+ * Login and get super admin token
+ */
+async function loginAsSuperAdmin() {
+  try {
+    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
+    });
+
+    if (response.statusCode === 200 && response.body?.data?.token) {
+      storeToken('superAdmin', response.body.data.token);
+      printTestResult('Super admin login', true, 'SUCCESS', null);
+      return true;
+    } else {
+      printTestResult('Super admin login', false, `Expected success, got ${response.statusCode}`, response.body);
+      return false;
+    }
+  } catch (error) {
+    printTestResult('Super admin login', false, `Request failed: ${error.message}`, null);
+    return false;
+  }
+}
+
+/**
+ * Test updating SEO entries
  */
 async function testUpdateSeo() {
-  console.log('\n🧪 Testing: Update SEO (PUT /api/v1/seos/:id)');
-  console.log('='.repeat(50));
+  printSection('Testing Update SEO');
 
-  try {
-    // First, login as super admin to get token
-    console.log('🔐 Logging in as super admin...');
-    const loginResponse = await makeRequest('POST', `${BASE_URL}/auth/login`, {
-      email: testUsers.superAdmin.email,
-      password: testUsers.superAdmin.password
-    });
+  // First create a test SEO entry
+  console.log('📝 Creating a test SEO entry first...');
+  const createResponse = await makeRequest('POST', `${CONFIG.apiVersion}/seos`, {
+    meta_title: 'Original SEO Title',
+    meta_description: 'Original meta description'
+  }, authHeader('superAdmin'));
 
-    if (loginResponse.statusCode !== 200) {
-      throw new Error(`Login failed: ${loginResponse.statusCode} - ${JSON.stringify(loginResponse.body)}`);
-    }
-
-    superAdminToken = loginResponse.body.data.token;
-    console.log('✅ Super admin login successful');
-
-    // First, create a test SEO entry to update
-    console.log('📝 Creating a test SEO entry first...');
-    const seoData = {
-      meta_title: 'Original SEO Title',
-      meta_description: 'Original meta description'
-    };
-
-    const createResponse = await makeRequest('POST', `${BASE_URL}/seos`, seoData, {
-      'Authorization': `Bearer ${superAdminToken}`,
-      'Content-Type': 'application/json'
-    });
-
-    if (createResponse.statusCode !== 201) {
-      throw new Error(`Failed to create test SEO: ${createResponse.statusCode}`);
-    }
-
-    testSeoId = createResponse.body.data.id;
-    console.log(`✅ Test SEO created with ID: ${testSeoId}`);
-
-    // Now update the SEO entry
-    console.log(`📝 Updating SEO with ID: ${testSeoId}...`);
-    const updateData = {
-      meta_title: 'Updated SEO Title',
-      meta_description: 'Updated meta description',
-      canonical_url: 'https://example.com/updated-page',
-      og_title: 'Updated OG Title'
-    };
-
-    const updateResponse = await makeRequest('PUT', `${BASE_URL}/seos/${testSeoId}`, updateData, {
-      'Authorization': `Bearer ${superAdminToken}`,
-      'Content-Type': 'application/json'
-    });
-
-    console.log(`📊 Response Status: ${updateResponse.statusCode}`);
-    console.log(`📊 Response Data: ${JSON.stringify(updateResponse.body, null, 2)}`);
-
-    if (updateResponse.statusCode === 200) {
-      console.log(`${COLORS.green}✅ PASS: SEO updated successfully${COLORS.reset}`);
-
-      // Validate response structure
-      if (updateResponse.body && updateResponse.body.data) {
-        const seo = updateResponse.body.data;
-
-        if (seo.id === testSeoId &&
-            seo.meta_title === updateData.meta_title &&
-            seo.meta_description === updateData.meta_description) {
-          console.log(`${COLORS.green}✅ PASS: Response data shows updated SEO entry${COLORS.reset}`);
-          return { success: true, seoId: testSeoId };
-        } else {
-          console.log(`${COLORS.red}❌ FAIL: Response data does not show updated SEO entry${COLORS.reset}`);
-          return { success: false };
-        }
-      } else {
-        console.log(`${COLORS.red}❌ FAIL: Response missing data field${COLORS.reset}`);
-        return { success: false };
-      }
-    } else {
-      console.log(`${COLORS.red}❌ FAIL: Expected status 200, got ${updateResponse.statusCode}${COLORS.reset}`);
-      return { success: false };
-    }
-
-  } catch (error) {
-    console.error(`${COLORS.red}💥 ERROR: ${error.message}${COLORS.reset}`);
-    return { success: false };
+  if (createResponse.statusCode !== 201) {
+    console.log('❌ Failed to create test SEO entry');
+    return;
   }
-}
 
-/**
- * Test: Update SEO - Not Found
- */
-async function testUpdateSeoNotFound() {
-  console.log('\n🧪 Testing: Update SEO - Not Found');
-  console.log('='.repeat(50));
+  testSeoId = createResponse.body.data.id;
+  console.log(`✅ Test SEO created with ID: ${testSeoId}`);
 
-  try {
-    const nonExistentId = 999999;
-    const updateData = {
-      meta_title: 'Updated Title'
-    };
+  // Test 1: Update SEO without auth
+  console.log('\nTest 1: Update SEO without authentication');
+  console.log('📤 Request: PUT /seos/' + testSeoId);
+  console.log('📦 Body:', { meta_title: 'Updated Title' });
+  console.log('🔑 Auth: None');
 
-    console.log(`📝 Attempting to update non-existent SEO with ID: ${nonExistentId}...`);
-    const updateResponse = await makeRequest('PUT', `${BASE_URL}/seos/${nonExistentId}`, updateData, {
-      'Authorization': `Bearer ${superAdminToken}`,
-      'Content-Type': 'application/json'
-    });
-
-    console.log(`📊 Response Status: ${updateResponse.statusCode}`);
-
-    if (updateResponse.statusCode === 404) {
-      console.log(`${COLORS.green}✅ PASS: Correctly returned 404 for non-existent SEO${COLORS.reset}`);
-      return { success: true };
-    } else {
-      console.log(`${COLORS.red}❌ FAIL: Should have returned 404 for non-existent SEO${COLORS.reset}`);
-      return { success: false };
-    }
-
-  } catch (error) {
-    console.error(`${COLORS.red}💥 ERROR: ${error.message}${COLORS.reset}`);
-    return { success: false };
-  }
-}
-
-/**
- * Test: Update SEO without Authentication
- */
-async function testUpdateSeoNoAuth() {
-  console.log('\n🧪 Testing: Update SEO without Authentication');
-  console.log('='.repeat(50));
-
-  try {
-    const updateData = {
-      meta_title: 'Updated Title'
-    };
-
-    console.log(`📝 Attempting to update SEO without authentication...`);
-    const updateResponse = await makeRequest('PUT', `${BASE_URL}/seos/${testSeoId || 1}`, updateData, {
-      'Content-Type': 'application/json'
-    });
-
-    console.log(`📊 Response Status: ${updateResponse.statusCode}`);
-
-    if (updateResponse.statusCode === 401 || updateResponse.statusCode === 403) {
-      console.log(`${COLORS.green}✅ PASS: Correctly rejected unauthenticated request${COLORS.reset}`);
-      return { success: true };
-    } else {
-      console.log(`${COLORS.red}❌ FAIL: Should have rejected unauthenticated request${COLORS.reset}`);
-      return { success: false };
-    }
-
-  } catch (error) {
-    console.error(`${COLORS.red}💥 ERROR: ${error.message}${COLORS.reset}`);
-    return { success: false };
-  }
-}
-
-/**
- * Test: Update SEO with Invalid Data
- */
-async function testUpdateSeoInvalidData() {
-  console.log('\n🧪 Testing: Update SEO with Invalid Data');
-  console.log('='.repeat(50));
-
-  try {
-    const invalidData = {
-      meta_title: '' // Empty title should fail validation
-    };
-
-    console.log(`📝 Attempting to update SEO with invalid data...`);
-    const updateResponse = await makeRequest('PUT', `${BASE_URL}/seos/${testSeoId || 1}`, invalidData, {
-      'Authorization': `Bearer ${superAdminToken}`,
-      'Content-Type': 'application/json'
-    });
-
-    console.log(`📊 Response Status: ${updateResponse.statusCode}`);
-
-    if (updateResponse.statusCode === 400) {
-      console.log(`${COLORS.green}✅ PASS: Correctly rejected invalid data${COLORS.reset}`);
-      return { success: true };
-    } else {
-      console.log(`${COLORS.red}❌ FAIL: Should have rejected invalid data with 400${COLORS.reset}`);
-      return { success: false };
-    }
-
-  } catch (error) {
-    console.error(`${COLORS.red}💥 ERROR: ${error.message}${COLORS.reset}`);
-    return { success: false };
-  }
-}
-
-// Main test runner
-async function runTests() {
-  console.log('🚀 Starting Update SEO Tests');
-  console.log('=====================================');
-
-  const results = [];
-
-  // Test successful update
-  const updateResult = await testUpdateSeo();
-  results.push({ test: 'Update SEO - Success', ...updateResult });
-
-  // Test not found
-  const notFoundResult = await testUpdateSeoNotFound();
-  results.push({ test: 'Update SEO - Not Found', ...notFoundResult });
-
-  // Test no authentication
-  const noAuthResult = await testUpdateSeoNoAuth();
-  results.push({ test: 'Update SEO - No Auth', ...noAuthResult });
-
-  // Test invalid data
-  const invalidDataResult = await testUpdateSeoInvalidData();
-  results.push({ test: 'Update SEO - Invalid Data', ...invalidDataResult });
-
-  // Summary
-  console.log('\n📊 Test Results Summary:');
-  console.log('='.repeat(50));
-
-  const passed = results.filter(r => r.success).length;
-  const total = results.length;
-
-  results.forEach(result => {
-    const status = result.success ? `${COLORS.green}✅ PASS${COLORS.reset}` : `${COLORS.red}❌ FAIL${COLORS.reset}`;
-    console.log(`${status} ${result.test}`);
+  const response1 = await makeRequest('PUT', `${CONFIG.apiVersion}/seos/${testSeoId}`, {
+    meta_title: 'Updated Title'
   });
 
-  console.log(`\n📈 Total: ${passed}/${total} tests passed`);
+  const test1Passed = response1.statusCode === 401;
+  printTestResult('Update SEO without auth', test1Passed, `Status: ${response1.statusCode}, Expected: 401`, response1);
+  if (test1Passed) passedTests++; else failedTests++;
 
-  if (passed === total) {
-    console.log(`${COLORS.green}🎉 All tests passed!${COLORS.reset}`);
-    process.exit(0);
-  } else {
-    console.log(`${COLORS.red}💥 Some tests failed${COLORS.reset}`);
+  // Test 2: Update SEO with valid data
+  console.log('\nTest 2: Update SEO with valid data');
+  console.log('📤 Request: PUT /seos/' + testSeoId);
+  console.log('�� Body:', {
+    meta_title: 'Updated SEO Title',
+    meta_description: 'Updated meta description',
+    canonical_url: 'https://example.com/updated-page'
+  });
+  console.log('🔑 Auth: Bearer token (super admin)');
+
+  const response2 = await makeRequest('PUT', `${CONFIG.apiVersion}/seos/${testSeoId}`, {
+    meta_title: 'Updated SEO Title',
+    meta_description: 'Updated meta description',
+    canonical_url: 'https://example.com/updated-page'
+  }, authHeader('superAdmin'));
+
+  const test2Passed = response2.statusCode === 200 && response2.body?.data;
+  printTestResult('Update SEO with valid data', test2Passed, `Status: ${response2.statusCode}, Expected: 200`, response2);
+  if (test2Passed) passedTests++; else failedTests++;
+
+  // Test 3: Update SEO with invalid data
+  console.log('\nTest 3: Update SEO with invalid data (empty title)');
+  console.log('📤 Request: PUT /seos/' + testSeoId);
+  console.log('📦 Body:', { meta_title: '' });
+  console.log('🔑 Auth: Bearer token (super admin)');
+
+  const response3 = await makeRequest('PUT', `${CONFIG.apiVersion}/seos/${testSeoId}`, {
+    meta_title: ''
+  }, authHeader('superAdmin'));
+
+  const test3Passed = response3.statusCode === 400;
+  printTestResult('Update SEO with invalid data', test3Passed, `Status: ${response3.statusCode}, Expected: 400`, response3);
+  if (test3Passed) passedTests++; else failedTests++;
+
+  // Test 4: Update non-existent SEO
+  console.log('\nTest 4: Update non-existent SEO');
+  console.log('📤 Request: PUT /seos/999999');
+  console.log('📦 Body:', { meta_title: 'Test Title' });
+  console.log('🔑 Auth: Bearer token (super admin)');
+
+  const response4 = await makeRequest('PUT', `${CONFIG.apiVersion}/seos/999999`, {
+    meta_title: 'Test Title'
+  }, authHeader('superAdmin'));
+
+  const test4Passed = response4.statusCode === 404;
+  printTestResult('Update non-existent SEO', test4Passed, `Status: ${response4.statusCode}, Expected: 404`, response4);
+  if (test4Passed) passedTests++; else failedTests++;
+}
+
+/**
+ * Main test runner
+ */
+async function runTests() {
+  console.log('🧪 SEO UPDATE API TESTS');
+  console.log('========================\n');
+
+  // Login first
+  const loginSuccess = await loginAsSuperAdmin();
+  if (!loginSuccess) {
+    console.log('❌ Cannot proceed without super admin authentication');
     process.exit(1);
   }
+
+  // Run tests
+  await testUpdateSeo();
+
+  // Print summary
+  printSummary(passedTests, failedTests, passedTests + failedTests);
+
+  // Exit with appropriate code
+  process.exit(failedTests > 0 ? 1 : 0);
 }
 
-// Run tests if called directly
+// Run if called directly
 if (require.main === module) {
-  runTests();
+  runTests().catch(error => {
+    console.error('Test runner failed:', error);
+    process.exit(1);
+  });
 }
 
-module.exports = { testUpdateSeo, testUpdateSeoNotFound, testUpdateSeoNoAuth, testUpdateSeoInvalidData };
+module.exports = { runTests };

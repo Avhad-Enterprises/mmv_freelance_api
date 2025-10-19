@@ -13,6 +13,7 @@ const {
   printSummary,
   storeToken,
   TOKENS,
+  authHeader
 } = require('../test-utils');
 
 let passedTests = 0;
@@ -25,8 +26,8 @@ async function loginAsClient() {
   try {
     console.log('🔐 Logging in as client...');
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'test.client@example.com',
-      password: 'TestPass123!'
+      email: 'login-test@example.com',
+      password: 'Password123!'
     });
 
     if (response.statusCode === 200 && response.body?.data?.token) {
@@ -50,9 +51,7 @@ async function saveProjectForTesting() {
     console.log('💾 Saving a project for testing...');
     const response = await makeRequest('POST', `${CONFIG.apiVersion}/saved/save-project`, {
       projects_task_id: 58
-    }, {
-      'Authorization': `Bearer ${TOKENS.client}`
-    });
+    }, authHeader('client'));
 
     if (response.statusCode === 201 || response.statusCode === 400) {
       // 201 = successfully saved, 400 = already saved (duplicate)
@@ -86,9 +85,7 @@ async function testGetMySavedProjects() {
 
   // Test 2: Get my saved projects with valid auth
   console.log('\nTest 2: Get my saved projects with valid authentication');
-  const response2 = await makeRequest('GET', `${CONFIG.apiVersion}/saved/my-saved-projects`, null, {
-    'Authorization': `Bearer ${TOKENS.client}`
-  });
+  const response2 = await makeRequest('GET', `${CONFIG.apiVersion}/saved/my-saved-projects`, null, authHeader('client'));
 
   const test2Passed = response2.statusCode === 200 && response2.body?.data;
   printTestResult('Get my saved with auth', test2Passed, `Status: ${response2.statusCode}`, response2);

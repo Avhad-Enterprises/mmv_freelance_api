@@ -1,105 +1,116 @@
 #!/usr/bin/env node
 
 /**
- * Category API Test Runner
- * Runs all category-related tests sequentially
+ * Complete Category API Test Suite Runner
+ *
+ * This script runs all category-related tests:
+ * - Create Category
+ * - Get All Categories
+ * - Get Category by ID
+ * - Get Categories by Type
+ * - Update Category
+ * - Delete Category
+ *
+ * Usage: node tests/category/run-category-tests.js
  */
 
-const { spawn } = require('child_process');
-const path = require('path');
+const { printSection, printSummary, getTestCounters, resetTestCounters } = require('../test-utils');
 
-// Test files in order
-const tests = [
-  'test-create-category.js',
-  'test-get-all-categories.js',
-  'test-get-category-by-id.js',
-  'test-get-by-type.js',
-  'test-update-category.js',
-  'test-delete-category.js'
-];
+let totalPassed = 0;
+let totalFailed = 0;
 
-const results = {
-  passed: [],
-  failed: []
+/**
+ * Run a test module and collect results
+ */
+async function runTestModule(name, testModule) {
+  console.log(`\n🏃 Running ${name}...\n`);
+
+  try {
+    // Reset counters for this module
+    resetTestCounters();
+
+    // Override process.exit to prevent individual tests from terminating the suite
+    const originalProcessExit = process.exit;
+    process.exit = function(code) {
+      // Don't actually exit, just return the code
+      return code;
+    };
+
+    // Run the test
+    await testModule.runTests();
+
+    // Restore process.exit
+    process.exit = originalProcessExit;
+
+    // Get the counters after running the test
+    const counters = getTestCounters();
+
+    console.log(`\n✅ ${name} completed: ${counters.passed} passed, ${counters.failed} failed\n`);
+
+    return counters;
+
+  } catch (error) {
+    console.error(`❌ ${name} failed:`, error.message);
+    return { passed: 0, failed: 1 };
+  }
+}
+
+/**
+ * Main test runner
+ */
+async function runAllCategoryTests() {
+  console.log('� Starting Complete Category API Test Suite...\n');
+  console.log('=' .repeat(60));
+
+  try {
+    // Import test modules
+    const createCategoryTests = require('./test-create-category');
+    const getAllCategoriesTests = require('./test-get-all-categories');
+    const getCategoryByIdTests = require('./test-get-category-by-id');
+    const getByTypeTests = require('./test-get-by-type');
+    const updateCategoryTests = require('./test-update-category');
+    const deleteCategoryTests = require('./test-delete-category');
+
+    // Run all test suites
+    await runTestModule('Create Category Tests', createCategoryTests);
+    await runTestModule('Get All Categories Tests', getAllCategoriesTests);
+    await runTestModule('Get Category by ID Tests', getCategoryByIdTests);
+    await runTestModule('Get Categories by Type Tests', getByTypeTests);
+    await runTestModule('Update Category Tests', updateCategoryTests);
+    await runTestModule('Delete Category Tests', deleteCategoryTests);
+
+    // Get final counters
+    const finalCounters = getTestCounters();
+    totalPassed = finalCounters.passed;
+    totalFailed = finalCounters.failed;
+
+    // Final summary
+    console.log('\n' + '='.repeat(60));
+    console.log('🏁 CATEGORY TEST SUITE COMPLETE');
+    console.log('='.repeat(60));
+
+    printSummary(totalPassed, totalFailed, totalPassed + totalFailed);
+
+    // Exit with appropriate code
+    if (totalFailed === 0) {
+      console.log('\n✅ All category tests passed!');
+      process.exit(0);
+    } else {
+      console.log('\n❌ Some category tests failed!');
+      process.exit(1);
+    }
+
+  } catch (error) {
+    console.error('\n❌ Test suite failed:', error.message);
+    process.exit(1);
+  }
+}
+
+// Run tests if called directly
+if (require.main === module) {
+  runAllCategoryTests();
+}
+
+module.exports = {
+  runAllCategoryTests
 };
-
-/**
- * Run a single test file
- */
-function runTest(testFile) {
-  return new Promise((resolve) => {
-    const testPath = path.join(__dirname, testFile);
-    console.log(`\n🚀 Running ${testFile}...`);
-    console.log(`Script: ${testPath}`);
-    console.log('='.repeat(50));
-
-    const child = spawn('node', [testPath], {
-      stdio: 'inherit',
-      cwd: __dirname
-    });
-
-    child.on('close', (code) => {
-      if (code === 0) {
-        results.passed.push(testFile);
-        console.log(`\n✅ ${testFile} completed successfully\n`);
-      } else {
-        results.failed.push(testFile);
-        console.log(`\n❌ ${testFile} failed with exit code ${code}\n`);
-      }
-      resolve(code);
-    });
-
-    child.on('error', (err) => {
-      console.error(`Failed to start test: ${err.message}`);
-      results.failed.push(testFile);
-      resolve(1);
-    });
-  });
-}
-
-/**
- * Run all tests sequentially
- */
-async function runAllTests() {
-  console.log('🚀 Starting Category API Tests...\n');
-  console.log(`Available tests: ${tests.join(', ')}\n`);
-
-  for (const test of tests) {
-    await runTest(test);
-  }
-
-  // Print summary
-  console.log('='.repeat(60));
-  console.log('🏆 CATEGORY API TESTS SUMMARY');
-  console.log('='.repeat(60));
-
-  results.passed.forEach(test => {
-    console.log(`✅ ${test}`);
-  });
-
-  results.failed.forEach(test => {
-    console.log(`❌ ${test}`);
-  });
-
-  console.log('\n📊 OVERALL RESULTS:');
-  console.log(`✅ Total Passed: ${results.passed.length}`);
-  console.log(`❌ Total Failed: ${results.failed.length}`);
-  console.log(`📈 Success Rate: ${((results.passed.length / tests.length) * 100).toFixed(1)}%`);
-
-  if (results.failed.length === 0) {
-    console.log('\n🎉 ALL TESTS PASSED! Category APIs are working correctly.');
-  } else {
-    console.log(`\n⚠️  ${results.failed.length} test(s) failed. Please review the results above.`);
-  }
-
-  console.log('='.repeat(60));
-  console.log('');
-
-  process.exit(results.failed.length > 0 ? 1 : 0);
-}
-
-// Run all tests
-runAllTests().catch(error => {
-  console.error('❌ Test runner failed:', error);
-  process.exit(1);
-});

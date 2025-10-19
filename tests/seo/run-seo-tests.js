@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * Saved Project API Test Runner
- * Runs all saved project-related tests
+ * SEO API Test Runner
+ * Runs all SEO-related tests
  *
  * Usage:
- *   node tests/saved_project/run-saved-project-tests.js           # Run all tests
- *   node tests/saved_project/run-saved-project-tests.js save      # Run only save project test
- *   node tests/saved_project/run-saved-project-tests.js get-all   # Run only get all saved test
- *   node tests/saved_project/run-saved-project-tests.js unsave    # Run only unsave project test
- *   node tests/saved_project/run-saved-project-tests.js get-my    # Run only get my saved projects test
+ *   node tests/seo/run-seo-tests.js           # Run all tests
+ *   node tests/seo/run-seo-tests.js create    # Run only create seo test
+ *   node tests/seo/run-seo-tests.js get-all   # Run only get all seos test
+ *   node tests/seo/run-seo-tests.js get-id    # Run only get seo by id test
+ *   node tests/seo/run-seo-tests.js update    # Run only update seo test
+ *   node tests/seo/run-seo-tests.js delete    # Run only delete seo test
+ *   node tests/seo/run-seo-tests.js all       # Run only test all seos test
  */
 
 const { printSection, printSummary, getTestCounters, resetTestCounters } = require('../test-utils');
@@ -18,10 +20,12 @@ let totalPassed = 0;
 let totalFailed = 0;
 
 const SCRIPTS = {
-  'save': 'test-save-project.js',
-  'get-all': 'test-get-all-saved.js',
-  'unsave': 'test-unsave-project.js',
-  'get-my': 'test-get-my-saved-projects.js'
+  'create': 'test-create-seo.js',
+  'get-all': 'test-get-all-seos.js',
+  'get-id': 'test-get-seo-by-id.js',
+  'update': 'test-update-seo.js',
+  'delete': 'test-delete-seo.js',
+  'all': 'test-all-seos.js'
 };
 
 /**
@@ -66,32 +70,36 @@ async function runTestModule(name, testModule) {
 }
 
 async function runAllTests() {
-  console.log('🧪 Starting Saved Project API Tests...\n');
+  console.log('🧪 Starting SEO API Tests...\n');
   console.log('Available tests:', Object.keys(SCRIPTS).join(', '));
   console.log('');
 
   try {
     // Import test modules
-    const saveTests = require('./test-save-project');
-    const getAllTests = require('./test-get-all-saved');
-    const unsaveTests = require('./test-unsave-project');
-    const getMyTests = require('./test-get-my-saved-projects');
+    const createTests = require('./test-create-seo');
+    const getAllTests = require('./test-get-all-seos');
+    const getByIdTests = require('./test-get-seo-by-id');
+    const updateTests = require('./test-update-seo');
+    const deleteTests = require('./test-delete-seo');
+    const allTests = require('./test-all-seos');
 
     // Run all test suites
-    await runTestModule('Save Project Tests', saveTests);
-    await runTestModule('Get All Saved Tests', getAllTests);
-    await runTestModule('Unsave Project Tests', unsaveTests);
-    await runTestModule('Get My Saved Projects Tests', getMyTests);
+    await runTestModule('Create SEO Tests', createTests);
+    await runTestModule('Get All SEO Tests', getAllTests);
+    await runTestModule('Get SEO by ID Tests', getByIdTests);
+    await runTestModule('Update SEO Tests', updateTests);
+    await runTestModule('Delete SEO Tests', deleteTests);
+    await runTestModule('All SEO Tests', allTests);
 
     // Final summary
     console.log('\n' + '='.repeat(60));
-    console.log('🏆 SAVED PROJECT API TESTS SUMMARY');
+    console.log('🏆 SEO API TESTS SUMMARY');
     console.log('='.repeat(60));
 
     printSummary(totalPassed, totalFailed, totalPassed + totalFailed);
 
     if (totalFailed === 0) {
-      console.log('\n🎉 ALL TESTS PASSED! Saved Project APIs are working correctly.');
+      console.log('\n🎉 ALL TESTS PASSED! SEO APIs are working correctly.');
       process.exit(0);
     } else {
       console.log(`\n⚠️  ${totalFailed} test(s) failed. Please review the results above.`);

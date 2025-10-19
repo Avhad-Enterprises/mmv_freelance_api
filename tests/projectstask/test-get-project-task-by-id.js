@@ -214,3 +214,7 @@ runTests().catch(error => {
   console.error('💥 Test runner failed:', error);
   process.exit(1);
 });
+
+module.exports = {
+  runTests
+};

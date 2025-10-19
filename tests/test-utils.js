@@ -25,6 +25,16 @@ const TOKENS = {
   admin: null,
 };
 
+// Global test counters
+const TEST_COUNTERS = {
+  passed: 0,
+  failed: 0,
+  reset: function() {
+    this.passed = 0;
+    this.failed = 0;
+  }
+};
+
 // Color codes for console output
 const COLORS = {
   reset: '\x1b[0m',
@@ -119,6 +129,13 @@ function makeRequest(method, path, data = null, formDataOrHeaders = {}) {
  * Print test result
  */
 function printTestResult(testName, passed, message = '', response = null) {
+  // Update global counters
+  if (passed) {
+    TEST_COUNTERS.passed++;
+  } else {
+    TEST_COUNTERS.failed++;
+  }
+  
   const status = passed 
     ? `${COLORS.green}✓ PASS${COLORS.reset}` 
     : `${COLORS.red}✗ FAIL${COLORS.reset}`;
@@ -153,7 +170,7 @@ function printSection(title) {
 /**
  * Print test summary
  */
-function printSummary(passed, failed, total) {
+function printSummary(passed, failed, total = passed + failed) {
   console.log(`\n${COLORS.blue}${'='.repeat(60)}${COLORS.reset}`);
   console.log(`${COLORS.blue}TEST SUMMARY${COLORS.reset}`);
   console.log(`${COLORS.blue}${'='.repeat(60)}${COLORS.reset}`);
@@ -224,10 +241,25 @@ function randomUsername(prefix = 'user') {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
+/**
+ * Get current test counters
+ */
+function getTestCounters() {
+  return { ...TEST_COUNTERS };
+}
+
+/**
+ * Reset test counters
+ */
+function resetTestCounters() {
+  TEST_COUNTERS.reset();
+}
+
 module.exports = {
   CONFIG,
   TOKENS,
   COLORS,
+  TEST_COUNTERS,
   makeRequest,
   processApiResponse,
   printTestResult,
@@ -239,4 +271,6 @@ module.exports = {
   sleep,
   randomEmail,
   randomUsername,
+  getTestCounters,
+  resetTestCounters,
 };
