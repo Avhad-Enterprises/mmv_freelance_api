@@ -14,6 +14,7 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/users/password-reset-request',
       '/users/password-reset',
       '/auth/login',
+      '/auth/register',
       '/auth/register/client',
       '/auth/register/videographer',
       '/auth/register/videoeditor',
@@ -29,11 +30,14 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/blog/getallblogs'
     ];
 
-    // Check if the current path matches any public route AND is a GET request
-    // POST/PUT/DELETE to these routes still require authentication
-    const isPublicRoute = publicRoutes.some(route => req.path.includes(route)) && req.method === 'GET';
+    // Check if the current path matches any public route
+    // GET requests to public routes don't require auth
+    // POST requests to registration and login routes don't require auth
+    const isPublicGetRoute = publicRoutes.some(route => req.path.includes(route)) && req.method === 'GET';
+    const isPublicRegistrationRoute = req.path.includes('/auth/register') && req.method === 'POST';
+    const isPublicLoginRoute = req.path.includes('/auth/login') && req.method === 'POST';
     
-    if (isPublicRoute) {
+    if (isPublicGetRoute || isPublicRegistrationRoute || isPublicLoginRoute) {
       await DB.raw("SET search_path TO public");
       return next();
     }
