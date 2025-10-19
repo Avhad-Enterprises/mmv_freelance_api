@@ -61,11 +61,11 @@ async function testGetCategoriesByType() {
     console.log(`✅ Created test category with type: ${testType}`);
   }
 
-  // Test 1: Get by type without authentication
+  // Test 1: Get by type without authentication (should work since it's public)
   const test1 = await makeRequest('GET', `${CONFIG.apiVersion}/categories/by-type?type=${testType}`);
 
-  const passed1 = test1.statusCode === 401;
-  printTestResult('Get by type without auth', passed1, `Status: ${test1.statusCode}`, test1);
+  const passed1 = test1.statusCode === 200 && test1.body?.success === true;
+  printTestResult('Get by type without auth', passed1, `Status: ${test1.statusCode}, Expected: 200`, test1);
   if (passed1) passedTests++; else failedTests++;
 
   // Test 2: Get by type with query parameter

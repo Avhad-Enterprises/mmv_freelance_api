@@ -42,7 +42,6 @@ class blogRoute implements Route {
     );
 
     this.router.get(`${this.path}/getallblogs`,
-      requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users can read blogs
       (req, res, next) => this.blogController.getallblogsby(req, res, next)
     );
 

@@ -65,11 +65,11 @@ async function testGetCategoryById() {
     testCategoryId = 1;
   }
 
-  // Test 1: Get category without authentication
+  // Test 1: Get category without authentication (should work since it's public)
   const test1 = await makeRequest('GET', `${CONFIG.apiVersion}/categories/${testCategoryId}`);
 
-  const passed1 = test1.statusCode === 401;
-  printTestResult('Get category without auth', passed1, `Status: ${test1.statusCode}`, test1);
+  const passed1 = test1.statusCode === 200 && test1.body?.data?.category_id === testCategoryId;
+  printTestResult('Get category without auth', passed1, `Status: ${test1.statusCode}, Expected: 200`, test1);
   if (passed1) passedTests++; else failedTests++;
 
   // Test 2: Get category with valid ID

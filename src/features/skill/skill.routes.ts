@@ -38,22 +38,20 @@ class SkillsRoute implements Route {
         /**
          * Get all skills
          * GET /api/v1/skills
-         * Requires: ADMIN or SUPER_ADMIN role
+         * Public access - no authentication required
          */
         this.router.get(
             `${this.path}`,
-            requireRole('ADMIN', 'SUPER_ADMIN'),
             this.skillsController.getAllSkills
         );
 
         /**
          * Get skill by ID
          * GET /api/v1/skills/:id
-         * Requires: ADMIN or SUPER_ADMIN role
+         * Public access - no authentication required
          */
         this.router.get(
             `${this.path}/:id`,
-            requireRole('ADMIN', 'SUPER_ADMIN'),
             this.skillsController.getSkillById
         );
 
