@@ -29,7 +29,11 @@ export class VideoEditorRegistrationDto {
   // Step 1: Basic Information (Required)
   @IsNotEmpty()
   @IsString()
-  full_name: string;
+  first_name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  last_name: string;
 
   @IsNotEmpty()
   @IsEmail()
