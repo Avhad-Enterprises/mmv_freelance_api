@@ -21,14 +21,17 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/health',
       '/projects-tasks/listings',
       '/freelancers/getfreelancers',
-      '/categories',
-      '/categories/by-type',
+      '/freelancers/getfreelancers-public',  // GET /freelancers/getfreelancers-public (public-safe)
+      '/categories',  // GET /categories (read-only)
+      '/categories/by-type',  // GET /categories/by-type (read-only)
       '/skills',
-      '/tags'
+      '/tags',
+      '/blog/getallblogs'
     ];
 
-    // Check if the current path matches any public route
-    const isPublicRoute = publicRoutes.some(route => req.path.includes(route));
+    // Check if the current path matches any public route AND is a GET request
+    // POST/PUT/DELETE to these routes still require authentication
+    const isPublicRoute = publicRoutes.some(route => req.path.includes(route)) && req.method === 'GET';
     
     if (isPublicRoute) {
       await DB.raw("SET search_path TO public");
@@ -44,7 +47,7 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
         
         const secret = process.env.JWT_SECRET;
         
-        const verificationResponse = (await jwt.verify(bearerToken, secret)) as DataStoredInToken;
+        const verificationResponse = (await jwt.verify(bearerToken, secret)) as any;
        
         if (verificationResponse) {
           const userId = verificationResponse.id;
@@ -52,6 +55,16 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
           
           if (findUser) {
             req.user = findUser;
+            
+            // Fetch user roles from database
+            const userRoles = await DB('user_roles')
+              .join('role', 'user_roles.role_id', 'role.role_id')
+              .where('user_roles.user_id', userId)
+              .select('role.name');
+            
+            // Attach roles to user object
+            req.user.roles = userRoles.map(r => r.name);
+            
             await DB.raw("SET search_path TO public");
             next();
           } else {
