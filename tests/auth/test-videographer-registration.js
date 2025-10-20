@@ -125,7 +125,8 @@ async function testSuccessfulVideographerRegistration() {
 
     // Add JSON data
     const videographerData = {
-      full_name: 'John Videographer',
+      first_name: 'John',
+      last_name: 'Videographer',
       email: randomEmail('videographer-test'),
       password: 'Password123!',
       skill_tags: JSON.stringify(['cinematography', 'drone', 'editing']),
@@ -198,7 +199,8 @@ async function testSuccessfulVideographerRegistration() {
     const formData = new FormData();
 
     const minimalData = {
-      full_name: 'Jane Videographer',
+      first_name: 'Jane',
+      last_name: 'Videographer',
       email: randomEmail('videographer-minimal'),
       password: 'Password123!',
       skill_tags: JSON.stringify(['cinematography']),
@@ -293,7 +295,8 @@ async function testVideographerRegistrationValidation() {
     const formData = new FormData();
 
     const invalidData = {
-      full_name: 'Invalid Videographer',
+      first_name: 'Invalid',
+      last_name: 'Videographer',
       email: 'invalid-email',
       password: 'Password123!',
       skill_tags: JSON.stringify(['cinematography']),
@@ -344,7 +347,8 @@ async function testDuplicateVideographerRegistration() {
     const duplicateEmail = randomEmail('duplicate-videographer');
 
     const videographerData = {
-      full_name: 'Duplicate Videographer',
+      first_name: 'Duplicate',
+      last_name: 'Videographer',
       email: duplicateEmail,
       password: 'Password123!',
       skill_tags: JSON.stringify(['cinematography']),
@@ -391,7 +395,8 @@ async function testDuplicateVideographerRegistration() {
       const formData2 = new FormData();
 
       const duplicateData = {
-        full_name: 'Second Videographer',
+        first_name: 'Second',
+        last_name: 'Videographer',
         email: duplicateEmail, // Same email
         password: 'Password123!',
         skill_tags: JSON.stringify(['drone']),

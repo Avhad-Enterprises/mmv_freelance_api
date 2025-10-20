@@ -105,7 +105,8 @@ async function testSuccessfulClientRegistration() {
 
     // Add JSON data
     const clientData = {
-      full_name: 'John Smith',
+      first_name: 'John',
+      last_name: 'Smith',
       email: randomEmail('client-test'),
       password: 'Password123!',
       company_name: 'Test Company Inc',
@@ -179,7 +180,8 @@ async function testSuccessfulClientRegistration() {
     const formData = new FormData();
 
     const minimalData = {
-      full_name: 'Jane Doe',
+      first_name: 'Jane',
+      last_name: 'Doe',
       email: randomEmail('client-minimal'),
       password: 'Password123!',
       company_name: 'Minimal Company',
@@ -259,7 +261,8 @@ async function testClientRegistrationValidation() {
     const formData = new FormData();
 
     const invalidData = {
-      full_name: 'Invalid User',
+      first_name: 'Invalid',
+      last_name: 'User',
       email: 'invalid-email',
       password: 'Password123!',
       company_name: 'Test Company',
@@ -306,7 +309,8 @@ async function testClientRegistrationValidation() {
     const formData = new FormData();
 
     const invalidData = {
-      full_name: 'Invalid User',
+      first_name: 'Invalid',
+      last_name: 'User',
       email: randomEmail('invalid-industry'),
       password: 'Password123!',
       company_name: 'Test Company',
@@ -353,7 +357,8 @@ async function testClientRegistrationValidation() {
     const formData = new FormData();
 
     const invalidData = {
-      full_name: 'Terms User',
+      first_name: 'Terms',
+      last_name: 'User',
       email: randomEmail('no-terms'),
       password: 'Password123!',
       company_name: 'Test Company',
@@ -409,7 +414,8 @@ async function testDuplicateRegistration() {
     const formData = new FormData();
 
     const clientData = {
-      full_name: 'First User',
+      first_name: 'First',
+      last_name: 'User',
       email: duplicateEmail,
       password: 'Password123!',
       company_name: 'First Company',
@@ -442,7 +448,8 @@ async function testDuplicateRegistration() {
       const formData2 = new FormData();
 
       const duplicateData = {
-        full_name: 'Second User',
+        first_name: 'Second',
+        last_name: 'User',
         email: duplicateEmail, // Same email
         password: 'Password123!',
         company_name: 'Second Company',

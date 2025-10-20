@@ -125,7 +125,8 @@ async function testSuccessfulVideoEditorRegistration() {
 
     // Add JSON data
     const videoEditorData = {
-      full_name: 'John Video Editor',
+      first_name: 'John',
+      last_name: 'Video Editor',
       email: randomEmail('videoeditor-test'),
       password: 'Password123!',
       skill_tags: JSON.stringify(['color grading', 'motion graphics', 'vfx']),
@@ -194,7 +195,8 @@ async function testSuccessfulVideoEditorRegistration() {
     const formData = new FormData();
 
     const minimalData = {
-      full_name: 'Jane Video Editor',
+      first_name: 'Jane',
+      last_name: 'Video Editor',
       email: randomEmail('videoeditor-minimal'),
       password: 'Password123!',
       skill_tags: JSON.stringify(['editing']),
@@ -284,7 +286,8 @@ async function testVideoEditorRegistrationValidation() {
     const formData = new FormData();
 
     const invalidData = {
-      full_name: 'Invalid Video Editor',
+      first_name: 'Invalid',
+      last_name: 'Video Editor',
       email: 'invalid-email',
       password: 'Password123!',
       skill_tags: JSON.stringify(['editing']),
@@ -339,7 +342,8 @@ async function testDuplicateVideoEditorRegistration() {
     const duplicateEmail = randomEmail('duplicate-videoeditor');
 
     const videoEditorData = {
-      full_name: 'Duplicate Video Editor',
+      first_name: 'Duplicate',
+      last_name: 'Video Editor',
       email: duplicateEmail,
       password: 'Password123!',
       skill_tags: JSON.stringify(['editing']),
@@ -383,7 +387,8 @@ async function testDuplicateVideoEditorRegistration() {
       const formData2 = new FormData();
 
       const duplicateData = {
-        full_name: 'Second Video Editor',
+        first_name: 'Second',
+        last_name: 'Video Editor',
         email: duplicateEmail, // Same email
         password: 'Password123!',
         skill_tags: JSON.stringify(['color grading']),
