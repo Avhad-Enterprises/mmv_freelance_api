@@ -8,8 +8,8 @@ const API_PREFIX = '/api/v1';
 // Test data
 const testUsers = {
   superAdmin: {
-    email: 'avhadenterprisespc5@gmail.com',
-    password: 'SuperAdmin123!'
+    email: 'testadmin@example.com',
+    password: 'TestAdmin123!'
   }
 };
 

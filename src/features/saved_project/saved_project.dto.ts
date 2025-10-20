@@ -37,9 +37,9 @@ export class SavedProjectsDto {
 
   @IsOptional()
   @IsInt()
-  created_at: Number;
+  created_at?: number;
 
   @IsOptional()
   @IsInt()
-  updated_at: Number;
+  updated_at?: number;
 }

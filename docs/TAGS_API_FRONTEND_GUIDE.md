@@ -41,6 +41,7 @@ Authorization: Bearer <jwt_token>
 **Response (201):**
 ```json
 {
+  "success": true,
   "data": {
     "tag_id": 1,
     "tag_name": "Frontend",
@@ -67,6 +68,7 @@ Authorization: Bearer <jwt_token>
 **Response (200):**
 ```json
 {
+  "success": true,
   "data": [
     {
       "tag_id": 1,
@@ -104,6 +106,7 @@ Authorization: Bearer <jwt_token>
 **Response (200):**
 ```json
 {
+  "success": true,
   "data": {
     "tag_id": 1,
     "tag_name": "Frontend",
@@ -133,6 +136,7 @@ Authorization: Bearer <jwt_token>
 **Response (200):**
 ```json
 {
+  "success": true,
   "data": [
     {
       "tag_id": 1,
@@ -181,6 +185,7 @@ Authorization: Bearer <jwt_token>
 **Response (200):**
 ```json
 {
+  "success": true,
   "data": {
     "tag_id": 1,
     "tag_name": "Advanced Frontend",
@@ -216,6 +221,7 @@ Authorization: Bearer <jwt_token>
 **Response (200):**
 ```json
 {
+  "success": true,
   "data": {
     "tag_id": 1,
     "is_deleted": true,

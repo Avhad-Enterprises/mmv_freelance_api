@@ -11,7 +11,7 @@ class SkillsController {
         try {
             const skillData: SkillsDto = req.body;
             const insertedSkill = await this.SkillsService.InsertSkill(skillData);
-            res.status(201).json({ data: insertedSkill, message: "Skill created successfully" });
+            res.status(201).json({ success: true, data: insertedSkill, message: "Skill created successfully" });
         } catch (error) {
             next(error);
         }
@@ -22,7 +22,7 @@ class SkillsController {
     public getAllSkills = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const skills = await this.SkillsService.GetAllSkills();
-            res.status(200).json({ data: skills, message: "Skills fetched successfully" });
+            res.status(200).json({ success: true, data: skills, message: "Skills fetched successfully" });
         } catch (error) {
             next(error);
         }
@@ -34,7 +34,7 @@ class SkillsController {
         try {
             const skillId = parseInt(req.params.id);
             const skill = await this.SkillsService.GetSkillById(skillId);
-            res.status(200).json({ data: skill, message: "Skill fetched successfully" });
+            res.status(200).json({ success: true, data: skill, message: "Skill fetched successfully" });
         } catch (error) {
             next(error);
         }
@@ -47,7 +47,7 @@ class SkillsController {
             const skillId = parseInt(req.params.id);
             const updateData: Partial<SkillsDto> = req.body;
             const updatedSkill = await this.SkillsService.UpdateSkill(skillId, updateData);
-            res.status(200).json({ data: updatedSkill, message: "Skill updated successfully" });
+            res.status(200).json({ success: true, data: updatedSkill, message: "Skill updated successfully" });
         } catch (error) {
             next(error);
         }
@@ -60,7 +60,7 @@ class SkillsController {
             const skillId = parseInt(req.params.id);
             const deletedBy = req.body.deleted_by || 1; // Use deleted_by from body or default to 1
             const deletedSkill = await this.SkillsService.DeleteSkill(skillId, deletedBy);
-            res.status(200).json({ data: deletedSkill, message: "Skill deleted successfully" });
+            res.status(200).json({ success: true, data: deletedSkill, message: "Skill deleted successfully" });
         } catch (error) {
             next(error);
         }

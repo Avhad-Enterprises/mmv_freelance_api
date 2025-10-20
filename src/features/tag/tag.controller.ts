@@ -11,7 +11,7 @@ class TagsController {
         try {
             const tagData: TagsDto = req.body;
             const insertedTag = await this.TagsService.InsertTag(tagData);
-            res.status(201).json({ data: insertedTag, message: "Tag created successfully" });
+            res.status(201).json({ success: true, data: insertedTag, message: "Tag created successfully" });
         } catch (error) {
             next(error);
         }
@@ -22,7 +22,7 @@ class TagsController {
     public getAllTags = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const tags = await this.TagsService.GetAllTags();
-            res.status(200).json({ data: tags, message: "Tags fetched successfully" });
+            res.status(200).json({ success: true, data: tags, message: "Tags fetched successfully" });
         } catch (error) {
             next(error);
         }
@@ -34,7 +34,7 @@ class TagsController {
         try {
             const tagId = parseInt(req.params.id);
             const tag = await this.TagsService.GetTagById(tagId);
-            res.status(200).json({ data: tag, message: "Tag fetched successfully" });
+            res.status(200).json({ success: true, data: tag, message: "Tag fetched successfully" });
         } catch (error) {
             next(error);
         }
@@ -46,7 +46,7 @@ class TagsController {
         try {
             const { type } = req.params;
             const tags = await this.TagsService.GetTagsByType(type);
-            res.status(200).json({ data: tags, message: `Tags of type '${type}' fetched successfully` });
+            res.status(200).json({ success: true, data: tags, message: `Tags of type '${type}' fetched successfully` });
         } catch (error) {
             next(error);
         }
@@ -59,7 +59,7 @@ class TagsController {
             const tagId = parseInt(req.params.id);
             const updateData: Partial<TagsDto> = req.body;
             const updatedTag = await this.TagsService.UpdateTag(tagId, updateData);
-            res.status(200).json({ data: updatedTag, message: "Tag updated successfully" });
+            res.status(200).json({ success: true, data: updatedTag, message: "Tag updated successfully" });
         } catch (error) {
             next(error);
         }
@@ -72,7 +72,7 @@ class TagsController {
             const tagId = parseInt(req.params.id);
             const deletedBy = req.body.deleted_by || 1; // Use deleted_by from body or default to 1
             const deletedTag = await this.TagsService.DeleteTag(tagId, deletedBy);
-            res.status(200).json({ data: deletedTag, message: "Tag deleted successfully" });
+            res.status(200).json({ success: true, data: deletedTag, message: "Tag deleted successfully" });
         } catch (error) {
             next(error);
         }

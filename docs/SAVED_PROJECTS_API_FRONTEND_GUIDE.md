@@ -55,16 +55,34 @@ The following user roles can use the saved projects APIs:
 }
 ```
 
-**Response (Error - 400):**
+**Response (Error - 400 - Duplicate Save):**
 ```json
 {
-  "message": "Data Invalid"
+  "success": false,
+  "message": "Project already saved",
+  "meta": {
+    "timestamp": "2025-10-20T10:00:00Z",
+    "version": "v1"
+  }
+}
+```
+
+**Response (Error - 400 - Project Not Found):**
+```json
+{
+  "success": false,
+  "message": "Project not found",
+  "meta": {
+    "timestamp": "2025-10-20T10:00:00Z",
+    "version": "v1"
+  }
 }
 ```
 
 **Notes:**
 - `user_id` is automatically set from the JWT token
-- Duplicate saves for the same project by the same user are allowed (no uniqueness constraint)
+- Duplicate saves for the same project by the same user are **not allowed**
+- The project must exist in the `projects_task` table
 
 ---
 
@@ -185,20 +203,21 @@ The following user roles can use the saved projects APIs:
 
 ### Save Project
 - `projects_task_id`: Required, integer, must exist in projects_task table
+- Prevents duplicate saves of the same project by the same user
 
 ### Remove Saved Project
 - `projects_task_id`: Required, integer
+- User can only remove their own saved projects
 
 ## Error Scenarios
 
 ### Save Project
-- `400 Bad Request`: Invalid data or missing required fields
+- `400 Bad Request`: Invalid data, missing required fields, project not found, or project already saved
 - `401 Unauthorized`: Missing/invalid JWT token
 - `500 Internal Server Error`: Database error
 
 ### Get My Saved Projects
 - `401 Unauthorized`: Missing/invalid JWT token
-- `404 Not Found`: User not found in saved_projects table
 - `500 Internal Server Error`: Database error
 
 ### Remove Saved Project
