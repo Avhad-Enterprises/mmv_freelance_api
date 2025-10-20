@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { ClientController } from './client.controller';
 import { requireRole } from '../../middlewares/role.middleware';
 import validationMiddleware from '../../middlewares/validation.middleware';
-import { ClientUpdateDto } from './client.update.dto';
+import { ClientProfileUpdateDto } from './client.update.dto';
 import Route from '../../interfaces/route.interface';
 
 /**
@@ -52,7 +52,7 @@ export class ClientRoutes implements Route {
     this.router.patch(
       `${this.path}/profile`,
       requireRole('CLIENT'),
-      validationMiddleware(ClientUpdateDto, 'body', true, []),
+      validationMiddleware(ClientProfileUpdateDto, 'body', true, []),
       this.clientController.updateProfile
     );
 

@@ -40,10 +40,7 @@ Authorization: Bearer <jwt_token>
       "created_at": "2025-01-01T00:00:00Z"
     }
   ],
-  "meta": {
-    "timestamp": "2025-10-18T10:00:00Z",
-    "version": "v1"
-  }
+  "count": 1
 }
 ```
 
@@ -68,22 +65,25 @@ Authorization: Bearer <jwt_token>
       "email": "john@example.com",
       "username": "johndoe",
       "company_name": "ABC Corp",
-      "phone": "+1234567890",
-      "address": "123 Main St",
+      "phone_number": "+1234567890",
+      "address_line_first": "123 Main St",
       "city": "New York",
       "state": "NY",
       "country": "USA",
-      "zip_code": "10001",
+      "pincode": "10001",
       "website": "https://abc.com",
       "bio": "Company description",
       "is_active": true,
       "created_at": "2025-01-01T00:00:00Z",
       "updated_at": "2025-01-01T00:00:00Z"
-    }
-  },
-  "meta": {
-    "timestamp": "2025-10-18T10:00:00Z",
-    "version": "v1"
+    },
+    "profile": {
+      "company_name": "ABC Corp",
+      "industry": "film_production",
+      "website": "https://abc.com",
+      "business_documents": ["https://example.com/doc1.pdf"]
+    },
+    "userType": "CLIENT"
   }
 }
 ```
@@ -95,26 +95,26 @@ Authorization: Bearer <jwt_token>
 
 **Required Roles:** CLIENT
 
-**Description:** Update the current authenticated client's profile information.
+**Description:** Update the current authenticated client's profile information. This endpoint only updates fields in the client_profiles table.
 
 **Request Body:**
 ```json
 {
-  "first_name": "John",
-  "last_name": "Doe",
   "company_name": "ABC Corporation",
-  "phone": "+1234567890",
-  "address": "123 Main Street",
-  "city": "New York",
-  "state": "NY",
-  "country": "USA",
-  "zip_code": "10001",
+  "industry": "film_production",
   "website": "https://abc-corp.com",
-  "bio": "Updated company description"
+  "company_size": "11-50",
+  "required_services": ["video_editing", "videography"],
+  "required_skills": ["premiere_pro", "after_effects"],
+  "budget_min": 1000,
+  "budget_max": 5000,
+  "business_documents": ["https://example.com/doc1.pdf"],
+  "work_arrangement": "remote",
+  "project_frequency": "recurring"
 }
 ```
 
-**Validation:** All fields are optional. Uses ClientUpdateDto validation.
+**Validation:** All fields are optional. Uses ClientProfileUpdateDto validation.
 
 **Response (200):**
 ```json
@@ -128,20 +128,26 @@ Authorization: Bearer <jwt_token>
       "last_name": "Doe",
       "email": "john@example.com",
       "company_name": "ABC Corporation",
-      "phone": "+1234567890",
-      "address": "123 Main Street",
+      "phone_number": "+1234567890",
+      "address_line_first": "123 Main Street",
       "city": "New York",
       "state": "NY",
       "country": "USA",
-      "zip_code": "10001",
+      "pincode": "10001",
       "website": "https://abc-corp.com",
       "bio": "Updated company description",
       "updated_at": "2025-10-18T10:00:00Z"
-    }
-  },
-  "meta": {
-    "timestamp": "2025-10-18T10:00:00Z",
-    "version": "v1"
+    },
+    "profile": {
+      "company_name": "ABC Corporation",
+      "industry": "film_production",
+      "website": "https://abc-corp.com",
+      "company_size": "11-50",
+      "required_services": ["video_editing", "videography"],
+      "budget_min": 1000,
+      "budget_max": 5000
+    },
+    "userType": "CLIENT"
   }
 }
 ```
@@ -160,19 +166,9 @@ Authorization: Bearer <jwt_token>
 {
   "success": true,
   "data": {
-    "stats": {
-      "total_projects": 15,
-      "active_projects": 5,
-      "completed_projects": 10,
-      "total_spent": 25000.00,
-      "avg_project_cost": 1666.67,
-      "total_reviews": 8,
-      "avg_rating": 4.5
-    }
-  },
-  "meta": {
-    "timestamp": "2025-10-18T10:00:00Z",
-    "version": "v1"
+    "projects_created": [],
+    "total_spent": 0,
+    "active_projects": 0
   }
 }
 ```
@@ -189,37 +185,21 @@ Authorization: Bearer <jwt_token>
 **Request Body:**
 ```json
 {
-  "business_license": "https://example.com/license.pdf",
-  "tax_id": "https://example.com/tax-id.pdf",
-  "insurance_certificate": "https://example.com/insurance.pdf",
-  "other_documents": [
-    "https://example.com/doc1.pdf",
-    "https://example.com/doc2.pdf"
+  "document_urls": [
+    "https://example.com/license.pdf",
+    "https://example.com/tax-id.pdf",
+    "https://example.com/insurance.pdf"
   ]
 }
 ```
+
+**Validation:** document_urls must be an array of strings.
 
 **Response (200):**
 ```json
 {
   "success": true,
-  "message": "Business documents updated successfully",
-  "data": {
-    "documents": {
-      "business_license": "https://example.com/license.pdf",
-      "tax_id": "https://example.com/tax-id.pdf",
-      "insurance_certificate": "https://example.com/insurance.pdf",
-      "other_documents": [
-        "https://example.com/doc1.pdf",
-        "https://example.com/doc2.pdf"
-      ],
-      "updated_at": "2025-10-18T10:00:00Z"
-    }
-  },
-  "meta": {
-    "timestamp": "2025-10-18T10:00:00Z",
-    "version": "v1"
-  }
+  "message": "Business documents updated successfully"
 }
 ```
 
@@ -247,31 +227,24 @@ Authorization: Bearer <jwt_token>
       "email": "john@example.com",
       "username": "johndoe",
       "company_name": "ABC Corp",
-      "phone": "+1234567890",
-      "address": "123 Main St",
+      "phone_number": "+1234567890",
+      "address_line_first": "123 Main St",
       "city": "New York",
       "state": "NY",
       "country": "USA",
-      "zip_code": "10001",
+      "pincode": "10001",
       "website": "https://abc.com",
       "bio": "Company description",
-      "business_documents": {
-        "business_license": "https://example.com/license.pdf",
-        "tax_id": "https://example.com/tax-id.pdf"
-      },
       "is_active": true,
       "created_at": "2025-01-01T00:00:00Z",
       "updated_at": "2025-01-01T00:00:00Z"
     },
-    "stats": {
-      "total_projects": 15,
-      "active_projects": 5,
-      "completed_projects": 10
-    }
-  },
-  "meta": {
-    "timestamp": "2025-10-18T10:00:00Z",
-    "version": "v1"
+    "profile": {
+      "company_name": "ABC Corp",
+      "industry": "film_production",
+      "business_documents": ["https://example.com/doc1.pdf"]
+    },
+    "userType": "CLIENT"
   }
 }
 ```
@@ -284,11 +257,7 @@ Authorization: Bearer <jwt_token>
 ```json
 {
   "success": false,
-  "message": "Authentication token missing",
-  "meta": {
-    "timestamp": "2025-10-18T10:00:00Z",
-    "version": "v1"
-  }
+  "message": "Authentication token missing"
 }
 ```
 
@@ -296,11 +265,7 @@ Authorization: Bearer <jwt_token>
 ```json
 {
   "success": false,
-  "message": "Insufficient permissions",
-  "meta": {
-    "timestamp": "2025-10-18T10:00:00Z",
-    "version": "v1"
-  }
+  "message": "Insufficient permissions"
 }
 ```
 
@@ -308,11 +273,7 @@ Authorization: Bearer <jwt_token>
 ```json
 {
   "success": false,
-  "message": "Client not found",
-  "meta": {
-    "timestamp": "2025-10-18T10:00:00Z",
-    "version": "v1"
-  }
+  "message": "Client not found"
 }
 ```
 
@@ -320,17 +281,7 @@ Authorization: Bearer <jwt_token>
 ```json
 {
   "success": false,
-  "message": "Validation failed",
-  "errors": [
-    {
-      "field": "email",
-      "message": "Invalid email format"
-    }
-  ],
-  "meta": {
-    "timestamp": "2025-10-18T10:00:00Z",
-    "version": "v1"
-  }
+  "message": "Validation failed"
 }
 ```
 
@@ -339,7 +290,8 @@ Authorization: Bearer <jwt_token>
 ## Notes for Frontend Integration
 
 1. **Authentication:** All requests must include the JWT token in the Authorization header
-2. **Role-based Access:** Different endpoints require different user roles
-3. **Validation:** Profile update requests are validated using ClientUpdateDto
-4. **File Uploads:** Document endpoints expect file URLs (upload handling done separately)
-5. **Response Structure:** All responses follow the standard API response format with `success`, `data`, and `meta` fields
+2. **Role-based Access:** Different endpoints require different user roles (CLIENT, ADMIN, SUPER_ADMIN)
+3. **Validation:** Profile update requests are validated using ClientProfileUpdateDto with support for arrays and enums
+4. **Document Uploads:** Business documents are stored as an array of URLs in the `business_documents` field
+5. **Response Structure:** All responses follow the standard API response format with `success`, `data`, and optional `message` fields
+6. **Separation of Concerns:** `/clients/profile` only updates client_profiles table fields. Use `/users/me` to update basic user information (users table)

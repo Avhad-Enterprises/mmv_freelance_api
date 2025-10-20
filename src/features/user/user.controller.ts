@@ -81,7 +81,7 @@ export class UserController {
   };
 
   /**
-   * Update basic user info
+   * Update basic user info (users table fields only)
    * PATCH /api/v1/users/me
    */
   public updateBasicInfo = async (

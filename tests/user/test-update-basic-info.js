@@ -362,7 +362,7 @@ const TEST_CASES = [
 async function runTests() {
   // First, try to get a valid token for authenticated tests
   console.log('🔑 Attempting to obtain authentication token...');
-  testToken = await loginAndGetToken('avhadenterprisespc5@gmail.com', 'SuperAdmin123!');
+  testToken = await loginAndGetToken('testadmin@example.com', 'TestAdmin123!');
 
   if (testToken) {
     console.log('✅ Authentication token obtained');
