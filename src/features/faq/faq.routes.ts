@@ -1,53 +1,65 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
 import validationMiddleware from '../../middlewares/validation.middleware';
-import faqController from './faq.controller';
+import FaqController from './faq.controller';
 import { FaqDto } from './faq.dto';
+import { requireRole } from '../../middlewares/role.middleware';
 
-class faqRoute implements Route {
-
+class FaqRoute implements Route {
     public path = '/faq';
     public router = Router();
-    public faqController = new faqController();
+    public faqController = new FaqController();
 
     constructor() {
         this.initializeRoutes();
     }
+
     private initializeRoutes() {
+        /**
+         * GET /faq/:id
+         * Get a specific FAQ by ID (Public - no auth required)
+         */
+        this.router.get(`${this.path}/:id`, this.faqController.getFaqById);
 
         /**
-         *    GET /faq/getfaq/:id
-         *    Get a specific FAQ by ID
+         * GET /faq
+         * Get all active FAQs (Public - no auth required)
          */
-        this.router.get(`${this.path}/getfaq/:id`, (req, res, next) => this.faqController.faq(req, res, next));
+        this.router.get(`${this.path}`, this.faqController.getAllFaqs);
 
         /**
-         *     POST /faq/insertfaqs
-         *     Create a new FAQ entry
-         
+         * POST /faq
+         * Create a new FAQ entry (Admin only)
          */
-        this.router.post(`${this.path}/insertfaqs`, (req, res, next) => this.faqController.insertfaqin(req, res, next));
+        this.router.post(
+            `${this.path}`,
+            requireRole('SUPER_ADMIN', 'ADMIN'),
+            validationMiddleware(FaqDto, 'body', true, ['faq_id', 'created_at', 'updated_at', 'deleted_at']),
+            this.faqController.createFaq
+        );
 
         /**
-         *   PUT /faq/updatefaq
-         *   Update an existing FAQ
+         * PUT /faq
+         * Update an existing FAQ (Admin only)
          */
-        this.router.put(`${this.path}/updatefaq`, validationMiddleware(FaqDto, 'body', false, []), (req, res, next) => this.faqController.faqs(req, res, next));
+        this.router.put(
+            `${this.path}`,
+            requireRole('SUPER_ADMIN', 'ADMIN'),
+            validationMiddleware(FaqDto, 'body', false, ['created_at', 'deleted_at']),
+            this.faqController.updateFaq
+        );
 
         /**
-         *    POST /faq/deletefaq
-         *    Soft delete an FAQ (marks as deleted)
+         * DELETE /faq
+         * Soft delete an FAQ (Admin only)
          */
-        this.router.post(`${this.path}/deletefaq`, validationMiddleware(FaqDto, 'body', true, []), (req, res, next) => this.faqController.deletefaqs(req, res, next));
-
-        /**
-         *    GET /faq/getallfaq
-         *    Get all active FAQs
-    
-         */
-        this.router.get(`${this.path}/getallfaq`, (req, res, next) => this.faqController.getallfaqsby(req, res, next));
-
+        this.router.delete(
+            `${this.path}`,
+            requireRole('SUPER_ADMIN', 'ADMIN'),
+            validationMiddleware(FaqDto, 'body', true, ['faq_id']),
+            this.faqController.deleteFaq
+        );
     }
 }
 
-export default faqRoute;
+export default FaqRoute;
