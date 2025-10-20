@@ -1,7 +1,7 @@
 // Client Controller - Handles client-specific HTTP requests
 import { Request, Response, NextFunction } from 'express';
 import ClientService from './client.service';
-import { ClientUpdateDto } from './client.update.dto';
+import { ClientProfileUpdateDto } from './client.update.dto';
 import { RequestWithUser } from '../../interfaces/auth.interface';
 import HttpException from '../../exceptions/HttpException';
 
@@ -78,7 +78,7 @@ export class ClientController {
   };
 
   /**
-   * Update client profile
+   * Update client profile (client_profiles table fields only)
    * PATCH /api/v1/clients/profile
    */
   public updateProfile = async (
@@ -87,43 +87,17 @@ export class ClientController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const updateData: ClientUpdateDto = req.body;
+      const updateData: ClientProfileUpdateDto = req.body;
       
-      // Update base user fields if provided
-      const userFields = [
-        'first_name', 'last_name', 'email', 'phone_number', 
-        'profile_picture', 'bio', 'timezone', 'address_line_first',
-        'address_line_second', 'city', 'state', 'country', 'pincode'
-      ];
-      
-      const hasUserFields = Object.keys(updateData).some(key => userFields.includes(key));
-      
-      if (hasUserFields) {
-        const userUpdateData: any = {};
-        userFields.forEach(field => {
-          if (updateData[field as keyof ClientUpdateDto] !== undefined) {
-            userUpdateData[field] = updateData[field as keyof ClientUpdateDto];
-          }
-        });
-        await this.clientService.updateBasicInfo(req.user.user_id, userUpdateData);
-      }
-      
-      // Update client profile fields
-      const profileFields = Object.keys(updateData).filter(key => !userFields.includes(key));
-      if (profileFields.length > 0) {
-        const profileData: any = {};
-        profileFields.forEach(field => {
-          profileData[field] = updateData[field as keyof ClientUpdateDto];
-        });
-        await this.clientService.updateClientProfile(req.user.user_id, profileData);
-      }
+      // Update client profile fields only
+      await this.clientService.updateClientProfile(req.user.user_id, updateData);
       
       // Get updated profile
       const updatedProfile = await this.clientService.getClientProfile(req.user.user_id);
       
       res.status(200).json({
         success: true,
-        message: 'Profile updated successfully',
+        message: 'Client profile updated successfully',
         data: updatedProfile
       });
     } catch (error) {

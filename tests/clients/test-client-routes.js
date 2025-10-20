@@ -98,67 +98,28 @@ function createTestFiles() {
 }
 
 /**
- * Setup: Create a test client
+ * Setup: Login as existing test client
  */
 async function setupTestClient() {
-  printSection('SETUP: Creating Test Client');
+  printSection('SETUP: Logging in as Test Client');
   
   try {
-    // Create test files
-    const { imagePath, pdfPath } = createTestFiles();
-    
-    const email = randomEmail('client-test');
-    
-    // Create FormData for multipart request
-    const formData = new FormData();
-    
-    // Add JSON data
-    const clientData = {
-      full_name: 'Test Client',
-      email: email,
-      password: 'Password123!',
-      username: randomUsername('testclient'),
-      company_name: 'Test Client Company',
-      industry: 'corporate',
-      company_size: '11-50',
-      country: 'India',
-      state: 'Maharashtra',
-      city: 'Mumbai',
-      phone_number: '+1234567890',
-      terms_accepted: true,
-      privacy_policy_accepted: true,
-    };
-    
-    // Add JSON fields
-    Object.keys(clientData).forEach(key => {
-      const value = clientData[key];
-      // Convert boolean values to strings for FormData
-      const stringValue = typeof value === 'boolean' ? value.toString() : value;
-      formData.append(key, stringValue);
+    // Login with existing test client
+    const loginResponse = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'test.client@example.com',
+      password: 'TestPass123!'
     });
     
-    // Append files
-    formData.append('profile_picture', fs.createReadStream(imagePath), {
-      filename: 'test-profile.png',
-      contentType: 'image/png',
-    });
-    
-    formData.append('id_document', fs.createReadStream(pdfPath), {
-      filename: 'test-id.pdf',
-      contentType: 'application/pdf',
-    });
-    
-    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/register/client`, null, formData);
-    
-    if (response.statusCode === 201 && response.body.data) {
-      clientToken = response.body.data.token;
-      clientId = response.body.data.user.user_id;
-      console.log(`✓ Test client created: ${email}`);
+    if (loginResponse.statusCode === 200 && loginResponse.body.data) {
+      clientToken = loginResponse.body.data.token;
+      clientId = loginResponse.body.data.user.user_id;
+      console.log(`✓ Logged in as test client: test.client@example.com`);
       console.log(`  User ID: ${clientId}`);
       return true;
     } else {
-      console.log('✗ Failed to create test client');
-      console.log('Response:', response.body);
+      console.log('✗ Failed to login as test client');
+      console.log(`  Status: ${loginResponse.statusCode}`);
+      console.log(`  Response:`, JSON.stringify(loginResponse.body, null, 2));
       return false;
     }
   } catch (error) {

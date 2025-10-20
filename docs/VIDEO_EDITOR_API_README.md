@@ -257,40 +257,28 @@ Authorization: Bearer <jwt_token>
 
 **Required Roles:** VIDEO_EDITOR
 
-**Description:** Update the current authenticated video editor's profile information.
+**Description:** Update the current authenticated video editor's profile information. This endpoint only updates fields in the freelancer_profiles table.
 
 **Request Body:**
 ```json
 {
-  "first_name": "Mike",
-  "last_name": "Johnson",
-  "company_name": "MJ Video Editing Studio",
-  "phone": "+1234567890",
-  "address": "456 Editing Street",
-  "city": "Los Angeles",
-  "state": "CA",
-  "country": "USA",
-  "zip_code": "90210",
-  "website": "https://mj-editing-studio.com",
-  "bio": "Award-winning video editor specializing in wedding films, corporate content, and music videos",
-  "specialization": ["wedding", "corporate", "music_video", "color_grading", "motion_graphics"],
-  "experience_years": 8,
-  "hourly_rate": 95.00,
-  "software_skills": ["Adobe Premiere Pro", "After Effects", "DaVinci Resolve", "Final Cut Pro", "Motion"],
-  "hardware_specs": ["Mac Pro M2", "27-inch 5K Display", "External SSD Storage", "Color Calibration Monitor"],
-  "languages": ["English", "Spanish"],
-  "portfolio_url": "https://mj-editing-studio.com/portfolio",
-  "social_links": {
-    "instagram": "@mjvideoediting",
-    "vimeo": "mjvideoediting",
-    "behance": "mj-editing",
-    "linkedin": "mike-johnson-video-editing"
-  },
-  "is_available": true
+  "profile_title": "Senior Video Editor",
+  "role": "Lead Editor",
+  "short_description": "Award-winning video editor specializing in wedding films, corporate content, and music videos",
+  "experience_level": "expert",
+  "skills": ["video editing", "color grading", "motion graphics"],
+  "superpowers": ["creative editing", "technical expertise"],
+  "portfolio_links": ["https://portfolio.example.com"],
+  "rate_amount": 95.00,
+  "currency": "USD",
+  "availability": "full-time",
+  "work_type": "remote",
+  "hours_per_week": "30_40",
+  "languages": ["English", "Spanish"]
 }
 ```
 
-**Validation:** All fields are optional. Uses FreelancerUpdateDto validation.
+**Validation:** All fields are optional. Uses VideoEditorUpdateDto validation.
 
 **Response (200):**
 ```json
@@ -514,7 +502,7 @@ Authorization: Bearer <jwt_token>
 
 1. **Authentication:** All requests must include the JWT token in the Authorization header
 2. **Role-based Access:** Profile management endpoints require VIDEO_EDITOR role, discovery endpoints require general authentication
-3. **Validation:** Profile update requests are validated using FreelancerUpdateDto
+3. **Validation:** Profile update requests are validated using VideoEditorUpdateDto
 4. **Availability Tracking:** The `/available` endpoint is crucial for task assignment and shows current workload
 5. **Specialized Fields:** Video editor profiles include software skills, hardware specs, and editing-specific specializations
 6. **Task Management:** Statistics include completion rates, revisions, and delivery performance metrics

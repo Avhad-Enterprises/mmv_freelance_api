@@ -7,11 +7,17 @@ import {
   IsBoolean,
   MinLength,
   IsNotEmpty,
-  Matches
+  Matches,
+  IsEnum,
+  IsArray,
+  IsNumber,
+  Min,
+  Max
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 /**
- * DTO for updating base user information (users table fields)
+ * DTO for updating base user information (users table fields only)
  * All fields are optional - only provided fields will be updated
  */
 export class UserUpdateDto {
@@ -87,26 +93,6 @@ export class UserUpdateDto {
   @IsOptional()
   @IsBoolean()
   email_notifications?: boolean;
-
-  // Client-specific fields (will be stored in client_profiles table)
-  @IsOptional()
-  @IsString()
-  work_arrangement?: string;
-
-  @IsOptional()
-  @IsString()
-  project_frequency?: string;
-
-  @IsOptional()
-  @IsString()
-  hiring_preferences?: string;
-
-  @IsOptional()
-  @IsString()
-  website?: string;
-
-  @IsOptional()
-  social_links?: any;
 }
 
 /**

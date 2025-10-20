@@ -38,6 +38,7 @@ class AppliedProjectsController {
     }
     const applications = await this.AppliedProjectsService.getProjectApplications(projects_task_id);
     res.status(200).json({
+      success: true,
       data: applications,
       message: `got all applications for project task ID ${projects_task_id}`
     });
@@ -51,6 +52,7 @@ class AppliedProjectsController {
     const user_id = req.user.user_id;
     const applications = await this.AppliedProjectsService.getUserApplications(user_id);
     res.status(200).json({
+      success: true,
       data: applications,
       message: `got all applications for user ${user_id}`
     });
@@ -73,6 +75,7 @@ class AppliedProjectsController {
       throw new HttpException(404, "Application not found");
     }
     res.status(200).json({
+      success: true,
       data: application,
       message: `got application for user ${user_id} and project task ${projects_task_id}`
     });
@@ -91,6 +94,7 @@ class AppliedProjectsController {
       }
       const updated = await this.AppliedProjectsService.updateApplicationStatus(applied_projects_id, status);
       res.status(200).json({
+        success: true,
         data: updated,
         message: "Application status updated successfully"
       });
@@ -111,6 +115,7 @@ class AppliedProjectsController {
       }
       await this.AppliedProjectsService.withdrawApplication(parseInt(application_id));
       res.status(200).json({
+        success: true,
         message: "Application withdrawn successfully"
       });
     } catch (error) {
@@ -127,7 +132,7 @@ class AppliedProjectsController {
       }
 
       const count = await this.AppliedProjectsService.getApplicationCountByProject(Number(project_id));
-      res.status(200).json({ success: true, project_id, count });
+      res.status(200).json({ success: true, project_id: Number(project_id), count });
     } catch (error) {
       next(error);
     }
@@ -164,6 +169,7 @@ class AppliedProjectsController {
       const count = await this.AppliedProjectsService.getAppliedCount(user_id);
 
       res.status(200).json({
+        success: true,
         message: `Applied project count for user ${user_id} fetched successfully`,
         data: count,
       });
@@ -179,6 +185,7 @@ class AppliedProjectsController {
       const projects = await this.AppliedProjectsService.ongoingprojects(user_id);
 
       res.status(200).json({
+        success: true,
         message: `Ongoing (Approved) projects fetched for user ID ${user_id}`,
         data: projects,
       });
@@ -200,6 +207,7 @@ class AppliedProjectsController {
       const projects = await this.AppliedProjectsService.getprojectsbyfilter(user_id, filter);
 
       res.status(200).json({
+        success: true,
         message: `${filter} projects fetched successfully`,
         data: projects,
       });
@@ -212,6 +220,7 @@ class AppliedProjectsController {
     try {
       const count = await this.AppliedProjectsService.getCompletedProjectCount();
       res.status(200).json({
+        success: true,
         data: { completed_projects: count },
         message: "Completed project count fetched successfully"
       });

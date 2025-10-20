@@ -33,6 +33,8 @@ Authorization: Bearer <your_jwt_token>
 ### 1. Apply to Project
 **Endpoint:** `POST /applications/projects/apply`
 
+**Allowed Roles:** VIDEOGRAPHER, VIDEO_EDITOR
+
 **Description:** Submit an application for a freelance project.
 
 **Request Body:**
@@ -63,6 +65,8 @@ Authorization: Bearer <your_jwt_token>
 ### 2. Get My Applications
 **Endpoint:** `GET /applications/my-applications`
 
+**Allowed Roles:** VIDEOGRAPHER, VIDEO_EDITOR
+
 **Description:** Retrieve all applications submitted by the current user.
 
 **Response (Success):**
@@ -89,12 +93,16 @@ Authorization: Bearer <your_jwt_token>
 ### 3. Get My Application by Project ID
 **Endpoint:** `GET /applications/my-applications/project/:project_id`
 
+**Allowed Roles:** VIDEOGRAPHER, VIDEO_EDITOR
+
 **Description:** Get a specific application for a project.
 
 **Response:** Same format as above but for a single application.
 
 ### 4. Withdraw Application
 **Endpoint:** `DELETE /applications/withdraw/:application_id`
+
+**Allowed Roles:** VIDEOGRAPHER, VIDEO_EDITOR
 
 **Description:** Withdraw a pending application (soft delete).
 
@@ -111,6 +119,8 @@ Authorization: Bearer <your_jwt_token>
 
 ### 5. Get Project Applications
 **Endpoint:** `GET /applications/projects/:project_id/applications`
+
+**Allowed Roles:** CLIENT
 
 **Description:** View all applications for a client's project.
 
@@ -138,14 +148,15 @@ Authorization: Bearer <your_jwt_token>
 ### 6. Update Application Status
 **Endpoint:** `PATCH /applications/update-status`
 
+**Allowed Roles:** CLIENT
+
 **Description:** Approve, reject, or update application status (hire editor).
 
 **Request Body:**
 ```json
 {
-  "application_id": 1,
-  "status": 1,
-  "notes": "Approved for the project"
+  "applied_projects_id": 1,
+  "status": 1
 }
 ```
 
@@ -164,6 +175,8 @@ Authorization: Bearer <your_jwt_token>
 
 ### 7. Get Application Count
 **Endpoint:** `GET /applications/projects/:project_id/application-count`
+
+**Allowed Roles:** CLIENT, ADMIN, SUPER_ADMIN
 
 **Description:** Get the count of applications for a project.
 
@@ -274,6 +287,8 @@ Authorization: Bearer <your_jwt_token>
 
 ### 12. Get Completed Projects Count
 **Endpoint:** `GET /applications/projects/completed-count`
+
+**Allowed Roles:** ADMIN, SUPER_ADMIN
 
 **Description:** Get total count of completed projects across the platform.
 

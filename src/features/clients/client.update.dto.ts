@@ -1,51 +1,23 @@
 // Client Update DTO - For updating client profiles
-import { 
-  IsString, 
-  IsOptional, 
-  IsEmail, 
-  IsUrl, 
-  IsEnum, 
-  IsNumber, 
-  Min, 
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsUrl,
+  IsEnum,
+  IsNumber,
+  Min,
   Max,
-  IsArray
+  IsArray,
+  IsBoolean
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 /**
- * DTO for updating client profile information
+ * DTO for updating client profile information (client_profiles table fields only)
  * All fields are optional - only provided fields will be updated
  */
-export class ClientUpdateDto {
-  // Basic Info
-  @IsOptional()
-  @IsString()
-  first_name?: string;
-
-  @IsOptional()
-  @IsString()
-  last_name?: string;
-
-  @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  phone_number?: string;
-
-  @IsOptional()
-  @IsUrl()
-  profile_picture?: string;
-
-  @IsOptional()
-  @IsString()
-  bio?: string;
-
-  @IsOptional()
-  @IsString()
-  timezone?: string;
-
+export class ClientProfileUpdateDto {
   // Company Info
   @IsOptional()
   @IsString()
@@ -53,10 +25,10 @@ export class ClientUpdateDto {
 
   @IsOptional()
   @IsEnum([
-    'film_production', 
-    'ad_agency', 
-    'marketing', 
-    'events', 
+    'film_production',
+    'ad_agency',
+    'marketing',
+    'events',
     'real_estate',
     'education',
     'e_commerce',
@@ -144,31 +116,6 @@ export class ClientUpdateDto {
   @IsNumber()
   @Min(0)
   budget_max?: number;
-
-  // Address
-  @IsOptional()
-  @IsString()
-  address_line_first?: string;
-
-  @IsOptional()
-  @IsString()
-  address_line_second?: string;
-
-  @IsOptional()
-  @IsString()
-  city?: string;
-
-  @IsOptional()
-  @IsString()
-  state?: string;
-
-  @IsOptional()
-  @IsString()
-  country?: string;
-
-  @IsOptional()
-  @IsString()
-  pincode?: string;
 
   // Business Details
   @IsOptional()

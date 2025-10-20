@@ -1,7 +1,7 @@
 // Videographer Controller - Handles videographer-specific HTTP requests
 import { Request, Response, NextFunction } from 'express';
 import VideographerService from './videographer.service';
-import { FreelancerUpdateDto } from '../freelancers/freelancer.update.dto';
+import { VideographerUpdateDto } from './videographer.update.dto';
 import { RequestWithUser } from '../../interfaces/auth.interface';
 
 /**
@@ -131,36 +131,10 @@ export class VideographerController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const updateData: FreelancerUpdateDto = req.body;
+      const updateData: VideographerUpdateDto = req.body;
       
-      // Update base user fields if provided
-      const userFields = [
-        'first_name', 'last_name', 'email', 'phone_number', 
-        'profile_picture', 'bio', 'timezone', 'address_line_first',
-        'address_line_second', 'city', 'state', 'country', 'pincode'
-      ];
-      
-      const hasUserFields = Object.keys(updateData).some(key => userFields.includes(key));
-      
-      if (hasUserFields) {
-        const userUpdateData: any = {};
-        userFields.forEach(field => {
-          if (updateData[field as keyof FreelancerUpdateDto] !== undefined) {
-            userUpdateData[field] = updateData[field as keyof FreelancerUpdateDto];
-          }
-        });
-        await this.videographerService.updateBasicInfo(req.user.user_id, userUpdateData);
-      }
-      
-      // Update freelancer profile fields
-      const profileFields = Object.keys(updateData).filter(key => !userFields.includes(key));
-      if (profileFields.length > 0) {
-        const profileData: any = {};
-        profileFields.forEach(field => {
-          profileData[field] = updateData[field as keyof FreelancerUpdateDto];
-        });
-        await this.videographerService.updateFreelancerProfile(req.user.user_id, profileData);
-      }
+      // Update freelancer profile fields only (freelancer_profiles table)
+      await this.videographerService.updateFreelancerProfile(req.user.user_id, updateData);
       
       // Get updated profile
       const updatedProfile = await this.videographerService.getVideographerProfile(req.user.user_id);
