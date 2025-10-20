@@ -79,9 +79,11 @@ export class ClientRegistrationDto {
   country: string;
 
   @IsOptional()
+  @IsString()
   state?: string;
 
   @IsOptional()
+  @IsString()
   city?: string;
 
   // Step 3: Contact Information (Required)
