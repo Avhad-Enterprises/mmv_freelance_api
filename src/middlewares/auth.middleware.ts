@@ -26,7 +26,6 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/categories',  // GET /categories (read-only)
       '/categories/by-type',  // GET /categories/by-type (read-only)
       '/skills',
-      '/tags',
       '/blog/getallblogs'
     ];
 
