@@ -21,16 +21,23 @@ export class FreelancerRoutes implements Route {
     private initializeRoutes() {
 
         //Get all freelancers (public endpoint for homepage)
-
-        this.router.get(
-            `${this.path}/getfreelancers`,
-            this.freelancerController.getAllFreelancers
-        );
-
-        //Get all freelancers (public-safe version without email/phone)
         this.router.get(
             `${this.path}/getfreelancers-public`,
             this.freelancerController.getAllFreelancersPublic
+        );
+
+        //Get all freelancers (protected - requires auth, includes sensitive data)
+        this.router.get(
+            `${this.path}/getfreelancers`,
+            requireRole('SUPER_ADMIN', 'ADMIN', 'CLIENT', 'FREELANCER'),
+            this.freelancerController.getAllFreelancers
+        );
+
+        //Get available freelancers (protected - requires auth)
+        this.router.get(
+            `${this.path}/getavailablefreelancers`,
+            requireRole('SUPER_ADMIN', 'ADMIN', 'CLIENT', 'FREELANCER'),
+            this.freelancerController.getAvailableFreelancers
         );
     }
 }

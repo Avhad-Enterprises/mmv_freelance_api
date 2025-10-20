@@ -98,68 +98,28 @@ function createTestFiles() {
 }
 
 /**
- * Setup: Create a test videographer
+ * Setup: Login as existing test videographer
  */
 async function setupTestVideographer() {
-  printSection('SETUP: Creating Test Videographer');
+  printSection('SETUP: Logging in as Test Videographer');
   
   try {
-    // Create test files
-    const { imagePath, pdfPath } = createTestFiles();
-    
-    const email = randomEmail('videographer-test');
-    
-    // Create FormData for multipart request
-    const formData = new FormData();
-    
-    // Add JSON data
-    const videographerData = {
-      full_name: 'Test Videographer',
-      email: email,
-      password: 'Password123!',
-      country: 'India',
-      city: 'Mumbai',
-      skill_tags: JSON.stringify(['cinematography', 'drone_operation']),
-      superpowers: JSON.stringify(['fast turnaround', 'high quality']),
-      portfolio_links: JSON.stringify(['https://vimeo.com/test1', 'https://youtube.com/test2']),
-      rate_amount: 150,
-      phone_number: '+1234567890',
-      id_type: 'passport',
-      short_description: 'Professional test videographer',
-      availability: 'full-time',
-      languages: JSON.stringify(['English', 'Spanish']),
-      experience_level: 'expert',
-    };
-    
-    // Add JSON fields
-    Object.keys(videographerData).forEach(key => {
-      const value = videographerData[key];
-      formData.append(key, value);
+    // Login with existing test videographer
+    const loginResponse = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'test.videographer@example.com',
+      password: 'TestPass123!'
     });
     
-    // Append files
-    formData.append('profile_photo', fs.createReadStream(imagePath), {
-      filename: 'test-profile.png',
-      contentType: 'image/png',
-    });
-    
-    formData.append('id_document', fs.createReadStream(pdfPath), {
-      filename: 'test-id.pdf',
-      contentType: 'application/pdf',
-    });
-    
-    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/register/videographer`, null, formData);
-    
-    if (response.statusCode === 201 && response.body.data) {
-      videographerToken = response.body.data.token;
-      videographerId = response.body.data.user.user_id;
-      console.log(`✓ Test videographer created: ${email}`);
+    if (loginResponse.statusCode === 200 && loginResponse.body.data) {
+      videographerToken = loginResponse.body.data.token;
+      videographerId = loginResponse.body.data.user.user_id;
+      console.log(`✓ Logged in as test videographer: test.videographer@example.com`);
       console.log(`  User ID: ${videographerId}`);
       return true;
     } else {
-      console.log('✗ Failed to create test videographer');
-      console.log(`  Status: ${response.statusCode}`);
-      console.log(`  Response:`, JSON.stringify(response.body, null, 2));
+      console.log('✗ Failed to login as test videographer');
+      console.log(`  Status: ${loginResponse.statusCode}`);
+      console.log(`  Response:`, JSON.stringify(loginResponse.body, null, 2));
       return false;
     }
   } catch (error) {
@@ -251,13 +211,13 @@ async function testUpdateVideoEditorProfile() {
     failedTests++;
   }
   
-  // Test 2: Update with invalid hourly rate
+  // Test 2: Update with invalid rate
   try {
     const response = await makeRequest(
       'PATCH',
       `${CONFIG.apiVersion}/videographers/profile`,
       {
-        hourly_rate: -30, // Negative rate
+        rate_amount: -30, // Negative rate
       },
       { Authorization: `Bearer ${videographerToken}` }
     );

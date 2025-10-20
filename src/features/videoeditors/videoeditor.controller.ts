@@ -1,7 +1,7 @@
 // Video Editor Controller - Handles video editor-specific HTTP requests
 import { Request, Response, NextFunction } from 'express';
 import VideoEditorService from './videoeditor.service';
-import { FreelancerUpdateDto } from '../freelancers/freelancer.update.dto';
+import { VideoEditorUpdateDto } from './videoeditor.update.dto';
 import { RequestWithUser } from '../../interfaces/auth.interface';
 
 /**
@@ -153,7 +153,7 @@ export class VideoEditorController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const updateData: FreelancerUpdateDto = req.body;
+      const updateData: VideoEditorUpdateDto = req.body;
       
       // Update freelancer profile fields
       await this.videoEditorService.updateFreelancerProfile(req.user.user_id, updateData);

@@ -9,12 +9,12 @@ Skills management endpoints for creating, reading, updating, and soft deleting s
 ```
 
 ## Authentication
-All endpoints require JWT authentication in the Authorization header:
+Most endpoints require JWT authentication in the Authorization header:
 ```
 Authorization: Bearer <jwt_token>
 ```
 
-**Required Roles:** ADMIN or SUPER_ADMIN
+**Note:** GET endpoints (/skills and /skills/:id) are public and do not require authentication. POST/PUT/DELETE endpoints require ADMIN or SUPER_ADMIN roles.
 
 ---
 
@@ -39,6 +39,7 @@ Authorization: Bearer <jwt_token>
 **Response (201):**
 ```json
 {
+  "success": true,
   "data": {
     "skill_id": 1,
     "skill_name": "JavaScript",
@@ -56,13 +57,14 @@ Authorization: Bearer <jwt_token>
 ### 2. Get All Skills
 **GET** `/skills`
 
-**Required Roles:** ADMIN, SUPER_ADMIN
+**Required Roles:** None (Public endpoint)
 
 **Description:** Retrieve all active (non-deleted) skills.
 
 **Response (200):**
 ```json
 {
+  "success": true,
   "data": [
     {
       "skill_id": 1,
@@ -86,7 +88,7 @@ Authorization: Bearer <jwt_token>
 ### 3. Get Skill by ID
 **GET** `/skills/:id`
 
-**Required Roles:** ADMIN, SUPER_ADMIN
+**Required Roles:** None (Public endpoint)
 
 **Description:** Retrieve a single skill by its ID.
 
@@ -96,6 +98,7 @@ Authorization: Bearer <jwt_token>
 **Response (200):**
 ```json
 {
+  "success": true,
   "data": {
     "skill_id": 1,
     "skill_name": "JavaScript",
@@ -132,6 +135,7 @@ Authorization: Bearer <jwt_token>
 **Response (200):**
 ```json
 {
+  "success": true,
   "data": {
     "skill_id": 1,
     "skill_name": "Advanced JavaScript",
@@ -165,6 +169,7 @@ Authorization: Bearer <jwt_token>
 **Response (200):**
 ```json
 {
+  "success": true,
   "data": {
     "skill_id": 1,
     "is_deleted": true,

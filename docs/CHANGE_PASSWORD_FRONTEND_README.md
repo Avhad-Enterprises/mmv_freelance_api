@@ -56,11 +56,11 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
-**404 Not Found** - Missing Authorization header
+**401 Unauthorized** - Missing Authorization header
 ```json
 {
   "success": false,
-  "message": "Not Found"
+  "message": "Authentication token missing"
 }
 ```
 

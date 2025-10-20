@@ -215,38 +215,28 @@ Authorization: Bearer <jwt_token>
 
 **Required Roles:** VIDEOGRAPHER
 
-**Description:** Update the current authenticated videographer's profile information.
+**Description:** Update the current authenticated videographer's profile information. This endpoint only updates fields in the freelancer_profiles table.
 
 **Request Body:**
 ```json
 {
-  "first_name": "Jane",
-  "last_name": "Smith",
-  "company_name": "Jane's Video Productions LLC",
-  "phone": "+1234567890",
-  "address": "123 Main Street",
-  "city": "New York",
-  "state": "NY",
-  "country": "USA",
-  "zip_code": "10001",
-  "website": "https://janesvideos.com",
-  "bio": "Award-winning videographer specializing in weddings and corporate events",
-  "specialization": ["wedding", "corporate", "event", "documentary"],
-  "experience_years": 6,
-  "hourly_rate": 175.00,
-  "equipment": ["Canon EOS R5", "DJI Ronin", "Professional Lighting Kit", "Audio Equipment"],
-  "languages": ["English", "Spanish", "French"],
-  "portfolio_url": "https://new-portfolio.example.com",
-  "social_links": {
-    "instagram": "@janesmithvideos",
-    "youtube": "JaneSmithProductions",
-    "linkedin": "jane-smith-videography"
-  },
-  "is_available": true
+  "profile_title": "Senior Wedding Videographer",
+  "role": "Lead Videographer",
+  "short_description": "Award-winning videographer specializing in weddings and corporate events",
+  "experience_level": "expert",
+  "skills": ["cinematography", "lighting", "post-production"],
+  "superpowers": ["creative storytelling", "technical expertise"],
+  "portfolio_links": ["https://portfolio.example.com"],
+  "rate_amount": 175.00,
+  "currency": "USD",
+  "availability": "part-time",
+  "work_type": "remote",
+  "hours_per_week": "20_30",
+  "languages": ["English", "Spanish", "French"]
 }
 ```
 
-**Validation:** All fields are optional. Uses FreelancerUpdateDto validation.
+**Validation:** All fields are optional. Uses VideographerUpdateDto validation.
 
 **Response (200):**
 ```json

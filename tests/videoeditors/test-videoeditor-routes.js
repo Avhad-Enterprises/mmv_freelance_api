@@ -98,66 +98,28 @@ function createTestFiles() {
 }
 
 /**
- * Setup: Create a test video editor
+ * Setup: Login as existing test video editor
  */
 async function setupTestVideoEditor() {
-  printSection('SETUP: Creating Test Video Editor');
+  printSection('SETUP: Logging in as Test Video Editor');
   
   try {
-    // Create test files
-    const { imagePath, pdfPath } = createTestFiles();
-    
-    const email = randomEmail('editor-test');
-    
-    // Create FormData for multipart request
-    const formData = new FormData();
-    
-    // Add JSON data
-    const videoEditorData = {
-      full_name: 'Test Video Editor',
-      email: email,
-      password: 'Password123!',
-      skill_tags: JSON.stringify(['video_editing', 'color_grading']),
-      superpowers: JSON.stringify(['fast turnaround', 'high quality']),
-      portfolio_links: JSON.stringify(['https://vimeo.com/test1', 'https://youtube.com/test2']),
-      rate_amount: 100,
-      phone_number: '+1234567890',
-      id_type: 'passport',
-      short_description: 'Professional test video editor',
-      availability: 'full-time',
-      languages: JSON.stringify(['English', 'Spanish']),
-      experience_level: 'intermediate',
-    };
-    
-    // Add JSON fields
-    Object.keys(videoEditorData).forEach(key => {
-      const value = videoEditorData[key];
-      formData.append(key, value);
+    // Login with existing test video editor
+    const loginResponse = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+      email: 'test.videoeditor@example.com',
+      password: 'TestPass123!'
     });
     
-    // Append files
-    formData.append('profile_photo', fs.createReadStream(imagePath), {
-      filename: 'test-profile.png',
-      contentType: 'image/png',
-    });
-    
-    formData.append('id_document', fs.createReadStream(pdfPath), {
-      filename: 'test-id.pdf',
-      contentType: 'application/pdf',
-    });
-    
-    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/register/videoeditor`, null, formData);
-    
-    if (response.statusCode === 201 && response.body.data) {
-      editorToken = response.body.data.token;
-      editorId = response.body.data.user.user_id;
-      console.log(`✓ Test video editor created: ${email}`);
+    if (loginResponse.statusCode === 200 && loginResponse.body.data) {
+      editorToken = loginResponse.body.data.token;
+      editorId = loginResponse.body.data.user.user_id;
+      console.log(`✓ Logged in as test video editor: test.videoeditor@example.com`);
       console.log(`  User ID: ${editorId}`);
       return true;
     } else {
-      console.log('✗ Failed to create test video editor');
-      console.log(`  Status: ${response.statusCode}`);
-      console.log(`  Response:`, JSON.stringify(response.body, null, 2));
+      console.log('✗ Failed to login as test video editor');
+      console.log(`  Status: ${loginResponse.statusCode}`);
+      console.log(`  Response:`, JSON.stringify(loginResponse.body, null, 2));
       return false;
     }
   } catch (error) {
@@ -249,13 +211,13 @@ async function testUpdateVideoEditorProfile() {
     failedTests++;
   }
   
-  // Test 2: Update with invalid hourly rate
+  // Test 2: Update with invalid rate
   try {
     const response = await makeRequest(
       'PATCH',
       `${CONFIG.apiVersion}/videoeditors/profile`,
       {
-        hourly_rate: -30, // Negative rate
+        rate_amount: -30, // Negative rate
       },
       { Authorization: `Bearer ${editorToken}` }
     );

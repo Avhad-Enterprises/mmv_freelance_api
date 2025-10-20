@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { VideographerController } from './videographer.controller';
 import { requireRole } from '../../middlewares/role.middleware';
 import validationMiddleware from '../../middlewares/validation.middleware';
-import { FreelancerUpdateDto } from '../freelancers/freelancer.update.dto';
+import { VideographerUpdateDto } from './videographer.update.dto';
 import Route from '../../interfaces/route.interface';
 
 /**
@@ -70,7 +70,7 @@ export class VideographerRoutes implements Route {
     this.router.patch(
       `${this.path}/profile`,
       requireRole('VIDEOGRAPHER'),
-      validationMiddleware(FreelancerUpdateDto, 'body', true, []),
+      validationMiddleware(VideographerUpdateDto, 'body', true, []),
       this.videographerController.updateProfile
     );
 

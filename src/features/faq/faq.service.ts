@@ -8,11 +8,11 @@ export class FaqService {
     /**
      * Retrieves a single FAQ by ID
      */
-    public async getfaq(faq_id: number): Promise<any> {
-        if (!faq_id) throw new HttpException(400, "FAQ ID is required");
+    public async getFaqById(faqId: number): Promise<any> {
+        if (!faqId) throw new HttpException(400, "FAQ ID is required");
 
-        const faq = await DB(T.FAQ).where({ faq_id }).first();
-        if (!faq) throw new HttpException(404, "faq not found");
+        const faq = await DB(T.FAQ).where({ faq_id: faqId }).first();
+        if (!faq) throw new HttpException(404, "FAQ not found");
 
         return faq;
     }
@@ -20,29 +20,43 @@ export class FaqService {
     /**
      * Creates a new FAQ entry in the database
      */
-    public async insertfaqs(data: FaqDto): Promise<any> {
+    public async createFaq(data: FaqDto): Promise<any> {
         if (isEmpty(data)) {
-            throw new HttpException(400, "Faq data is empty");
+            throw new HttpException(400, "FAQ data is empty");
         }
-        const insertedFaq = await DB(T.FAQ).insert(data).returning("*");
 
+        // Set default values and audit fields
+        const faqData = {
+            ...data,
+            created_by: data.created_by || 1, // Default to system user if not provided
+            is_active: data.is_active !== undefined ? data.is_active : true,
+            is_deleted: false
+        };
+
+        const insertedFaq = await DB(T.FAQ).insert(faqData).returning("*");
         return insertedFaq[0];
     }
 
     /**
      * Updates an existing FAQ
      */
-    public async updatefaqs(data: Partial<FaqDto>): Promise<any> {
+    public async updateFaq(data: Partial<FaqDto>): Promise<any> {
         if (isEmpty(data)) throw new HttpException(400, "Update data is empty");
 
-        if (!data.faq_id) throw new HttpException(400, "faq id is required for update");
+        if (!data.faq_id) throw new HttpException(400, "FAQ ID is required for update");
+
+        const updateData = {
+            ...data,
+            updated_by: data.updated_by || 1, // Default to system user if not provided
+            updated_at: DB.fn.now()
+        };
 
         const updated = await DB(T.FAQ)
             .where({ faq_id: data.faq_id })
-            .update({ ...data, updated_at: DB.fn.now() })
+            .update(updateData)
             .returning("*");
 
-        if (!updated.length) throw new HttpException(404, "Faq not found or not updated");
+        if (!updated.length) throw new HttpException(404, "FAQ not found or not updated");
 
         return updated[0];
     }
@@ -50,15 +64,23 @@ export class FaqService {
     /**
      * Soft deletes an FAQ entry
      */
-    public async deleteFAQ(data: Partial<FaqDto>): Promise<any> {
+    public async deleteFaq(data: Partial<FaqDto>): Promise<any> {
         if (isEmpty(data)) throw new HttpException(400, "Data is required");
+
+        if (!data.faq_id) throw new HttpException(400, "FAQ ID is required for deletion");
+
+        const deleteData = {
+            is_deleted: true,
+            deleted_by: data.deleted_by || 1, // Default to system user if not provided
+            deleted_at: DB.fn.now()
+        };
 
         const deleted = await DB(T.FAQ)
             .where({ faq_id: data.faq_id })
-            .update(data)
+            .update(deleteData)
             .returning("*");
 
-        if (!deleted.length) throw new HttpException(404, "Faq not found or not delete");
+        if (!deleted.length) throw new HttpException(404, "FAQ not found or not deleted");
 
         return deleted[0];
     }
@@ -66,15 +88,17 @@ export class FaqService {
     /**
      * Retrieves all active and non-deleted FAQs
      */
-    public async getallfaqsbytable(): Promise<any> {
+    public async getAllActiveFaqs(): Promise<any> {
         try {
             const result = await DB(T.FAQ)
                 .where({ is_active: true, is_deleted: false })
-                .select("*");
+                .select("*")
+                .orderBy('created_at', 'desc');
             return result;
         } catch (error) {
-            throw new Error('Error fetching faq');
+            throw new HttpException(500, 'Error fetching FAQs');
         }
     }
 }
+
 export default FaqService;

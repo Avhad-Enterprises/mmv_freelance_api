@@ -1,7 +1,7 @@
 import {
   IsString, IsNotEmpty, IsDateString,
   IsInt, IsJSON, IsArray, ArrayNotEmpty, IsUrl, IsObject,
-  IsBoolean, IsOptional, ValidateNested
+  IsBoolean, IsOptional, ValidateNested, IsNumber
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -27,7 +27,7 @@ export class ProjectsTaskDto {
 
   @IsOptional()
   @Type(() => Number)
-  @IsInt()
+  @IsNumber()
   budget: number;
 
   @IsOptional()

@@ -21,15 +21,14 @@ class ProjectstaskService {
     if (existingUser) {
       throw new HttpException(409, "URL already registered");
     }
-    // ✅ Convert jsonb fields to JSON string
+    // ✅ Convert jsonb fields to JSON string for database insertion
     const formattedData = {
       ...data,
       skills_required: JSON.stringify(data.skills_required),
       reference_links: JSON.stringify(data.reference_links),
-      // status: JSON.stringify(data.status),
-      sample_project_file: JSON.stringify(data.sample_project_file),
-      project_files: JSON.stringify(data.project_files),
-      show_all_files: JSON.stringify(data.show_all_files)
+      sample_project_file: JSON.stringify(data.sample_project_file || []),
+      project_files: JSON.stringify(data.project_files || []),
+      show_all_files: JSON.stringify(data.show_all_files || [])
     };
 
     // ✅ Insert into correct table: projects_task

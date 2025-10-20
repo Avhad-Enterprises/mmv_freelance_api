@@ -21,13 +21,12 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/admin/invites/accept',
       '/health',
       '/projects-tasks/listings',
-      '/freelancers/getfreelancers',
       '/freelancers/getfreelancers-public',  // GET /freelancers/getfreelancers-public (public-safe)
       '/categories',  // GET /categories (read-only)
       '/categories/by-type',  // GET /categories/by-type (read-only)
       '/skills',
-      '/tags',
-      '/blog/getallblogs'
+      '/blog/getallblogs',
+      '/faq'  // GET /faq and GET /faq/:id (public read-only)
     ];
 
     // Check if the current path matches any public route
