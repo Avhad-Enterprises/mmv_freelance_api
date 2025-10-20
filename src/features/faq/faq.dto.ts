@@ -26,7 +26,7 @@ export class FaqDto {
 
   @IsOptional()
   @IsBoolean()
-  is_active: boolean;
+  is_active?: boolean;
 
   @IsOptional()
   @IsDateString()
@@ -39,4 +39,28 @@ export class FaqDto {
   @IsOptional()
   @IsString()
   type?: string;
+
+  // Audit fields
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  created_by?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  updated_by?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  deleted_by?: number;
+
+  @IsOptional()
+  @IsDateString()
+  deleted_at?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_deleted?: boolean;
 }

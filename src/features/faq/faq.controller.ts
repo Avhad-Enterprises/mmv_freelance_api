@@ -4,43 +4,55 @@ import { NextFunction, Request, Response } from "express";
 import FaqService from "./faq.service";
 import HttpException from "../../exceptions/HttpException";
 
-class faqController {
+class FaqController {
     private faqService = new FaqService();
 
     /**
-     * Gets complete FAQ entry including question, answer
+     * Gets a specific FAQ entry by ID
      */
-    public faq = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    public getFaqById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const faq_id = Number(req.params.id);
-            const faq = await this.faqService.getfaq(faq_id);
-            res.status(200).json({ data: faq, message: "Faq fetched" });
+            const faqId = Number(req.params.id);
+            const faq = await this.faqService.getFaqById(faqId);
+            res.status(200).json({
+                success: true,
+                data: faq,
+                message: "FAQ retrieved successfully"
+            });
         } catch (error) {
-            next();
+            next(error);
         }
     };
 
     /**
      * Creates a new FAQ entry
      */
-    public insertfaqin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    public createFaq = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const faqData: FaqDto = req.body;
-            const inserteddata = await this.faqService.insertfaqs(faqData);
-            res.status(201).json({ data: inserteddata, message: "Inserted" });
+            const createdFaq = await this.faqService.createFaq(faqData);
+            res.status(201).json({
+                success: true,
+                data: createdFaq,
+                message: "FAQ created successfully"
+            });
         } catch (error) {
             next(error);
         }
-    }
+    };
 
     /**
      * Updates an existing FAQ
      */
-    public faqs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    public updateFaq = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const faqData: Partial<FaqDto> = req.body;
-            const updatefaq = await this.faqService.updatefaqs(faqData);
-            res.status(200).json({ data: updatefaq, message: "Faq updated" });
+            const updatedFaq = await this.faqService.updateFaq(faqData);
+            res.status(200).json({
+                success: true,
+                data: updatedFaq,
+                message: "FAQ updated successfully"
+            });
         } catch (error) {
             next(error);
         }
@@ -49,11 +61,15 @@ class faqController {
     /**
      * Soft deletes an FAQ
      */
-    public deletefaqs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    public deleteFaq = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const faqdata = req.body;
-            const deletedFAQ = await this.faqService.deleteFAQ(faqdata);
-            res.status(200).json({ data: deletedFAQ, message: "faq deleted" });
+            const faqData = req.body;
+            const deletedFaq = await this.faqService.deleteFaq(faqData);
+            res.status(200).json({
+                success: true,
+                data: deletedFaq,
+                message: "FAQ deleted successfully"
+            });
         } catch (error) {
             next(error);
         }
@@ -62,14 +78,18 @@ class faqController {
     /**
      * Gets all active FAQs
      */
-    public getallfaqsby = async (req: Request, res: Response, next: NextFunction) => {
+    public getAllFaqs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const faq = await this.faqService.getallfaqsbytable();
-            res.status(200).json({ data: faq, success: true });
-        } catch (err) {
-            next(err);
+            const faqs = await this.faqService.getAllActiveFaqs();
+            res.status(200).json({
+                success: true,
+                data: faqs,
+                message: "FAQs retrieved successfully"
+            });
+        } catch (error) {
+            next(error);
         }
     };
+}
 
-};
-export default faqController;
+export default FaqController;

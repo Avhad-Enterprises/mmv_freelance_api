@@ -16,7 +16,8 @@ const path = require('path');
 
 const SCRIPTS = {
   login: 'auth/test-login.js',
-  register: 'auth/test-register.js'
+  register: 'auth/test-register.js',
+  faq: 'faq/run-faq-tests.js'
 };
 
 function runScript(scriptName) {
@@ -86,6 +87,12 @@ async function runAllTests() {
       // Run registration tests
       const registerResult = await runScript('register');
       results.push(registerResult);
+
+      console.log('\n' + '='.repeat(80) + '\n');
+      
+      // Run FAQ tests
+      const faqResult = await runScript('faq');
+      results.push(faqResult);
     }
     
     // Print final summary
@@ -128,6 +135,7 @@ function showUsage() {
   console.log('  node tests/run-tests.js           # Run all tests');
   console.log('  node tests/run-tests.js login     # Run only login tests');
   console.log('  node tests/run-tests.js register  # Run only registration tests');
+  console.log('  node tests/run-tests.js faq       # Run only FAQ tests');
   console.log('');
   console.log('Available test suites:');
   Object.keys(SCRIPTS).forEach(script => {
