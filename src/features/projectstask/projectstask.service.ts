@@ -305,6 +305,26 @@ class ProjectstaskService {
       })
       .returning('*');
 
+    // If approving the submission (status = 1), assign the freelancer to the project
+    if (status === 1) {
+      // Get the freelancer profile for this user
+      const freelancerProfile = await DB(T.FREELANCER_PROFILES)
+        .where({ user_id: existingSubmission.user_id })
+        .first();
+
+      if (freelancerProfile) {
+        // Update project status to assigned (1) and set freelancer_id
+        await DB(T.PROJECTS_TASK)
+          .where({ projects_task_id: existingSubmission.projects_task_id })
+          .update({
+            status: 1, // assigned
+            freelancer_id: freelancerProfile.freelancer_id,
+            assigned_at: DB.fn.now(),
+            updated_at: DB.fn.now()
+          });
+      }
+    }
+
     return updatedSubmission;
   }
 
@@ -512,24 +532,74 @@ class ProjectstaskService {
     return Number(result?.count || 0);
   }
 
-  public async updateProjectTaskStatus(projects_task_id: number, status: number, user_id?: number): Promise<any> {
+  public async updateProjectTaskStatus(projects_task_id: number, status: number, user_id?: number, user_role?: string): Promise<any> {
 
     if (!projects_task_id) {
       throw new HttpException(400, "projects_task_id is required");
     }
 
-    const updated = await DB(T.PROJECTS_TASK)
+    // Get current project to validate state transitions
+    const currentProject = await DB(T.PROJECTS_TASK)
       .where({ projects_task_id })
-      .update({
-        status,
-        freelancer_id: user_id,
-        updated_at: new Date()
-      })
-      .returning("*");
+      .first();
 
-    if (!updated[0]) {
+    if (!currentProject) {
       throw new HttpException(404, "Project not found");
     }
+
+    // Prepare update data
+    const updateData: any = {
+      status,
+      updated_at: new Date()
+    };
+
+    // Handle different status transitions based on user role
+    if (status === 1) { // Assigning freelancer
+      if (user_role !== 'ADMIN' && user_role !== 'SUPER_ADMIN') {
+        throw new HttpException(403, "Only admins can assign freelancers to projects directly. Use submission approval for client assignments.");
+      }
+
+      if (!user_id) {
+        throw new HttpException(400, "user_id is required when assigning a freelancer");
+      }
+
+      // Verify that user_id corresponds to a valid freelancer
+      const freelancerProfile = await DB(T.FREELANCER_PROFILES)
+        .where({ user_id })
+        .first();
+
+      if (!freelancerProfile) {
+        throw new HttpException(400, "Invalid freelancer user_id");
+      }
+
+      updateData.freelancer_id = freelancerProfile.freelancer_id;
+      updateData.assigned_at = new Date();
+
+    } else if (status === 2) { // Completing project
+      // Allow clients to complete their own projects if they have a freelancer assigned
+      if (user_role === 'CLIENT' && currentProject.freelancer_id) {
+        // Client can complete project that has a freelancer assigned
+        updateData.completed_at = new Date();
+      } else if (user_role !== 'ADMIN' && user_role !== 'SUPER_ADMIN' && user_role !== 'CLIENT') {
+        throw new HttpException(403, "Insufficient permissions to complete project");
+      } else {
+        updateData.completed_at = new Date();
+      }
+
+    } else if (status === 0) { // Reset to pending
+      if (user_role !== 'ADMIN' && user_role !== 'SUPER_ADMIN') {
+        throw new HttpException(403, "Only admins can reset project status to pending");
+      }
+      // Clear assignment data when resetting to pending
+      updateData.freelancer_id = null;
+      updateData.assigned_at = null;
+      updateData.completed_at = null;
+    }
+
+    const updated = await DB(T.PROJECTS_TASK)
+      .where({ projects_task_id })
+      .update(updateData)
+      .returning("*");
 
     return updated[0];
   }
