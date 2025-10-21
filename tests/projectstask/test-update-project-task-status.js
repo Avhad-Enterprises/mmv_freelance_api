@@ -102,11 +102,11 @@ async function testUpdateProjectTaskStatus() {
     return;
   }
 
-  // Test 1: Valid status update
+  // Test 1: Valid status update (complete project)
   try {
     const statusUpdateData = {
-      status: 1, // 1: assigned
-      user_id: 1 // User performing the update
+      status: 2, // 2: completed
+      user_id: 1 // User performing the update (not required for completion)
     };
 
     const response = await makeRequest(

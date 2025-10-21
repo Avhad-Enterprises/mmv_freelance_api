@@ -128,7 +128,7 @@ class projectstaskcontroller {
     }
   };
 
-  public updateProjectTaskStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public updateProjectTaskStatus = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
     try {
       const raw = req.params.id;
       const projects_task_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
@@ -146,7 +146,8 @@ class projectstaskcontroller {
       const updated = await this.ProjectstaskService.updateProjectTaskStatus(
         projects_task_id,
         status,
-        user_id
+        user_id,
+        req.user?.roles?.[0] // Pass the user's primary role
       );
 
       res.status(200).json({
