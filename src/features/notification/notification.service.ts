@@ -10,9 +10,11 @@ class NotificationService {
             if (!user_id) {
                 throw new HttpException(400, "User ID is required");
             }
+            // Return all notifications for the user (keep default behaviour for unread filtering in controller if needed)
             const result = await DB(T.NOTIFICATION)
-                .where({ user_id, is_read: false })
-                .select("*");
+                .where({ user_id })
+                .select("*")
+                .orderBy('created_at', 'desc');
             return result;
         } catch (error) {
             throw new Error('Error fetching Notification');
@@ -27,6 +29,7 @@ class NotificationService {
             .update({
                 is_read: true,
                 read_at: new Date(),
+                updated_at: new Date(),
             })
             .returning("*");
 
@@ -42,8 +45,9 @@ class NotificationService {
         const result = await DB(T.NOTIFICATION)
             .where('user_id', userId)
             .update({
-                is_read: false,
+                is_read: true,
                 read_at: new Date(),
+                updated_at: new Date(),
             });
 
         if (!userId) {
@@ -66,6 +70,43 @@ class NotificationService {
             throw new HttpException(500, "Error converting unread count to number");
         }
         return count;
+    }
+    
+    public async createNotification(dto: NotificationDto): Promise<any> {
+        if (isEmpty(dto)) {
+            throw new HttpException(400, 'Data Invalid');
+        }
+
+        const insert = await DB(T.NOTIFICATION)
+            .insert({
+                user_id: dto.user_id,
+                title: dto.title,
+                message: dto.message,
+                type: dto.type,
+                related_id: dto.related_id || null,
+                related_type: dto.related_type || null,
+                redirect_url: dto.redirect_url || null,
+                meta: dto.meta || null,
+                is_read: dto.is_read ?? false,
+                read_at: dto.read_at ? new Date(dto.read_at) : null,
+                created_at: new Date(),
+                updated_at: new Date(),
+            })
+            .returning('*');
+
+        return insert[0];
+    }
+
+    public async deleteNotification(id: number): Promise<void> {
+        if (!id) {
+            throw new HttpException(400, 'ID is required');
+        }
+        const existing = await DB(T.NOTIFICATION).where({ id }).first();
+        if (!existing) {
+            throw new HttpException(404, 'Notification not found');
+        }
+        await DB(T.NOTIFICATION).where({ id }).del();
+        return;
     }
 }
 export default NotificationService;
