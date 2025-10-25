@@ -43,10 +43,22 @@ export class NotificationDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  is_read?: number;
+  is_read?: boolean;
 
   @IsOptional()
   @IsDateString()
   read_at?: string;
+
+  @IsOptional()
+  @IsObject()
+  meta?: any;
+
+  @IsOptional()
+  @IsDateString()
+  created_at?: string;
+
+  @IsOptional()
+  @IsDateString()
+  updated_at?: string;
 
 }
