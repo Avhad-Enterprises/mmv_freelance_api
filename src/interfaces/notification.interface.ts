@@ -7,7 +7,10 @@ export interface INotification {
   related_id?: number;
   related_type?: string;
   redirect_url?: string;
-  is_read?: number;
+  is_read?: boolean;
   read_at?: string | Date;
+  meta?: any;
+  created_at?: string | Date;
+  updated_at?: string | Date;
  
 }

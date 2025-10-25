@@ -21,16 +21,29 @@ export const migrate = async (dropFirst = false) => {
         console.log('Seeding Tables');
         // await DB.raw("set search_path to public")
         await DB.schema.createTable(NOTIFICATION, table => {
-           table.increments('id').primary();  //ID
-           table.integer('user_id').notNullable();
-           table.string('title').notNullable();
-           table.text('message').notNullable();
-           table.string('type').notNullable();
-           table.integer('related_id').nullable();
-           table.string('related_type').nullable();
-           table.string('redirect_url').nullable();
-           table.boolean('is_read').defaultTo(0);
-           table.timestamp('read_at').nullable();
+            table.increments('id').primary();  //ID
+            table.integer('user_id').notNullable();
+            table.string('title').notNullable();
+            table.text('message').notNullable();
+            table.string('type').notNullable();
+            table.integer('related_id').nullable();
+            table.string('related_type').nullable();
+            // Allow longer redirect URLs
+            table.text('redirect_url').nullable();
+            // Flexible JSON metadata for extensibility (actor id, extra context, etc.)
+            table.json('meta').nullable();
+            table.boolean('is_read').defaultTo(false);
+            table.timestamp('read_at').nullable();
+            // Timestamps for auditing; trigger `update_timestamp` will update `updated_at`
+            table.timestamp('created_at').defaultTo(DB.fn.now());
+            table.timestamp('updated_at').defaultTo(DB.fn.now());
+        });
+
+        // Indexes to speed up common queries (by user and unread counts, and polymorphic lookups)
+        await DB.schema.alterTable(NOTIFICATION, table => {
+            table.index(['user_id'], 'notification_user_id_idx');
+            table.index(['user_id', 'is_read'], 'notification_user_id_is_read_idx');
+            table.index(['related_type', 'related_id'], 'notification_related_idx');
         });
 
         console.log('Finished Seeding Tables');
