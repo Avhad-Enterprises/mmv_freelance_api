@@ -47,6 +47,7 @@ import AdminInvitesRoutes from './features/admin-invites/admin-invites.routes';
 
 import validateEnv from './utils/validation/validateEnv';
 import { FreelancerRoutes } from './features/freelancers/freelancer.routes';
+import ProjectBidRoute from './features/project-bid/project-bid.routes';
 // Validate .env variables
 validateEnv();
 
@@ -86,7 +87,8 @@ const app = new App([
     new RobotsTxtRoute(),
     new EMCRoute(),
     new ReportTemplatesRoute(),
-    new AdminInvitesRoutes()
+    new AdminInvitesRoutes(),
+    new ProjectBidRoute()
 ]);
 
 // Start server
