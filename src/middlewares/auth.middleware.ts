@@ -31,12 +31,13 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
 
     // Check if the current path matches any public route
     // GET requests to public routes don't require auth
-    // POST requests to registration and login routes don't require auth
+    // POST requests to registration, login, and password reset routes don't require auth
     const isPublicGetRoute = publicRoutes.some(route => req.path.includes(route)) && req.method === 'GET';
     const isPublicRegistrationRoute = req.path.includes('/auth/register') && req.method === 'POST';
     const isPublicLoginRoute = req.path.includes('/auth/login') && req.method === 'POST';
+    const isPublicPasswordResetRoute = (req.path.includes('/users/password-reset-request') || req.path.includes('/users/password-reset')) && req.method === 'POST';
     
-    if (isPublicGetRoute || isPublicRegistrationRoute || isPublicLoginRoute) {
+    if (isPublicGetRoute || isPublicRegistrationRoute || isPublicLoginRoute || isPublicPasswordResetRoute) {
       await DB.raw("SET search_path TO public");
       return next();
     }

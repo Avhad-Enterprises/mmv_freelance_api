@@ -37,6 +37,34 @@ class NotificationController {
         }
     };
 
+    public createnotification = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const dto: NotificationDto = req.body;
+            // If authenticated user present, ensure we set user_id from token
+            if ((req as any).user && dto.user_id !== (req as any).user.user_id) {
+                // prefer token user id for security
+                dto.user_id = (req as any).user.user_id;
+            }
+            const created = await this.NotificationService.createNotification(dto);
+            res.status(201).json({ data: created, message: 'Notification created' });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public deletenotification = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const id = parseInt(req.params.id);
+            if (!id) {
+                throw new HttpException(400, 'Id is required');
+            }
+            await this.NotificationService.deleteNotification(id);
+            res.status(200).json({ success: true, message: `Notification ${id} deleted` });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     public readallnotification = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
         try {
             const userId = req.user.user_id;
