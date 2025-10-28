@@ -11,7 +11,8 @@ const {
   printTestResult,
   printSection,
   printSummary,
-  authHeader
+  authHeader,
+  storeToken
 } = require('../test-utils');
 
 let passedTests = 0;
@@ -29,12 +30,13 @@ async function testDeleteFaq() {
   try {
     console.log('🔐 Logging in as admin...');
     const loginResponse = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'admin@test.com',
-      password: 'Admin123!'
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
     });
 
     if (loginResponse.body?.data?.token) {
       adminToken = loginResponse.body.data.token;
+      storeToken('admin', adminToken);
       console.log('✅ Admin login successful');
     } else {
       console.log('⚠️  Admin login failed, admin tests will be skipped');
@@ -49,7 +51,7 @@ async function testDeleteFaq() {
       const faqData = {
         question: 'Test FAQ for deletion?',
         answer: 'This FAQ will be deleted in tests',
-        type: 'test'
+        created_by: 84
       };
 
       const createResponse = await makeRequest('POST', `${CONFIG.apiVersion}/faq`, faqData, authHeader('admin'));
