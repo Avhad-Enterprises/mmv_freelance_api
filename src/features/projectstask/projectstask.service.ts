@@ -555,17 +555,34 @@ class ProjectstaskService {
 
     // Handle different status transitions based on user role
     if (status === 1) { // Assigning freelancer
-      if (user_role !== 'ADMIN' && user_role !== 'SUPER_ADMIN') {
-        throw new HttpException(403, "Only admins can assign freelancers to projects directly. Use submission approval for client assignments.");
+      if (user_role !== 'ADMIN' && user_role !== 'SUPER_ADMIN' && user_role !== 'CLIENT') {
+        throw new HttpException(403, "Only admins and clients can assign freelancers to projects.");
       }
 
-      if (!user_id) {
+      let freelancerUserId = user_id;
+
+      // If user_id not provided and user is CLIENT, try to find approved application
+      if (!user_id && user_role === 'CLIENT') {
+        const approvedApplication = await DB(T.APPLIED_PROJECTS)
+          .where({
+            projects_task_id,
+            status: 1, // approved
+            is_deleted: false
+          })
+          .first();
+
+        if (approvedApplication) {
+          freelancerUserId = approvedApplication.user_id;
+        } else {
+          throw new HttpException(400, "No approved application found for this project. Please approve an application first or provide user_id.");
+        }
+      } else if (!user_id) {
         throw new HttpException(400, "user_id is required when assigning a freelancer");
       }
 
-      // Verify that user_id corresponds to a valid freelancer
+      // Verify that freelancerUserId corresponds to a valid freelancer
       const freelancerProfile = await DB(T.FREELANCER_PROFILES)
-        .where({ user_id })
+        .where({ user_id: freelancerUserId })
         .first();
 
       if (!freelancerProfile) {
@@ -587,8 +604,8 @@ class ProjectstaskService {
       }
 
     } else if (status === 0) { // Reset to pending
-      if (user_role !== 'ADMIN' && user_role !== 'SUPER_ADMIN') {
-        throw new HttpException(403, "Only admins can reset project status to pending");
+      if (user_role !== 'ADMIN' && user_role !== 'SUPER_ADMIN' && user_role !== 'CLIENT') {
+        throw new HttpException(403, "Only admins and clients can reset project status to pending");
       }
       // Clear assignment data when resetting to pending
       updateData.freelancer_id = null;
