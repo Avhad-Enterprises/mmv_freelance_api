@@ -29,6 +29,7 @@ import VisitorLogRoute from './features/visitor-log/visitor-log.routes';
 import notificationRoute from './features/notification/notification.routes';
 import supportTicketsRoute from './features/support-ticket/support-ticket.routes';
 import EmailRoute from './features/email/email.routes';
+import ContactRoute from './features/contact/contact.routes';
 
 // Phase 8: Infrastructure Features
 import UploadRoute from './features/upload/upload.routes';
@@ -80,6 +81,7 @@ const app = new App([
     new notificationRoute(),
     new supportTicketsRoute(),
     new EmailRoute(),
+    new ContactRoute(),
     new CategoryRoute(),
     new TagRoute(),
     new SkillsRoute(),
