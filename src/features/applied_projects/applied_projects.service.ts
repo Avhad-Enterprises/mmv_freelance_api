@@ -109,6 +109,17 @@ class AppliedProjectsService {
         if (!applied_projects_id) {
             throw new HttpException(400, "applied_projects_id is required");
         }
+
+        // Get the application first to get project and user details
+        const application = await DB(T.APPLIED_PROJECTS)
+            .where({ applied_projects_id })
+            .first();
+
+        if (!application) {
+            throw new HttpException(404, "Application not found");
+        }
+
+        // Update the application status
         const updated = await DB(T.APPLIED_PROJECTS)
             .where({ applied_projects_id })
             .update({
@@ -116,9 +127,27 @@ class AppliedProjectsService {
                 updated_at: new Date()
             })
             .returning('*');
-        if (!updated[0]) {
-            throw new HttpException(404, "Application not found");
+
+        // If approving the application (status=1), assign the freelancer to the project
+        if (status === 1) {
+            // Get freelancer profile to get freelancer_id
+            const freelancerProfile = await DB(T.FREELANCER_PROFILES)
+                .where({ user_id: application.user_id })
+                .first();
+
+            if (freelancerProfile) {
+                // Update the project to assign the freelancer and set status to assigned
+                await DB(T.PROJECTS_TASK)
+                    .where({ projects_task_id: application.projects_task_id })
+                    .update({
+                        freelancer_id: freelancerProfile.freelancer_id,
+                        status: 1, // assigned
+                        assigned_at: new Date(),
+                        updated_at: new Date()
+                    });
+            }
         }
+
         return updated[0];
     }
 
