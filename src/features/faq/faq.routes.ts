@@ -34,7 +34,7 @@ class FaqRoute implements Route {
         this.router.post(
             `${this.path}`,
             requireRole('SUPER_ADMIN', 'ADMIN'),
-            validationMiddleware(FaqDto, 'body', true, ['faq_id', 'created_at', 'updated_at', 'deleted_at']),
+            validationMiddleware(FaqDto, 'body', true, []),
             this.faqController.createFaq
         );
 
@@ -45,7 +45,7 @@ class FaqRoute implements Route {
         this.router.put(
             `${this.path}`,
             requireRole('SUPER_ADMIN', 'ADMIN'),
-            validationMiddleware(FaqDto, 'body', false, ['created_at', 'deleted_at']),
+            validationMiddleware(FaqDto, 'body', false, []),
             this.faqController.updateFaq
         );
 
@@ -56,7 +56,7 @@ class FaqRoute implements Route {
         this.router.delete(
             `${this.path}`,
             requireRole('SUPER_ADMIN', 'ADMIN'),
-            validationMiddleware(FaqDto, 'body', true, ['faq_id']),
+            validationMiddleware(FaqDto, 'body', true, []),
             this.faqController.deleteFaq
         );
     }

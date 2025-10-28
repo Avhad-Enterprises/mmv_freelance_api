@@ -11,7 +11,8 @@ const {
   printTestResult,
   printSection,
   printSummary,
-  authHeader
+  authHeader,
+  storeToken
 } = require('../test-utils');
 
 let passedTests = 0;
@@ -27,16 +28,24 @@ async function testCreateFaq() {
   // Login as admin first
   try {
     console.log('🔐 Logging in as admin...');
+    console.log('📧 Email: testadmin@example.com');
+    console.log('🔑 Password: TestAdmin123!');
     const loginResponse = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'admin@test.com',
-      password: 'Admin123!'
+      email: 'testadmin@example.com',
+      password: 'TestAdmin123!'
     });
+
+    console.log('📥 Login Response Status:', loginResponse.statusCode);
+    console.log('📥 Login Response Body:', JSON.stringify(loginResponse.body, null, 2));
 
     if (loginResponse.body?.data?.token) {
       adminToken = loginResponse.body.data.token;
+      storeToken('admin', adminToken);
       console.log('✅ Admin login successful');
+      console.log('🎫 Token received:', adminToken.substring(0, 20) + '...');
     } else {
       console.log('⚠️  Admin login failed, admin tests will be skipped');
+      console.log('❌ Error details:', loginResponse.body?.message || 'Unknown error');
     }
   } catch (error) {
     console.log('⚠️  Admin login failed:', error.message);
@@ -49,8 +58,7 @@ async function testCreateFaq() {
 
   const faqData = {
     question: 'Test question without auth?',
-    answer: 'This should fail without authentication',
-    type: 'general'
+    answer: 'This should fail without authentication'
   };
 
   const response1 = await makeRequest('POST', `${CONFIG.apiVersion}/faq`, faqData);
@@ -69,10 +77,11 @@ async function testCreateFaq() {
 
     const validFaqData = {
       question: 'How do I hire a freelancer?',
-      answer: 'First, create a project posting with your requirements. Then review applications from qualified freelancers and conduct interviews. Finally, select the best candidate and start the project.',
-      type: 'general',
-      tags: ['hiring', 'freelancer', 'process']
+      answer: 'First, create a project posting with your requirements.'
     };
+
+    console.log('📤 Request Data:', JSON.stringify(validFaqData, null, 2));
+    console.log('🔑 Auth Header:', JSON.stringify(authHeader('admin'), null, 2));
 
     const response2 = await makeRequest('POST', `${CONFIG.apiVersion}/faq`, validFaqData, authHeader('admin'));
 
@@ -98,12 +107,15 @@ async function testCreateFaq() {
 
     const invalidFaqData = {
       // Missing question and answer
-      type: 'general'
     };
+
+    console.log('📤 Request Data (invalid):', JSON.stringify(invalidFaqData, null, 2));
+    console.log('🔑 Auth Header:', JSON.stringify(authHeader('admin'), null, 2));
 
     const response3 = await makeRequest('POST', `${CONFIG.apiVersion}/faq`, invalidFaqData, authHeader('admin'));
 
     console.log('📥 Response Status:', response3.statusCode);
+    console.log('📥 Response Body:', JSON.stringify(response3.body, null, 2));
 
     const test3Passed = response3.statusCode === 400;
     printTestResult('Create FAQ with missing fields', test3Passed, `Status: ${response3.statusCode}, Expected: 400`, response3);
