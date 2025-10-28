@@ -15,13 +15,13 @@ export class BlogDto {
   @IsInt()
   author_id?: number;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  title: string;
+  title?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  slug: string;
+  slug?: string;
 
   @IsOptional()
   @IsString()
@@ -35,8 +35,9 @@ export class BlogDto {
   @IsString()
   short_description?: string;
 
+  @IsOptional()
   @IsString()
-  author_name: string;
+  author_name?: string;
 
   @IsOptional()
   @IsString()

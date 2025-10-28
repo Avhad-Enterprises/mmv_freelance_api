@@ -1,66 +1,65 @@
 import { Router } from 'express';
 import Route from '../../interfaces/route.interface';
 import validationMiddleware from '../../middlewares/validation.middleware';
-import blogController from './blog.controller';
+import BlogController from './blog.controller';
 import { BlogDto } from './blog.dto';
 import { requireRole } from '../../middlewares/role.middleware';
 
-class blogRoute implements Route {
-
+class BlogRoute implements Route {
   public path = '/blog';
   public router = Router();
-  public blogController = new blogController();
+  public blogController = new BlogController();
   
   constructor() {
     this.initializeRoutes();
   }
 
   private initializeRoutes() {
+    /**
+     * GET /blog
+     * Get all active blogs (Public - no auth required)
+     */
+    this.router.get(`${this.path}`, this.blogController.getAllBlogs);
 
-    //users section  , validationMiddleware(usersDto, 'body', false, [])
-    this.router.post(`${this.path}/insertblog`,
-      requireRole('ADMIN', 'SUPER_ADMIN'), // Only admins can create blogs
-      validationMiddleware(BlogDto, 'body', false, []),
-      (req, res, next) => this.blogController.addblog(req, res, next)
-    );
+    /**
+     * GET /blog/:id
+     * Get a specific blog by ID (Public - no auth required)
+     */
+    this.router.get(`${this.path}/:id`, this.blogController.getBlogById);
 
-    this.router.get(`${this.path}/getblog/:id`,
-      requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users can read blogs
-      (req, res, next) => this.blogController.getblogby(req, res, next)
-    );
-
-    this.router.put(`${this.path}/updateblog`,
-      requireRole('ADMIN', 'SUPER_ADMIN'), // Only admins can update blogs
-      validationMiddleware(BlogDto, 'body', false, []),
-      (req, res, next) => this.blogController.updateblogby(req, res, next)
-    );
-
-    this.router.post(`${this.path}/deleteblog`,
-      requireRole('ADMIN', 'SUPER_ADMIN'), // Only admins can delete blogs
+    /**
+     * POST /blog
+     * Create a new blog (Admin only)
+     */
+    this.router.post(
+      `${this.path}`,
+      requireRole('SUPER_ADMIN', 'ADMIN'),
       validationMiddleware(BlogDto, 'body', true, []),
-      (req, res, next) => this.blogController.deleteblog(req, res, next)
+      this.blogController.createBlog
     );
 
-    this.router.get(`${this.path}/getallblogs`,
-      (req, res, next) => this.blogController.getallblogsby(req, res, next)
+    /**
+     * PUT /blog
+     * Update an existing blog (Admin only)
+     */
+    this.router.put(
+      `${this.path}`,
+      requireRole('SUPER_ADMIN', 'ADMIN'),
+      validationMiddleware(BlogDto, 'body', false, []),
+      this.blogController.updateBlog
     );
 
-    this.router.get(`${this.path}/getDeletedblog`,
-      requireRole('ADMIN', 'SUPER_ADMIN'), // Only admins can view deleted blogs
-      this.blogController.getDeletedblogby
+    /**
+     * DELETE /blog
+     * Soft delete a blog (Admin only)
+     */
+    this.router.delete(
+      `${this.path}`,
+      requireRole('SUPER_ADMIN', 'ADMIN'),
+      validationMiddleware(BlogDto, 'body', true, []),
+      this.blogController.deleteBlog
     );
-
-    this.router.get(`${this.path}/getblogby`,
-      requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users can read blogs by category
-      (req, res, next) => this.blogController.getBlogsByCategory(req, res, next)
-    );
-    
-    this.router.get(`${this.path}/getblogtypes`,
-      requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users can view blog types
-      (req, res, next) => this.blogController.getblogtypesby(req, res, next)
-    );
-
   }
 }
 
-export default  blogRoute;
+export default BlogRoute;

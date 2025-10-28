@@ -23,7 +23,7 @@ let failedTests = 0;
 const TEST_CONFIG = {
   baseUrl: CONFIG.baseUrl,
   apiVersion: CONFIG.apiVersion,
-  endpoint: '/blog/getallblogs',
+  endpoint: '/blog',
   timeout: 15000,
   showFullResponse: false,
 };
