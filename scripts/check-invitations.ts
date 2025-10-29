@@ -27,7 +27,7 @@ async function checkInvitations() {
     });
 
   } catch (error) {
-    console.error('❌ Error checking invitations:', error);
+    console.error(' Error checking invitations:', error);
   } finally {
     process.exit(0);
   }
