@@ -25,19 +25,21 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/categories',  // GET /categories (read-only)
       '/categories/by-type',  // GET /categories/by-type (read-only)
       '/skills',
-      '/blog/getallblogs',
-      '/faq'  // GET /faq and GET /faq/:id (public read-only)
+      '/blog',  // GET /blog and GET /blog/:id (public read-only)
+      '/faq',  // GET /faq and GET /faq/:id (public read-only)
+      '/contact/submit'  // POST /contact/submit (public contact form)
     ];
 
     // Check if the current path matches any public route
     // GET requests to public routes don't require auth
-    // POST requests to registration, login, and password reset routes don't require auth
+    // POST requests to registration, login, password reset, and contact submit routes don't require auth
     const isPublicGetRoute = publicRoutes.some(route => req.path.includes(route)) && req.method === 'GET';
+    const isPublicPostRoute = publicRoutes.some(route => req.path.includes(route)) && req.method === 'POST';
     const isPublicRegistrationRoute = req.path.includes('/auth/register') && req.method === 'POST';
     const isPublicLoginRoute = req.path.includes('/auth/login') && req.method === 'POST';
     const isPublicPasswordResetRoute = (req.path.includes('/users/password-reset-request') || req.path.includes('/users/password-reset')) && req.method === 'POST';
     
-    if (isPublicGetRoute || isPublicRegistrationRoute || isPublicLoginRoute || isPublicPasswordResetRoute) {
+    if (isPublicGetRoute || isPublicPostRoute || isPublicRegistrationRoute || isPublicLoginRoute || isPublicPasswordResetRoute) {
       await DB.raw("SET search_path TO public");
       return next();
     }

@@ -1,0 +1,271 @@
+# Bulk User Registration CSV Templates
+
+This document specifies the required fields for bulk registration CSV files for three user types: Client, Videographer, and Video Editor.
+
+## Important Notes:
+- All fields are required unless marked as (Optional)
+- JSON array fields should be formatted as comma-separated values within quotes, e.g., "value1,value2,value3"
+- Boolean fields should be "true" or "false"
+- File upload fields (profile_photo, id_document) should contain file paths or URLs
+- Email addresses must be unique across all users
+- Passwords should follow security requirements (minimum 8 characters, mix of letters/numbers/symbols)
+- For videographers and video editors, skills should be selected from the predefined skill list
+- Categories should be selected from the predefined category lists
+
+---
+
+## 1. CLIENT REGISTRATION CSV
+
+### Required Fields:
+```
+first_name,last_name,email,password,company_name,industry,company_size,country,phone_number,terms_accepted,privacy_policy_accepted,company_website,company_description,social_links,city,state,zip_code,work_arrangement,project_frequency,hiring_preferences,project_title,project_description,project_category,project_budget,project_timeline,profile_picture,business_document
+```
+
+### Field Descriptions:
+- **first_name**: User's first name (string, required)
+- **last_name**: User's last name (string, required)
+- **email**: Unique email address (string, required)
+- **password**: Secure password (string, min 8 chars, required)
+- **company_name**: Company/organization name (string, required)
+- **industry**: Industry sector (enum: "film", "ad_agency", "events", "youtube", "corporate", "other", required)
+- **company_size**: Company size category (enum: "1-10", "11-50", "51-200", "200+", required)
+- **country**: Country name (string, required)
+- **phone_number**: Phone number with country code (string, e.g., "+1-555-0123", required)
+- **terms_accepted**: Terms acceptance flag (boolean: "true", required)
+- **privacy_policy_accepted**: Privacy policy acceptance flag (boolean: "true", required)
+- **company_website**: Company website URL (string, optional)
+- **company_description**: Company description (string, optional)
+- **social_links**: Social media links as JSON array (string, optional, e.g., "https://linkedin.com/company,https://twitter.com/company")
+- **city**: City name (string, optional)
+- **state**: State/Province (string, optional)
+- **zip_code**: ZIP/Postal code (string, optional)
+- **work_arrangement**: Work arrangement preference (enum: "remote", "on_site", "hybrid", optional)
+- **project_frequency**: Project frequency (enum: "one_time", "occasional", "ongoing", optional)
+- **hiring_preferences**: Hiring preferences (enum: "individuals", "agencies", "both", optional)
+- **project_title**: Current project title (string, optional)
+- **project_description**: Project description (string, optional)
+- **project_category**: Project category (string, optional)
+- **project_budget**: Project budget (number, optional, e.g., 5000)
+- **project_timeline**: Project timeline (string, optional)
+- **profile_picture**: Profile photo file path/URL (string, optional)
+- **business_document**: Business document file path/URL (string, optional)
+
+### Sample CSV Row:
+```
+John,Doe,john.doe@example.com,Password123!,TechCorp,technology,51-200,United States,+1-555-0123,true,true,https://techcorp.com,"Leading technology solutions provider","https://linkedin.com/company/techcorp,https://twitter.com/techcorp",New York,NY,10001,remote,ongoing,both,"Mobile App Development","Developing a comprehensive mobile application for our clients",Technology,50000,"3-6 months",/path/to/profile.jpg,/path/to/business_doc.pdf
+```
+
+---
+
+## 2. VIDEOGRAPHER REGISTRATION CSV
+
+### Required Fields:
+```
+first_name,last_name,email,password,skill_tags,superpowers,country,portfolio_links,phone_number,id_type,short_description,languages,terms_accepted,privacy_policy_accepted,city,state,pincode,rate_amount,rate_currency,availability,experience_level,role,base_skills,profile_photo,id_document
+```
+
+### Field Descriptions:
+- **first_name**: User's first name (string, required)
+- **last_name**: User's last name (string, required)
+- **email**: Unique email address (string, required)
+- **password**: Secure password (string, min 8 chars, required)
+- **skill_tags**: Skills as JSON array (string, required, e.g., "Cinematography,Camera Operation,Lighting Setup")
+- **superpowers**: Special skills/expertise (string, required, e.g., "Color Grading,Motion Graphics,VFX")
+- **country**: Country name (string, required)
+- **portfolio_links**: Portfolio URLs as JSON array (string, required, e.g., "https://vimeo.com/portfolio,https://youtube.com/channel")
+- **phone_number**: Phone number with country code (string, e.g., "+1-555-0123", required)
+- **id_type**: ID document type (enum: "passport", "driving_license", "national_id", required)
+- **short_description**: Brief professional description (string, required)
+- **languages**: Spoken languages as JSON array (string, required, e.g., "English,Spanish,French")
+- **terms_accepted**: Terms acceptance flag (boolean: "true", required)
+- **privacy_policy_accepted**: Privacy policy acceptance flag (boolean: "true", required)
+- **city**: City name (string, optional)
+- **state**: State/Province (string, optional)
+- **pincode**: ZIP/Postal code (string, optional)
+- **rate_amount**: Hourly/daily rate (number, optional, e.g., 150)
+- **rate_currency**: Currency code (string, optional, e.g., "USD", "EUR", "GBP", "INR")
+- **availability**: Availability status (string, optional, e.g., "part-time", "full-time", "flexible", "on-demand")
+- **experience_level**: Experience level (enum: "entry", "intermediate", "expert", "master", optional)
+- **role**: Professional role/title (string, optional, e.g., "Lead Videographer", "Cinematographer")
+- **base_skills**: Core skills as JSON array (string, optional, e.g., "camera operation,lighting,sound")
+- **profile_photo**: Profile photo file path/URL (string, optional)
+- **id_document**: ID document file path/URL (string, optional)
+
+### Sample CSV Row:
+```
+John,Videographer,john.videographer@example.com,Password123!,"Cinematography,Camera Operation,Lighting Setup","Color Grading,Motion Graphics,VFX",United States,"https://vimeo.com/portfolio,https://youtube.com/channel",+1-555-0123,passport,"Professional videographer with 5 years of experience in commercial shoots","English,Spanish",true,true,Los Angeles,CA,90210,150,USD,full-time,expert,Lead Videographer,"camera operation,lighting,sound",/path/to/profile.jpg,/path/to/id.pdf
+```
+
+---
+
+## 3. VIDEO EDITOR REGISTRATION CSV
+
+### Required Fields:
+```
+first_name,last_name,email,password,skill_tags,superpowers,portfolio_links,rate_amount,phone_number,id_type,short_description,availability,languages,terms_accepted,privacy_policy_accepted,experience_level,city,state,country,role,base_skills,profile_photo,id_document
+```
+
+### Field Descriptions:
+- **first_name**: User's first name (string, required)
+- **last_name**: User's last name (string, required)
+- **email**: Unique email address (string, required)
+- **password**: Secure password (string, min 8 chars, required)
+- **skill_tags**: Skills as JSON array (string, required, e.g., "Color Correction,Color Grading,VFX")
+- **superpowers**: Special skills/expertise (string, required, e.g., "Adobe Premiere Pro,DaVinci Resolve,After Effects")
+- **portfolio_links**: Portfolio URLs as JSON array (string, required, e.g., "https://vimeo.com/portfolio,https://behance.net/portfolio")
+- **rate_amount**: Hourly/daily rate (number, required, e.g., 120)
+- **phone_number**: Phone number with country code (string, e.g., "+1-555-0123", required)
+- **id_type**: ID document type (enum: "passport", "driving_license", "national_id", required)
+- **short_description**: Brief professional description (string, required)
+- **availability**: Availability status (enum: "part-time", "full-time", "flexible", "on-demand", required)
+- **languages**: Spoken languages as JSON array (string, required, e.g., "English,Spanish")
+- **terms_accepted**: Terms acceptance flag (boolean: "true", required)
+- **privacy_policy_accepted**: Privacy policy acceptance flag (boolean: "true", required)
+- **experience_level**: Experience level (enum: "entry", "intermediate", "expert", "master", optional)
+- **city**: City name (string, optional)
+- **state**: State/Province (string, optional)
+- **country**: Country name (string, optional)
+- **role**: Professional role/title (string, optional, e.g., "Senior Video Editor", "Post-Production Specialist")
+- **base_skills**: Core skills as JSON array (string, optional, e.g., "editing,color correction,audio mixing")
+- **profile_photo**: Profile photo file path/URL (string, optional)
+- **id_document**: ID document file path/URL (string, optional)
+
+### Sample CSV Row:
+```
+Jane,Editor,jane.editor@example.com,Password123!,"Color Correction,Color Grading,VFX","Adobe Premiere Pro,DaVinci Resolve,After Effects","https://vimeo.com/portfolio,https://behance.net/portfolio",120,+1-555-0124,passport,"Expert video editor specializing in post-production",full-time,"English,Spanish",true,true,expert,Los Angeles,CA,United States,Senior Video Editor,"editing,color correction,audio mixing",/path/to/profile.jpg,/path/to/id.pdf
+```
+
+---
+
+## PREDEFINED SKILLS LIST
+
+### Videography Skills:
+```
+Creative Direction,Concept Development,Mood Boards,Script Writing,Screenwriting,Production Planning,Budgeting,Scheduling,Casting,Location Scouting,Prop Sourcing,Costume Design,Storyboarding,Shot List Creation,Pre-visualization (Previs),Production Design,Lighting Setup Planning,Cinematography,Camera Operation,Multi-Cam Setup,Drone Videography,360°/VR Filming,Green Screen Filming,Lighting Setup,Sound Recording,Boom Operation,Live Streaming,Directing,Color Correction,Color Grading,LUTs Application,VFX (Visual Effects),CGI,Rotoscoping,Green Screen Keying,Motion Graphics,2D Animation,3D Animation,Character Animation,Explainer Videos,Infographic Animation,Audio Editing,Sound Design,Foley,Voiceover Editing,ADR (Automated Dialogue Replacement),Mixing & Mastering,Background Score,Subtitling,Closed Captioning,Multi-language Subtitles,Aspect Ratio Formatting (16:9, 9:16, 1:1 etc.),Video Compression & Export,YouTube Optimization,Social Media Video Formatting
+```
+
+### Editing Skills:
+```
+Adobe Premiere Pro,Final Cut Pro,DaVinci Resolve,Avid Media Composer,Sony Vegas Pro,Adobe After Effects,Blender,Cinema 4D,Maya,3ds Max,Adobe Audition,Pro Tools,Logic Pro,Audacity,Color Correction,Color Grading,LUTs Application,VFX (Visual Effects),CGI,Rotoscoping,Green Screen Keying,Motion Graphics,2D Animation,3D Animation,Character Animation,Explainer Videos,Infographic Animation,Audio Editing,Sound Design,Foley,Voiceover Editing,ADR (Automated Dialogue Replacement),Mixing & Mastering,Background Score,Subtitling,Closed Captioning,Multi-language Subtitles,Aspect Ratio Formatting (16:9, 9:16, 1:1 etc.),Video Compression & Export,YouTube Optimization,Social Media Video Formatting
+```
+
+---
+
+## PREDEFINED CATEGORIES
+
+### Videographer Categories:
+```
+Reels & Short-Form Video,Podcast Videography,Smartphone & Mobile-First Videography,Wedding Films,Corporate Interviews & Testimonials,Live-Streaming & Multi-Cam Operator,Product & E-commerce Videography,Fashion & Beauty Cinematography,Real Estate & Architecture Videography,Aerial / Drone Operation,Business & Industrial Videography (Corporate AV, Factory Shoot, Trade Shows),Commercials & Ad Films (Digital & Broadcast),Music Videos & Live Performance Coverage,Documentary & Narrative Storytelling,Event & Conference Coverage,360º / VR Videography,Food & Beverage Videography,Travel & Lifestyle Videography,Educational & Explainer Videos
+```
+
+### Video Editor Categories:
+```
+YouTube Content Editing,Short-Form & Social Media Ads,Podcast & Interview Editing,Wedding & Personal Event Films,Generative AI Video Editing,Gaming Video Editing,Corporate & Brand Videos,Documentary & Narrative Editing,Event Highlight Reels,Music Video Editing,Motion Graphics & Explainer Videos,VFX & Compositing,Color Grading & Finishing,Educational & eLearning Content,Real Estate & Architectural Videos,Sports Highlights & Analysis,Movie Trailers & Sizzle Reels
+```
+
+---
+
+## PROFESSIONAL ROLES
+
+### Videographer Roles:
+```
+Lead Videographer,Cinematographer,Camera Operator,Drone Operator,Lighting Technician,Sound Engineer,Production Assistant,Director of Photography,Steadicam Operator,Gimbal Operator,Live Stream Technician,Multi-Camera Operator,Documentary Filmmaker,Commercial Director,Wedding Videographer,Event Videographer,Product Photographer,Real Estate Videographer,Aerial Photographer
+```
+
+### Video Editor Roles:
+```
+Senior Video Editor,Post-Production Specialist,Colorist,VFX Artist,Motion Graphics Designer,Sound Designer,Audio Engineer,Content Creator,Social Media Editor,YouTube Editor,Commercial Editor,Documentary Editor,Trailer Editor,Advertising Editor,Educational Content Editor,Corporate Video Editor,Sports Video Editor,Gaming Video Editor
+```
+
+---
+
+## EXPERIENCE LEVELS
+```
+entry,intermediate,expert,master
+```
+
+---
+
+## INDUSTRY TYPES (for Clients)
+```
+film,ad_agency,events,youtube,corporate,other
+```
+
+---
+
+## COMPANY SIZES (for Clients)
+```
+1-10,11-50,51-200,200+
+```
+
+---
+
+## WORK ARRANGEMENTS
+```
+remote,on_site,hybrid
+```
+
+---
+
+## PROJECT FREQUENCIES
+```
+one_time,occasional,ongoing
+```
+
+---
+
+## HIRING PREFERENCES
+```
+individuals,agencies,both
+```
+
+---
+
+## AVAILABILITY OPTIONS
+```
+part-time,full-time,flexible,on-demand
+```
+
+---
+
+## ID TYPES
+```
+passport,driving_license,national_id
+```
+
+---
+
+## CURRENCY CODES
+```
+USD,EUR,GBP,INR,AUD,CAD,JPY,CHF
+```
+
+---
+
+## CSV File Naming Convention:
+- **clients.csv** - For client registrations
+- **videographers.csv** - For videographer registrations
+- **videoeditors.csv** - For video editor registrations
+
+## Data Generation Tips:
+1. **Email Uniqueness**: Use patterns like firstname.lastname{N}@example.com where {N} is a sequential number
+2. **Phone Numbers**: Use realistic formats with country codes (+1 for US, +44 for UK, etc.)
+3. **File Paths**: For bulk registration, you can either:
+   - Use placeholder paths like "/uploads/profiles/user_{id}.jpg"
+   - Use actual file URLs if uploading files separately
+   - Leave empty if files will be uploaded later
+4. **JSON Arrays**: Format as comma-separated values without spaces after commas
+5. **Passwords**: Use strong passwords that meet validation requirements
+6. **Location Data**: Use real cities/states/countries for authenticity
+7. **Skills Selection**: Choose from the predefined skills list above
+8. **Categories**: Select appropriate categories from the predefined lists
+9. **Roles**: Choose from the professional roles list above
+10. **Rate Amounts**: Set realistic rates based on location and experience level
+
+## Bulk Registration Process:
+1. Create CSV files following the templates above
+2. Ensure all required fields are populated
+3. Validate email uniqueness across all files
+4. Use the CSV data to create bulk registration scripts
+5. Handle file uploads separately if needed
+6. Test with small batches first before full bulk registration

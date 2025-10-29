@@ -1,12 +1,15 @@
 export interface Blog {
   blog_id: number;
+  author_id?: number;
+  author_name: string;
   title: string;
   slug: string;
   featured_image?: string;
   content?: string;
   short_description?: string;
-  author_name: string;
   category?: string;
+  status: 'draft' | 'published';
+  format?: string;
   is_featured: boolean;
   views: number;
   seo_title?: string;
@@ -17,7 +20,7 @@ export interface Blog {
   sub_section?: Record<string, any>;
   tags?: Record<string, any>;
   notes?: Record<string, any>;
-  is_active: number;
+  is_active: boolean;
   created_by: number;
   created_at: Date;
   updated_at: Date;

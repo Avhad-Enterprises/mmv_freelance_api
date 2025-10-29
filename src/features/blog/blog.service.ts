@@ -2,108 +2,114 @@ import { BlogDto } from './blog.dto';
 import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
-import { BLOG } from "../../../database/blog.schema";
-import { Blog } from './blog.interface';
 
 class BlogService {
-
-    public async addtoblog(data: BlogDto): Promise<any> {
-        if (isEmpty(data)) {
-            throw new HttpException(400, "Blog data is empty");
+    /**
+     * Get all active and non-deleted blogs
+     */
+    public async getAllActiveBlogs(): Promise<any> {
+        try {
+            const result = await DB(T.BLOG)
+                .where({ is_active: true, is_deleted: false })
+                .select("*")
+                .orderBy('created_at', 'desc');
+            return result;
+        } catch (error) {
+            throw new HttpException(500, 'Error fetching blogs');
         }
-        const insertedBlog = await DB(T.BLOG).insert(data).returning("*");
-
-        return insertedBlog[0];
     }
 
-    public async getblogbyid(blog_id: number): Promise<any> {
+    /**
+     * Get a single blog by ID
+     */
+    public async getBlogById(blog_id: number): Promise<any> {
         if (!blog_id) throw new HttpException(400, "Blog ID is required");
 
-        const blog = await DB(T.BLOG).where({ blog_id }).first();
-        if (!blog) throw new HttpException(404, "blog not found");
+        const blog = await DB(T.BLOG)
+            .where({ blog_id, is_deleted: false })
+            .first();
+            
+        if (!blog) throw new HttpException(404, "Blog not found");
 
         return blog;
     }
 
-    public async updateblogbyid(data: Partial<BlogDto>): Promise<any> {
+    /**
+     * Create a new blog
+     */
+    public async createBlog(data: BlogDto): Promise<any> {
+        if (isEmpty(data)) {
+            throw new HttpException(400, "Blog data is empty");
+        }
+
+        // Validate required fields
+        if (!data.title || !data.slug || !data.author_name) {
+            throw new HttpException(400, "Title, slug, and author_name are required fields");
+        }
+
+        // Set default values and audit fields
+        const blogData = {
+            ...data,
+            created_by: data.created_by || 1,
+            is_active: data.is_active !== undefined ? data.is_active : true,
+            is_deleted: false,
+            status: data.status || 'draft',
+            views: 0,
+            comment_count: 0,
+            reading_time: data.reading_time || 0
+        };
+
+        const insertedBlog = await DB(T.BLOG).insert(blogData).returning("*");
+        return insertedBlog[0];
+    }
+
+    /**
+     * Update an existing blog
+     */
+    public async updateBlog(data: Partial<BlogDto>): Promise<any> {
         if (isEmpty(data)) throw new HttpException(400, "Update data is empty");
 
-        if (!data.blog_id) throw new HttpException(400, "blog id is required for update");
+        if (!data.blog_id) throw new HttpException(400, "Blog ID is required for update");
+
+        const updateData = {
+            ...data,
+            updated_by: data.updated_by || 1,
+            updated_at: DB.fn.now()
+        };
 
         const updated = await DB(T.BLOG)
             .where({ blog_id: data.blog_id })
-            .update({ ...data, updated_at: DB.fn.now() })
+            .update(updateData)
             .returning("*");
 
         if (!updated.length) throw new HttpException(404, "Blog not found or not updated");
 
         return updated[0];
-
     }
 
-    public async SoftDeleteblog(data: Partial<BlogDto>): Promise<any> {
-
+    /**
+     * Soft delete a blog
+     */
+    public async deleteBlog(data: Partial<BlogDto>): Promise<any> {
         if (isEmpty(data)) throw new HttpException(400, "Data is required");
+
+        if (!data.blog_id) throw new HttpException(400, "Blog ID is required for deletion");
+
+        const deleteData = {
+            is_deleted: true,
+            deleted_by: data.deleted_by || 1,
+            deleted_at: DB.fn.now()
+        };
 
         const deleted = await DB(T.BLOG)
             .where({ blog_id: data.blog_id })
-            .update(data)
+            .update(deleteData)
             .returning("*");
 
-        if (!deleted.length) throw new HttpException(404, "Blog not found or not delete");
+        if (!deleted.length) throw new HttpException(404, "Blog not found or not deleted");
 
         return deleted[0];
     }
-
-    public async getallblogsbytable(): Promise<any> {
-        try {
-            const result = await DB(T.BLOG)
-                .where({ is_active: true, is_deleted: false })
-                .select("*");
-            return result;
-        } catch (error) {
-            throw new Error('Error fetching blog');
-        }
-    }
-
-    public async getDeletedblogbytable(): Promise<any> {
-        try {
-            const result = await DB(T.BLOG)
-                .where({ is_deleted: true })
-                .select("*");
-            return result;
-        } catch (error) {
-            throw new Error('Error fetching blog');
-        }
-    }
-
-    public async getBlogsByCategory(categoryname: string): Promise<any[]> {
-
-        if (!categoryname) {
-            throw new HttpException(400, "Category name is required");
-        }
-
-        const categoryBlogs = await DB(T.BLOG)
-            .where('category', categoryname)
-            .andWhere('is_deleted', false)
-            .andWhere('is_active', true)       
-            .orderBy('created_at', 'desc')     
-            .select('*');                      
-       
-        return categoryBlogs;
-    }
-    public async getblogtypesbytable(categoryname: string): Promise<any> {
-         if (!categoryname) {
-            throw new HttpException(400, "Category name is required");
-        }
-
-            const result = await DB(T.CATEGORY)
-                .where({ is_active: true, is_deleted: false, types: 'blog'})
-                .select("*");
-            return result;
-        } catch (error) {
-            throw new Error('Error fetching blog');
-        
-    }
 }
+
 export default BlogService;
