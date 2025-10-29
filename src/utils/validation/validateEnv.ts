@@ -9,6 +9,7 @@ const validateEnv = () => {
     DB_USER: str(),
     DB_PASSWORD: str(),
     DB_DATABASE: str(),
+    FRONTEND_URL: str(),
   });
 };
 

@@ -156,7 +156,7 @@ export class UserController {
         await this.userService.saveResetToken(user.user_id, resetToken, expiresAt);
 
         // Send password reset email
-        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+        const resetLink = `${process.env.FRONTEND_URL || 'https://makemyvid.io'}/reset-password?token=${resetToken}`;
         
         await sendPasswordResetEmail({
           to: email,
@@ -574,7 +574,7 @@ export class UserController {
       console.log(req.body);
       const locationData: Users = await this.userService.createuserInvitation(req.body);
       const token = crypto.randomBytes(32).toString("hex");
-      const inviteLink = `${process.env.FRONTEND_URL}/register?token=${token}`;
+      const inviteLink = `${process.env.FRONTEND_URL || 'https://makemyvid.io'}/register?token=${token}`;
 
       await sendInvitationEmail({
         to: email,
