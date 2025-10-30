@@ -82,6 +82,13 @@ const app = new App([
     new supportTicketsRoute(),
     new EmailRoute(),
     new ContactRoute(),
+
+    // Phase 8: Infrastructure Features
+    new UploadRoute(),
+    new WebhookRoute(),
+    new BrandingRoute(),
+
+    // Phase 9: Remaining Features
     new CategoryRoute(),
     new TagRoute(),
     new SkillsRoute(),
