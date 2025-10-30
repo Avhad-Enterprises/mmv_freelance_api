@@ -53,7 +53,7 @@ class FreelancerService extends UserService {
 
     // Handle array fields that need to be stored as JSON
     const processedData = { ...profileData };
-    const arrayFields = ['skills', 'portfolio_links', 'certifications', 'languages'];
+    const arrayFields = ['skills', 'superpowers', 'skill_tags', 'base_skills', 'languages', 'portfolio_links', 'projects_applied', 'projects_completed'];
     
     arrayFields.forEach(field => {
       if (processedData[field] && Array.isArray(processedData[field])) {

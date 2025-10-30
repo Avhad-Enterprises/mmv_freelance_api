@@ -213,13 +213,8 @@ export class ClientProfileUpdateDto {
   project_frequency?: string;
 
   @IsOptional()
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      return JSON.parse(value);
-    }
-    return value;
-  })
-  hiring_preferences?: object;
+  @IsEnum(['individuals', 'agencies', 'both'])
+  hiring_preferences?: string;
 
   @IsOptional()
   @IsString()
