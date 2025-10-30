@@ -61,11 +61,21 @@ class ClientService extends UserService {
       throw new HttpException(404, "Client profile not found");
     }
 
+    // Handle array and object fields that need to be stored as JSON
+    const processedData = { ...profileData };
+    const jsonFields = ['business_documents', 'projects_created', 'payment_method'];
+    
+    jsonFields.forEach(field => {
+      if (processedData[field] && (Array.isArray(processedData[field]) || typeof processedData[field] === 'object')) {
+        processedData[field] = JSON.stringify(processedData[field]);
+      }
+    });
+
     // Update profile
     const updated = await DB(T.CLIENT_PROFILES)
       .where({ user_id })
       .update({
-        ...profileData,
+        ...processedData,
         updated_at: DB.fn.now()
       })
       .returning("*");
