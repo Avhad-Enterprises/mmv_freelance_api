@@ -1,4 +1,4 @@
-// Video Editor Update DTO - For updating video editor-specific fields
+// Unified Video Editor Update DTO - For updating both user and profile fields
 import {
   IsString,
   IsOptional,
@@ -6,16 +6,88 @@ import {
   IsNumber,
   Min,
   IsArray,
-  IsBoolean
+  IsBoolean,
+  IsEmail,
+  IsUrl
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 /**
- * DTO for updating video editor profile information (freelancer_profiles table fields only)
+ * Unified DTO for updating video editor profile information
+ * Handles both users table fields and freelancer_profiles table fields
  * All fields are optional - only provided fields will be updated
  */
 export class VideoEditorUpdateDto {
-  // Professional Info
+  // User Table Fields (from users table)
+  @IsOptional()
+  @IsString()
+  first_name?: string;
+
+  @IsOptional()
+  @IsString()
+  last_name?: string;
+
+  @IsOptional()
+  @IsString()
+  username?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone_number?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  phone_verified?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  email_verified?: boolean;
+
+  @IsOptional()
+  @IsUrl()
+  profile_picture?: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
+  timezone?: string;
+
+  @IsOptional()
+  @IsString()
+  address_line_first?: string;
+
+  @IsOptional()
+  @IsString()
+  address_line_second?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsString()
+  pincode?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  email_notifications?: boolean;
+
+  // Freelancer Profile Fields (from freelancer_profiles table)
   @IsOptional()
   @IsString()
   profile_title?: string;
@@ -42,6 +114,16 @@ export class VideoEditorUpdateDto {
     return value;
   })
   skills?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return JSON.parse(value);
+    }
+    return value;
+  })
+  software_skills?: string[];
 
   @IsOptional()
   @IsArray()
