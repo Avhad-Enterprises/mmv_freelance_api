@@ -1,6 +1,7 @@
 // Videographer Controller - Handles videographer-specific HTTP requests
 import { Request, Response, NextFunction } from 'express';
 import VideographerService from './videographer.service';
+import UserService from '../user/user.service';
 import { VideographerUpdateDto } from './videographer.update.dto';
 import { RequestWithUser } from '../../interfaces/auth.interface';
 
@@ -10,6 +11,7 @@ import { RequestWithUser } from '../../interfaces/auth.interface';
  */
 export class VideographerController {
   private videographerService = new VideographerService();
+  private userService = new UserService();
 
   /**
    * Get current videographer's profile
@@ -122,7 +124,7 @@ export class VideographerController {
   };
 
   /**
-   * Update videographer profile
+   * Update videographer profile (unified - handles both user and profile fields)
    * PATCH /api/v1/videographers/profile
    */
   public updateProfile = async (
@@ -132,13 +134,72 @@ export class VideographerController {
   ): Promise<void> => {
     try {
       const updateData: VideographerUpdateDto = req.body;
-      
-      // Update freelancer profile fields only (freelancer_profiles table)
-      await this.videographerService.updateFreelancerProfile(req.user.user_id, updateData);
-      
+
+      // Separate user fields from profile fields
+      const userFields = {
+        first_name: updateData.first_name,
+        last_name: updateData.last_name,
+        username: updateData.username,
+        email: updateData.email,
+        phone_number: updateData.phone_number,
+        phone_verified: updateData.phone_verified,
+        email_verified: updateData.email_verified,
+        profile_picture: updateData.profile_picture,
+        bio: updateData.bio,
+        timezone: updateData.timezone,
+        address_line_first: updateData.address_line_first,
+        address_line_second: updateData.address_line_second,
+        city: updateData.city,
+        state: updateData.state,
+        country: updateData.country,
+        pincode: updateData.pincode,
+        email_notifications: updateData.email_notifications
+      };
+
+      const profileFields = {
+        profile_title: updateData.profile_title,
+        role: updateData.role,
+        short_description: updateData.short_description,
+        experience_level: updateData.experience_level,
+        skills: updateData.skills,
+        software_skills: updateData.software_skills,
+        superpowers: updateData.superpowers,
+        skill_tags: updateData.skill_tags,
+        base_skills: updateData.base_skills,
+        languages: updateData.languages,
+        portfolio_links: updateData.portfolio_links,
+        certification: updateData.certification,
+        education: updateData.education,
+        previous_works: updateData.previous_works,
+        services: updateData.services,
+        rate_amount: updateData.rate_amount,
+        currency: updateData.currency,
+        availability: updateData.availability,
+        work_type: updateData.work_type,
+        hours_per_week: updateData.hours_per_week,
+        id_type: updateData.id_type,
+        id_document_url: updateData.id_document_url,
+        kyc_verified: updateData.kyc_verified,
+        aadhaar_verification: updateData.aadhaar_verification,
+        payment_method: updateData.payment_method,
+        bank_account_info: updateData.bank_account_info
+      };
+
+      // Update user table fields if any are provided
+      const hasUserFields = Object.values(userFields).some(value => value !== undefined);
+      if (hasUserFields) {
+        await this.userService.updateBasicInfo(req.user.user_id, userFields);
+      }
+
+      // Update freelancer profile fields if any are provided
+      const hasProfileFields = Object.values(profileFields).some(value => value !== undefined);
+      if (hasProfileFields) {
+        await this.videographerService.updateFreelancerProfile(req.user.user_id, profileFields);
+      }
+
       // Get updated profile
       const updatedProfile = await this.videographerService.getVideographerProfile(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         message: 'Profile updated successfully',

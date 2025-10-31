@@ -1,4 +1,4 @@
-// Client Update DTO - For updating client profiles
+// Unified Client Profile Update DTO - For updating both user and client profile fields
 import {
   IsString,
   IsOptional,
@@ -14,10 +14,81 @@ import {
 import { Transform } from 'class-transformer';
 
 /**
- * DTO for updating client profile information (client_profiles table fields only)
+ * Unified DTO for updating client profile information
+ * Handles both users table fields and client_profiles table fields
  * All fields are optional - only provided fields will be updated
  */
 export class ClientProfileUpdateDto {
+  // User Table Fields (from users table)
+  @IsOptional()
+  @IsString()
+  first_name?: string;
+
+  @IsOptional()
+  @IsString()
+  last_name?: string;
+
+  @IsOptional()
+  @IsString()
+  username?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone_number?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  phone_verified?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  email_verified?: boolean;
+
+  @IsOptional()
+  @IsUrl()
+  profile_picture?: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
+  timezone?: string;
+
+  @IsOptional()
+  @IsString()
+  address_line_first?: string;
+
+  @IsOptional()
+  @IsString()
+  address_line_second?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsString()
+  pincode?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  email_notifications?: boolean;
+
+  // Client Profile Fields (from client_profiles table)
   // Company Info
   @IsOptional()
   @IsString()
@@ -142,13 +213,8 @@ export class ClientProfileUpdateDto {
   project_frequency?: string;
 
   @IsOptional()
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      return JSON.parse(value);
-    }
-    return value;
-  })
-  hiring_preferences?: object;
+  @IsEnum(['individuals', 'agencies', 'both'])
+  hiring_preferences?: string;
 
   @IsOptional()
   @IsString()

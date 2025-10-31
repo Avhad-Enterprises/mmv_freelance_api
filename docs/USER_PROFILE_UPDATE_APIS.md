@@ -1,15 +1,21 @@
 # User Profile Update APIs Documentation
 
-This document provides comprehensive information about all user profile update endpoints in the MMV Freelance API. The API follows a separation of concerns architecture where different endpoints update different database tables.
+This document provides comprehensive information about all user profile update endpoints in the MMV Freelance API. The API now provides unified endpoints where role-specific APIs can update both user basic information and role-specific profile data in a single request.
 
 ## Overview
 
-The API provides 4 distinct update endpoints, each responsible for updating specific aspects of user profiles:
+The API provides 3 unified update endpoints:
 
-1. **User Basic Info** (`/users/me`) - Updates core user account information
-2. **Client Profile** (`/clients/profile`) - Updates client-specific business information
-3. **Videographer Profile** (`/videographers/profile`) - Updates videographer professional information
-4. **Video Editor Profile** (`/videoeditors/profile`) - Updates video editor professional information
+1. **Client Profile** (`/clients/profile`) - **UNIFIED**: Updates both user info and client-specific business information
+2. **Videographer Profile** (`/videographers/profile`) - **UNIFIED**: Updates both user info and videographer professional information
+3. **Video Editor Profile** (`/videoeditors/profile`) - **UNIFIED**: Updates both user info and video editor professional information
+
+## Key Changes (v2.0)
+
+- **Unified Updates**: Role-specific endpoints now accept both user table fields and profile table fields
+- **Single API Call**: Frontend can now update all profile information with one request per role
+- **Backward Compatibility**: All existing fields remain supported
+- **Optional Fields**: All fields remain optional - only provided fields are updated
 
 ## Authentication
 
@@ -20,123 +26,55 @@ Authorization: Bearer <jwt_token>
 
 ---
 
-## 1. Update User Basic Information
+## 1. Update Client Profile
 
-**Endpoint:** `PATCH /api/v1/users/me`
+**Endpoint:** `PATCH /api/v1/clients/profile`
 
-**Required Roles:** Any authenticated user
+**Required Roles:** CLIENT
 
-**Description:** Updates basic user account information stored in the `users` table. This includes identity, contact details, and general profile information.
+**Description:** **UNIFIED ENDPOINT** - Updates both user basic information (users table) and client-specific profile information (client_profiles table) in a single request. This eliminates the need for separate calls to `/users/me` and `/clients/profile`.
 
-### Request Body (All fields optional)
+### Request Body (All fields optional - mix user and profile fields as needed)
 ```json
 {
-  // Identity
+  // User Table Fields (same as /users/me endpoint)
   "first_name": "string",
   "last_name": "string",
   "username": "string",
   "email": "string",
-
-  // Contact
   "phone_number": "string",
   "phone_verified": "boolean",
   "email_verified": "boolean",
-
-  // Profile
   "profile_picture": "string (URL)",
   "bio": "string",
   "timezone": "string",
-
-  // Address
   "address_line_first": "string",
   "address_line_second": "string",
   "city": "string",
   "state": "string",
   "country": "string",
   "pincode": "string",
+  "email_notifications": "boolean",
 
-  // Notifications
-  "email_notifications": "boolean"
-}
-```
-
-### Response (200 OK)
-```json
-{
-  "success": true,
-  "message": "Profile updated successfully",
-  "data": {
-    "user": {
-      "user_id": 1,
-      "first_name": "John",
-      "last_name": "Doe",
-      "username": "johndoe",
-      "email": "john@example.com",
-      "phone_number": "+1234567890",
-      "phone_verified": true,
-      "email_verified": true,
-      "profile_picture": "https://example.com/avatar.jpg",
-      "bio": "Professional user",
-      "timezone": "UTC",
-      "address_line_first": "123 Main St",
-      "address_line_second": "Apt 4B",
-      "city": "New York",
-      "state": "NY",
-      "country": "USA",
-      "pincode": "10001",
-      "email_notifications": true,
-      "updated_at": "2025-10-20T10:00:00Z"
-    }
-  },
-  "meta": {
-    "timestamp": "2025-10-20T10:00:00Z",
-    "version": "v1"
-  }
-}
-```
-
----
-
-## 2. Update Client Profile
-
-**Endpoint:** `PATCH /api/v1/clients/profile`
-
-**Required Roles:** CLIENT
-
-**Description:** Updates client-specific profile information stored in the `client_profiles` table. This includes company details, business requirements, and hiring preferences.
-
-### Request Body (All fields optional)
-```json
-{
-  // Company Info
+  // Client Profile Fields (client_profiles table)
   "company_name": "string",
   "industry": "film_production | ad_agency | marketing | events | real_estate | education | e_commerce | technology | entertainment | corporate | other",
   "website": "string (URL)",
   "social_links": "object | string",
   "company_size": "1-10 | 11-50 | 51-200 | 201-500 | 500+",
-
-  // Requirements
   "required_services": "string[]",
   "required_skills": "string[]",
   "required_editor_proficiencies": "string[]",
   "required_videographer_proficiencies": "string[]",
-
-  // Budget
   "budget_min": "number (minimum: 0)",
   "budget_max": "number (minimum: 0)",
-
-  // Business Details
   "tax_id": "string",
   "business_documents": "string[]",
-
-  // Preferences
   "work_arrangement": "remote | on_site | hybrid",
   "project_frequency": "one_time | recurring | long_term | ongoing",
   "hiring_preferences": "object",
   "expected_start_date": "string",
   "project_duration": "less_than_1_month | 1_3_months | 3_6_months | 6_months_plus",
-
-  // Payment
   "payment_method": "object"
 }
 ```
@@ -145,7 +83,7 @@ Authorization: Bearer <jwt_token>
 ```json
 {
   "success": true,
-  "message": "Profile updated successfully",
+  "message": "Client profile updated successfully",
   "data": {
     "user": {
       "user_id": 2,
@@ -153,6 +91,25 @@ Authorization: Bearer <jwt_token>
       "last_name": "Smith",
       "username": "janesmith",
       "email": "jane@example.com",
+      "phone_number": "+1234567890",
+      "phone_verified": true,
+      "email_verified": true,
+      "profile_picture": "https://example.com/avatar.jpg",
+      "bio": "Professional client",
+      "timezone": "America/New_York",
+      "address_line_first": "123 Main St",
+      "address_line_second": "Suite 100",
+      "city": "New York",
+      "state": "NY",
+      "country": "USA",
+      "pincode": "10001",
+      "email_notifications": true,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-10-20T10:00:00Z"
+    },
+    "profile": {
+      "client_id": 1,
+      "user_id": 2,
       "company_name": "ABC Productions LLC",
       "industry": "film_production",
       "website": "https://abcproductions.com",
@@ -163,12 +120,30 @@ Authorization: Bearer <jwt_token>
       "company_size": "11-50",
       "required_services": ["video_editing", "videography"],
       "required_skills": ["cinematography", "color_grading"],
+      "required_editor_proficiencies": ["Adobe Premiere", "After Effects"],
+      "required_videographer_proficiencies": ["Canon EOS R5", "Professional Lighting"],
       "budget_min": 5000,
       "budget_max": 25000,
+      "business_documents": ["https://example.com/doc1.pdf"],
       "work_arrangement": "remote",
       "project_frequency": "recurring",
+      "hiring_preferences": {
+        "preferred_communication": "email",
+        "response_time_expectation": "24_hours"
+      },
+      "expected_start_date": "2025-11-01",
+      "project_duration": "3_6_months",
+      "payment_method": {
+        "type": "bank_transfer",
+        "currency": "USD"
+      },
+      "tax_id": "TAX123456",
+      "projects_created": [],
+      "total_spent": 0,
+      "created_at": "2025-01-01T00:00:00Z",
       "updated_at": "2025-10-20T10:00:00Z"
-    }
+    },
+    "userType": "CLIENT"
   },
   "meta": {
     "timestamp": "2025-10-20T10:00:00Z",
@@ -179,51 +154,61 @@ Authorization: Bearer <jwt_token>
 
 ---
 
-## 3. Update Videographer Profile
+## 2. Update Videographer Profile
 
 **Endpoint:** `PATCH /api/v1/videographers/profile`
 
 **Required Roles:** VIDEOGRAPHER
 
-**Description:** Updates videographer-specific profile information stored in the `freelancer_profiles` table. This includes professional details, skills, pricing, and portfolio information.
+**Description:** **UNIFIED ENDPOINT** - Updates both user basic information (users table) and videographer-specific profile information (freelancer_profiles table) in a single request. This eliminates the need for separate calls to `/users/me` and `/videographers/profile`.
 
-### Request Body (All fields optional)
+### Request Body (All fields optional - mix user and profile fields as needed)
 ```json
 {
-  // Professional Info
+  // User Table Fields (same as /users/me endpoint)
+  "first_name": "string",
+  "last_name": "string",
+  "username": "string",
+  "email": "string",
+  "phone_number": "string",
+  "phone_verified": "boolean",
+  "email_verified": "boolean",
+  "profile_picture": "string (URL)",
+  "bio": "string",
+  "timezone": "string",
+  "address_line_first": "string",
+  "address_line_second": "string",
+  "city": "string",
+  "state": "string",
+  "country": "string",
+  "pincode": "string",
+  "email_notifications": "boolean",
+
+  // Videographer Profile Fields (freelancer_profiles table)
   "profile_title": "string",
   "role": "string",
   "short_description": "string",
   "experience_level": "entry | intermediate | expert | master",
-
-  // Skills & Expertise
   "skills": "string[]",
+  "software_skills": "string[]",
   "superpowers": "string[]",
   "skill_tags": "string[]",
   "base_skills": "string[]",
   "languages": "string[]",
-
-  // Portfolio & Credentials
   "portfolio_links": "string[]",
   "certification": "object",
   "education": "object",
   "previous_works": "object",
   "services": "object",
-
-  // Pricing & Availability
   "rate_amount": "number (minimum: 0)",
   "currency": "string",
   "availability": "string",
   "work_type": "string",
   "hours_per_week": "string",
-
-  // Verification
   "id_type": "string",
   "id_document_url": "string",
   "kyc_verified": "boolean",
   "aadhaar_verification": "boolean",
-
-  // Payment
   "payment_method": "object",
   "bank_account_info": "object"
 }
@@ -241,20 +226,50 @@ Authorization: Bearer <jwt_token>
       "last_name": "Johnson",
       "username": "mikejohnson",
       "email": "mike@example.com",
-      "company_name": "MJ Videography",
+      "phone_number": "+1234567890",
+      "phone_verified": true,
+      "email_verified": true,
+      "profile_picture": "https://example.com/avatar.jpg",
+      "bio": "Professional videographer",
+      "timezone": "America/Los_Angeles",
+      "address_line_first": "456 Hollywood Blvd",
+      "address_line_second": null,
+      "city": "Los Angeles",
+      "state": "CA",
+      "country": "USA",
+      "pincode": "90210",
+      "email_notifications": true,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-10-20T10:00:00Z"
+    },
+    "profile": {
+      "freelancer_id": 2,
+      "user_id": 3,
       "profile_title": "Senior Wedding Videographer",
       "role": "Lead Videographer",
       "short_description": "Award-winning videographer specializing in weddings",
       "experience_level": "expert",
       "skills": ["cinematography", "lighting", "post-production"],
       "superpowers": ["creative storytelling", "technical expertise"],
+      "skill_tags": ["wedding", "corporate", "event"],
+      "base_skills": ["Canon EOS R5", "DJI Ronin"],
+      "languages": ["English", "Spanish"],
       "portfolio_links": ["https://vimeo.com/mikejohnson"],
       "rate_amount": 175.00,
       "currency": "USD",
       "availability": "part-time",
-      "languages": ["English", "Spanish"],
-      "updated_at": "2025-10-20T10:00:00Z"
-    }
+      "work_type": "remote",
+      "hours_per_week": "20_30",
+      "hire_count": 25,
+      "total_earnings": 45000.00,
+      "time_spent": 1800,
+      "projects_applied": [1, 2, 3],
+      "projects_completed": [1, 2],
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-10-20T10:00:00Z",
+      "videographer": null
+    },
+    "userType": "VIDEOGRAPHER"
   },
   "meta": {
     "timestamp": "2025-10-20T10:00:00Z",
@@ -265,51 +280,61 @@ Authorization: Bearer <jwt_token>
 
 ---
 
-## 4. Update Video Editor Profile
+## 3. Update Video Editor Profile
 
 **Endpoint:** `PATCH /api/v1/videoeditors/profile`
 
 **Required Roles:** VIDEO_EDITOR
 
-**Description:** Updates video editor-specific profile information stored in the `freelancer_profiles` table. This includes professional details, editing skills, pricing, and portfolio information.
+**Description:** **UNIFIED ENDPOINT** - Updates both user basic information (users table) and video editor-specific profile information (freelancer_profiles table) in a single request. This eliminates the need for separate calls to `/users/me` and `/videoeditors/profile`.
 
-### Request Body (All fields optional)
+### Request Body (All fields optional - mix user and profile fields as needed)
 ```json
 {
-  // Professional Info
+  // User Table Fields (same as /users/me endpoint)
+  "first_name": "string",
+  "last_name": "string",
+  "username": "string",
+  "email": "string",
+  "phone_number": "string",
+  "phone_verified": "boolean",
+  "email_verified": "boolean",
+  "profile_picture": "string (URL)",
+  "bio": "string",
+  "timezone": "string",
+  "address_line_first": "string",
+  "address_line_second": "string",
+  "city": "string",
+  "state": "string",
+  "country": "string",
+  "pincode": "string",
+  "email_notifications": "boolean",
+
+  // Video Editor Profile Fields (freelancer_profiles table)
   "profile_title": "string",
   "role": "string",
   "short_description": "string",
   "experience_level": "entry | intermediate | expert | master",
-
-  // Skills & Expertise
   "skills": "string[]",
+  "software_skills": "string[]",
   "superpowers": "string[]",
   "skill_tags": "string[]",
   "base_skills": "string[]",
   "languages": "string[]",
-
-  // Portfolio & Credentials
   "portfolio_links": "string[]",
   "certification": "object",
   "education": "object",
   "previous_works": "object",
   "services": "object",
-
-  // Pricing & Availability
   "rate_amount": "number (minimum: 0)",
   "currency": "string",
   "availability": "string",
   "work_type": "string",
   "hours_per_week": "string",
-
-  // Verification
   "id_type": "string",
   "id_document_url": "string",
   "kyc_verified": "boolean",
   "aadhaar_verification": "boolean",
-
-  // Payment
   "payment_method": "object",
   "bank_account_info": "object"
 }
@@ -327,20 +352,50 @@ Authorization: Bearer <jwt_token>
       "last_name": "Davis",
       "username": "sarahdavis",
       "email": "sarah@example.com",
-      "company_name": "SD Video Editing",
+      "phone_number": "+1234567890",
+      "phone_verified": true,
+      "email_verified": true,
+      "profile_picture": "https://example.com/avatar.jpg",
+      "bio": "Professional video editor",
+      "timezone": "America/New_York",
+      "address_line_first": "789 Editing St",
+      "address_line_second": "Floor 5",
+      "city": "New York",
+      "state": "NY",
+      "country": "USA",
+      "pincode": "10001",
+      "email_notifications": true,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-10-20T10:00:00Z"
+    },
+    "profile": {
+      "freelancer_id": 3,
+      "user_id": 4,
       "profile_title": "Senior Video Editor",
       "role": "Lead Editor",
       "short_description": "Award-winning video editor specializing in corporate content",
       "experience_level": "expert",
       "skills": ["video_editing", "color_grading", "motion_graphics"],
       "superpowers": ["creative editing", "technical expertise"],
+      "skill_tags": ["corporate", "commercial", "documentary"],
+      "base_skills": ["Adobe Premiere", "After Effects"],
+      "languages": ["English", "French"],
       "portfolio_links": ["https://behance.net/sarah-davis"],
       "rate_amount": 95.00,
       "currency": "USD",
       "availability": "full-time",
-      "languages": ["English", "French"],
-      "updated_at": "2025-10-20T10:00:00Z"
-    }
+      "work_type": "remote",
+      "hours_per_week": "30_40",
+      "hire_count": 35,
+      "total_earnings": 55000.00,
+      "time_spent": 2400,
+      "projects_applied": [1, 2, 3, 4],
+      "projects_completed": [1, 2, 3],
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-10-20T10:00:00Z",
+      "videoeditor": null
+    },
+    "userType": "VIDEO_EDITOR"
   },
   "meta": {
     "timestamp": "2025-10-20T10:00:00Z",
@@ -426,9 +481,9 @@ All endpoints return standardized error responses:
 
 ## Notes
 
-1. **Separation of Concerns**: Each endpoint updates only its designated database table to maintain clean data architecture.
+1. **Unified Updates (v2.0)**: Role-specific endpoints now handle both user and profile table updates in a single request, improving frontend UX by reducing API calls.
 
-2. **Partial Updates**: Since all fields are optional, you can update any subset of fields in a single request.
+2. **Flexible Updates**: Since all fields are optional, you can update any combination of user and profile fields in a single request.
 
 3. **Data Types**: Array and object fields can be sent as JSON objects or JSON-parseable strings.
 
