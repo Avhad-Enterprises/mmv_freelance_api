@@ -2,7 +2,10 @@
 
 /**
  * Project Task Tests Runner
- * Runs all project task API tests
+ * Runs all project task API tests (CRUD operations and analytics)
+ *
+ * Note: Submission tests have been moved to tests/submit-project/
+ * Run submission tests separately with: cd tests/submit-project && node run-submission-tests.js
  *
  * Usage:
  *   node tests/projectstask/run-projectstask-tests.js           # Run all tests
@@ -15,8 +18,6 @@
  *   node tests/projectstask/run-projectstask-tests.js count-active # Run only count active test
  *   node tests/projectstask/run-projectstask-tests.js public-listing # Run only public listing test
  *   node tests/projectstask/run-projectstask-tests.js get-by-client-id # Run only get by client id test
- *   node tests/projectstask/run-projectstask-tests.js submit    # Run only submit project test
- *   node tests/projectstask/run-projectstask-tests.js approve   # Run only approve submission test
  *   node tests/projectstask/run-projectstask-tests.js active-clients # Run only active clients analytics test
  *   node tests/projectstask/run-projectstask-tests.js active-editors # Run only active editors analytics test
  */
@@ -36,11 +37,12 @@ const SCRIPTS = {
   'count-active': 'test-count-active-project-tasks.js',
   'public-listing': 'test-get-public-project-listings.js',
   'get-by-client-id': 'test-get-projects-by-client-id.js',
-  'submit': 'test-submit-project.js',
-  'approve': 'test-approve-submission.js',
   'active-clients': 'test-active-clients-analytics.js',
   'active-editors': 'test-active-editors-analytics.js'
 };
+
+// Note: Submission tests have been moved to tests/submit-project/
+// Run them separately with: cd tests/submit-project && node run-submission-tests.js
 
 /**
  * Run a test module and collect results
@@ -99,8 +101,6 @@ async function runAllTests() {
     const countActiveTests = require('./test-count-active-project-tasks');
     const publicListingTests = require('./test-get-public-project-listings');
     const getByClientIdTests = require('./test-get-projects-by-client-id');
-    const submitTests = require('./test-submit-project');
-    const approveTests = require('./test-approve-submission');
     const activeClientsTests = require('./test-active-clients-analytics');
     const activeEditorsTests = require('./test-active-editors-analytics');
 
@@ -114,8 +114,6 @@ async function runAllTests() {
     await runTestModule('Count Active Project Tasks Tests', countActiveTests);
     await runTestModule('Get Public Project Listings Tests', publicListingTests);
     await runTestModule('Get Projects by Client ID Tests', getByClientIdTests);
-    await runTestModule('Submit Project Tests', submitTests);
-    await runTestModule('Approve Submission Tests', approveTests);
     await runTestModule('Active Clients Analytics Tests', activeClientsTests);
     await runTestModule('Active Editors Analytics Tests', activeEditorsTests);
 

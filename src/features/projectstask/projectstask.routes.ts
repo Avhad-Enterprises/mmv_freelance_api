@@ -4,12 +4,13 @@ import validationMiddleware from '../../middlewares/validation.middleware';
 import projectstaskcontroller from './projectstask.controller';
 import { ProjectsTaskDto } from './projectstask.dto';
 import { requireRole } from '../../middlewares/role.middleware';
-import { SubmitProjectDto } from './submit-project.dto';
 
 /**
  * Projects Task Routes
  * Handles all project task-related API endpoints with role-based access control
  * Includes public listings, CRUD operations, analytics, and status management
+ * 
+ * Note: Project submission endpoints have been moved to submit-project feature
  */
 class projectstaskRoute implements Route {
 
@@ -98,6 +99,7 @@ class projectstaskRoute implements Route {
       // ==========================================
       // PROJECT TASK CRUD OPERATIONS
       // ==========================================
+      // Note: Submission endpoints have been moved to submit-project feature
 
       /**
        * Create a new project task
@@ -118,9 +120,7 @@ class projectstaskRoute implements Route {
       this.router.get(`${this.path}/:id`,
          requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // Multiple roles can view
          this.projectstaskcontroller.getbytaskid
-      );
-
-      /**
+      );      /**
        * Update an existing project task
        * PUT /api/v1/projects-tasks/:id
        * Requires: CLIENT, ADMIN, or SUPER_ADMIN role
@@ -154,30 +154,7 @@ class projectstaskRoute implements Route {
          this.projectstaskcontroller.updateProjectTaskStatus
       );
 
-      // ==========================================
-      // PROJECT SUBMISSION & APPROVAL
-      // ==========================================
-
-      /**
-       * Submit a project
-       * POST /api/v1/projects-tasks/:id/submit
-       * Requires: VIDEOGRAPHER, VIDEO_EDITOR role (freelancers submit projects)
-       */
-      this.router.post(`${this.path}/:id/submit`,
-         requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR'),
-         validationMiddleware(SubmitProjectDto, 'body', false, []),
-         this.projectstaskcontroller.submitProject
-      );
-
-      /**
-       * Approve or reject a project submission
-       * PATCH /api/v1/projects-tasks/submissions/:submissionId/approve
-       * Requires: CLIENT, ADMIN, or SUPER_ADMIN role (clients approve their projects)
-       */
-      this.router.patch(`${this.path}/submissions/:submissionId/approve`,
-         requireRole('CLIENT', 'ADMIN', 'SUPER_ADMIN'),
-         this.projectstaskcontroller.approveProjectSubmission
-      );
+      // Note: Project submission endpoints moved to submit-project feature
    }
 }
 
