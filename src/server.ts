@@ -13,6 +13,7 @@ import { VideoEditorRoutes } from './features/videoeditors/videoeditor.routes';
 // RBAC routes
 import roleRoute from './features/role/role.routes';
 import permissionRoute from './features/permission/permission.routes';
+import SubmissionRoute from './features/submit-project/submission.routes';
 import projectstaskRoute from './features/projectstask/projectstask.routes';
 import AppliedProjectsRoute from './features/applied_projects/applied_projects.routes';
 import favoritesRoute from './features/favorites/favorites.routes';
@@ -65,6 +66,7 @@ const app = new App([
     // RBAC routes
     new roleRoute(),
     new permissionRoute(),
+    new SubmissionRoute(),
     new projectstaskRoute(),
     new AppliedProjectsRoute(),
     new favoritesRoute(),

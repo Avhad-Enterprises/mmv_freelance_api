@@ -4,9 +4,13 @@ import { IProjectTask } from './projectstask.interface';
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 import { PROJECTS_TASK } from "../../../database/projectstask.schema";
-import { SubmitProjectDto } from "./submit-project.dto";
-import { SUBMITTED_PROJECTS } from "../../../database/submitted_projects.schema";
 
+/**
+ * Projects Task Service
+ * Business logic for project task operations
+ * 
+ * Note: Submission service methods have been moved to submit-project feature
+ */
 class ProjectstaskService {
   public async Insert(data: ProjectsTaskDto): Promise<IProjectTask> {
     if (isEmpty(data)) {
@@ -248,85 +252,7 @@ class ProjectstaskService {
     }
   }
 
-  public async submit(data: SubmitProjectDto): Promise<any> {
-
-    if (!data.projects_task_id || !data.user_id) {
-      throw new HttpException(400, "Project Task ID and User ID are required");
-    }
-
-    const existing = await DB(SUBMITTED_PROJECTS)
-      .where({
-        projects_task_id: data.projects_task_id,
-        user_id: data.user_id,
-        is_deleted: false
-      })
-      .first();
-
-    if (existing) {
-      throw new HttpException(409, "Already Submitted");
-    }
-    const submitData = {
-      ...data,
-      status: data.status ?? 0, // 0 = pending
-      is_active: true,
-      is_deleted: false,
-      created_at: new Date(),
-      updated_at: new Date()
-    };
-
-    const submitted_project = await DB(T.SUBMITTED_PROJECTS)
-      .insert(submitData)
-      .returning("*");
-
-    return submitted_project[0];
-  }
-
-  public async approve(submission_id: number, status: number, data: any = {}): Promise<any> {
-    if (!submission_id) {
-      throw new HttpException(400, "Submission ID is required");
-    }
-
-    // Check if submission exists
-    const existingSubmission = await DB(T.SUBMITTED_PROJECTS)
-      .where({ submission_id, is_deleted: false })
-      .first();
-
-    if (!existingSubmission) {
-      throw new HttpException(404, "Submission not found");
-    }
-
-    // Update the submission status
-    const [updatedSubmission] = await DB(T.SUBMITTED_PROJECTS)
-      .where({ submission_id })
-      .update({
-        status,
-        updated_by: data.updated_by || null,
-        updated_at: DB.fn.now()
-      })
-      .returning('*');
-
-    // If approving the submission (status = 1), assign the freelancer to the project
-    if (status === 1) {
-      // Get the freelancer profile for this user
-      const freelancerProfile = await DB(T.FREELANCER_PROFILES)
-        .where({ user_id: existingSubmission.user_id })
-        .first();
-
-      if (freelancerProfile) {
-        // Update project status to assigned (1) and set freelancer_id
-        await DB(T.PROJECTS_TASK)
-          .where({ projects_task_id: existingSubmission.projects_task_id })
-          .update({
-            status: 1, // assigned
-            freelancer_id: freelancerProfile.freelancer_id,
-            assigned_at: DB.fn.now(),
-            updated_at: DB.fn.now()
-          });
-      }
-    }
-
-    return updatedSubmission;
-  }
+  // Note: Submission service methods moved to submit-project feature
 
   public async getTasksWithClientInfo(): Promise<any[]> {
     const result = await DB(T.PROJECTS_TASK)

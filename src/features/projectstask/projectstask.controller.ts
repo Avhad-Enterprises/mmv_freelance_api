@@ -7,9 +7,14 @@ import DB, { T } from '../../../database/index';
 import HttpException from '../../exceptions/HttpException';
 import { isEmpty } from 'class-validator';
 import { PROJECTS_TASK } from '../../../database/projectstask.schema';
-import { SubmitProjectDto } from './submit-project.dto';
 import { RequestWithUser } from '../../interfaces/auth.interface';
 
+/**
+ * Projects Task Controller
+ * Handles HTTP request/response for project task-related operations
+ * 
+ * Note: Project submission controllers have been moved to submit-project feature
+ */
 class projectstaskcontroller {
 
   public ProjectstaskService = new ProjectstaskService();
@@ -186,71 +191,6 @@ class projectstaskcontroller {
   };
 
   /**
-   * Submit a project
-   * POST /api/v1/projects-tasks/:id/submit
-   */
-  public submitProject = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const raw = req.params.id;
-      const projects_task_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
-
-      if (isNaN(projects_task_id)) {
-        res.status(400).json({ error: 'projects_task_id must be a number' });
-        return;
-      }
-
-      const submitData: SubmitProjectDto = {
-        ...req.body,
-        projects_task_id
-      };
-
-      const submission = await this.ProjectstaskService.submit(submitData);
-      res.status(201).json({ 
-        data: submission, 
-        message: 'Project submitted successfully',
-        success: true 
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * Approve/reject a project submission
-   * PATCH /api/v1/projects-tasks/submissions/:submissionId/approve
-   */
-  public approveProjectSubmission = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const raw = req.params.submissionId;
-      const submission_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
-      const { status } = req.body;
-
-      if (isNaN(submission_id)) {
-        res.status(400).json({ error: 'submission_id must be a number' });
-        return;
-      }
-
-      if (status === undefined || (status !== 0 && status !== 1 && status !== 2)) {
-        res.status(400).json({ 
-          error: 'status is required and must be 0 (pending), 1 (approved), or 2 (rejected)' 
-        });
-        return;
-      }
-
-      const approved = await this.ProjectstaskService.approve(submission_id, status, { 
-        updated_by: req.user?.user_id 
-      });
-      res.status(200).json({ 
-        data: approved, 
-        message: 'Submission status updated successfully',
-        success: true 
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
    * Get active clients count
    * GET /api/v1/projects-tasks/analytics/active-clients
    */
@@ -283,6 +223,8 @@ class projectstaskcontroller {
       next(error);
     }
   };
+
+  // Note: Submission controller methods moved to submit-project feature
 }
 
 export default projectstaskcontroller;
