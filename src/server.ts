@@ -49,6 +49,7 @@ import AdminInvitesRoutes from './features/admin-invites/admin-invites.routes';
 
 import validateEnv from './utils/validation/validateEnv';
 import { FreelancerRoutes } from './features/freelancers/freelancer.routes';
+import { CreditsRoutes } from './features/credits/credits.routes';
 import ProjectBidRoute from './features/project-bid/project-bid.routes';
 // Validate .env variables
 validateEnv();
@@ -62,6 +63,7 @@ const app = new App([
     new VideographerRoutes(),
     new VideoEditorRoutes(),
     new FreelancerRoutes(),
+    new CreditsRoutes(),
 
     // RBAC routes
     new roleRoute(),

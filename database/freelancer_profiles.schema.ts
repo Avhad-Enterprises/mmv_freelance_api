@@ -86,6 +86,11 @@ export const migrate = async (dropFirst = false) => {
         table.integer('total_earnings').defaultTo(0);
         table.integer('time_spent').defaultTo(0);
 
+        // Credits System
+        table.integer('credits_balance').defaultTo(0);
+        table.integer('total_credits_purchased').defaultTo(0);
+        table.integer('credits_used').defaultTo(0);
+
         // Projects
         table.jsonb('projects_applied').defaultTo('[]');
         table.jsonb('projects_completed').defaultTo('[]');
