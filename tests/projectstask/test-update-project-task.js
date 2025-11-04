@@ -49,7 +49,7 @@ async function testUpdateProjectTask() {
   const loginSuccess = await loginAsAdmin();
   if (!loginSuccess) {
     console.log('❌ Failed to login as admin');
-    failedTests += 3;
+    failedTests += 5; // Updated for 5 tests now
     return;
   }
 
@@ -131,6 +131,74 @@ async function testUpdateProjectTask() {
   } catch (error) {
     printTestResult(
       'Valid project task update',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test 1.1: Update bidding_enabled to true
+  try {
+    const updateData = {
+      bidding_enabled: true
+    };
+
+    const response = await makeRequest(
+      'PUT',
+      `${CONFIG.apiVersion}/projects-tasks/${createdProjectId}`,
+      updateData,
+      { Authorization: `Bearer ${TOKENS.admin}` }
+    );
+
+    const passed = response.statusCode === 200 && response.body?.data?.bidding_enabled === true;
+    printTestResult(
+      'Update bidding_enabled to true',
+      passed,
+      passed ? 'Bidding enabled successfully' : `Expected 200 with bidding_enabled=true, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Update bidding_enabled to true',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test 1.2: Update bidding_enabled to false
+  try {
+    const updateData = {
+      bidding_enabled: false
+    };
+
+    const response = await makeRequest(
+      'PUT',
+      `${CONFIG.apiVersion}/projects-tasks/${createdProjectId}`,
+      updateData,
+      { Authorization: `Bearer ${TOKENS.admin}` }
+    );
+
+    const passed = response.statusCode === 200 && response.body?.data?.bidding_enabled === false;
+    printTestResult(
+      'Update bidding_enabled to false',
+      passed,
+      passed ? 'Bidding disabled successfully' : `Expected 200 with bidding_enabled=false, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Update bidding_enabled to false',
       false,
       `Request failed: ${error.message}`,
       null

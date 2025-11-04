@@ -43,6 +43,8 @@ export const migrate = async (dropFirst = false) => {
 
                 table.integer("status").notNullable().defaultTo(0); // 0: pending, 1: ongoing, 2: completed
                 table.text('description');
+                table.decimal('bid_amount', 12, 2).nullable();
+                table.text('bid_message').nullable();
                 // compulsory columns
                 table.boolean("is_active").defaultTo(true);
                 table.boolean("is_deleted").defaultTo(false);
@@ -75,7 +77,20 @@ export const migrate = async (dropFirst = false) => {
             `);
             console.log('Finished Creating Triggers');
         } else {
-            console.log('Applied Projects table already exists, skipping migration');
+            console.log('Applied Projects table already exists, checking for missing columns...');
+            
+            // Check and add bid_amount column if it doesn't exist
+            const hasBidAmount = await DB.schema.hasColumn(APPLIED_PROJECTS, 'bid_amount');
+            if (!hasBidAmount) {
+                console.log('Adding bid_amount and bid_message columns...');
+                await DB.schema.alterTable(APPLIED_PROJECTS, table => {
+                    table.decimal('bid_amount', 12, 2).nullable();
+                    table.text('bid_message').nullable();
+                });
+                console.log('Added bid_amount and bid_message columns');
+            } else {
+                console.log('bid_amount column already exists');
+            }
         }
     } catch (error) {
         console.error('Migration failed for applied_projects:', error);

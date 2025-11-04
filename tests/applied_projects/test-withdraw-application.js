@@ -13,8 +13,8 @@ async function testWithdrawApplication() {
   printSection('Testing DELETE /applications/withdraw/:application_id');
 
   try {
-    // First, let's apply to a project to get an application ID
-    console.log('\nFirst, applying to a project to get an application ID...');
+    // First, add credits to test user
+    console.log('\nAdding credits to test user...');
     const videographerEmail = 'test.videographer@example.com';
     const videographerPassword = 'TestPass123!';
 
@@ -26,14 +26,79 @@ async function testWithdrawApplication() {
     const videographerLoginData = processApiResponse(videographerLoginResponse);
     storeToken('VIDEOGRAPHER', videographerLoginData.data.token);
 
+    // Add credits to videographer
+    const addCreditsResponse = await makeRequest(
+      'POST',
+      `${BASE_URL}/credits/purchase`,
+      { credits_amount: 10 },
+      authHeader('VIDEOGRAPHER')
+    );
+
+    console.log('✅ Added credits to test user');
+
+    // First, create a test project for withdrawal testing
+    console.log('\nCreating test project for withdrawal testing...');
+    
+    // Login as admin to create project
+    const adminLoginResponse = await makeRequest(
+      'POST',
+      `${BASE_URL}/auth/login`,
+      { email: 'testadmin@example.com', password: 'TestAdmin123!' }
+    );
+    const adminLoginData = processApiResponse(adminLoginResponse);
+    storeToken('ADMIN', adminLoginData.data.token);
+
+    const testProject = {
+      client_id: 2,
+      project_title: "Test Project for Withdrawal",
+      project_category: "Video Editing",
+      deadline: "2024-12-31",
+      project_description: "Test project for withdrawal testing",
+      budget: 5000.00,
+      tags: JSON.stringify(["test", "withdrawal"]),
+      skills_required: ["Adobe Premiere"],
+      reference_links: ["https://example.com"],
+      additional_notes: "Test project",
+      projects_type: "Video Editing",
+      project_format: "MP4",
+      audio_voiceover: "English",
+      audio_description: "Test",
+      video_length: 300,
+      preferred_video_style: "Professional",
+      url: "test-withdrawal-" + Date.now(),
+      meta_title: "Test Withdrawal Project",
+      meta_description: "Test project for withdrawal",
+      is_active: 1,
+      bidding_enabled: false,
+      created_by: 1
+    };
+
+    const createProjectResponse = await makeRequest(
+      'POST',
+      `${BASE_URL}/projects-tasks`,
+      testProject,
+      authHeader('ADMIN')
+    );
+
+    let testProjectId = null;
+    if (createProjectResponse.statusCode === 201) {
+      testProjectId = createProjectResponse.body.data.projects_task_id;
+      console.log(`✅ Created test project with ID: ${testProjectId}`);
+    } else {
+      console.log('❌ Failed to create test project');
+      return;
+    }
+
+    // First, let's apply to a project to get an application ID
+    console.log('\nFirst, applying to a project to get an application ID...');
     console.log('✅ Videographer login successful');
 
-    // Apply to a project to get a fresh application ID for testing
+    // Apply to the test project
     const applyResponse = await makeRequest(
       'POST',
       `${BASE_URL}/applications/projects/apply`,
       {
-        projects_task_id: 3, // Use project ID 3 to avoid conflicts
+        projects_task_id: testProjectId,
         description: "Test application for withdrawal testing"
       },
       authHeader('VIDEOGRAPHER')

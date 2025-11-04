@@ -57,11 +57,20 @@ async function testGetProjectApplications() {
 
     if (getApplicationsResponse.statusCode === 200) {
       const applicationsData = processApiResponse(getApplicationsResponse);
-      printTestResult(true, 'Successfully retrieved project applications', {
-        projectId,
-        applicationsCount: applicationsData.data ? applicationsData.data.length : 0,
-        applications: applicationsData.data
-      });
+      const hasBidFields = applicationsData.data && applicationsData.data.length > 0 &&
+                          applicationsData.data[0].hasOwnProperty('bid_amount');
+
+      printTestResult(
+        'Get applications with bid fields',
+        true,
+        'Successfully retrieved project applications with bid fields',
+        {
+          projectId,
+          applicationsCount: applicationsData.data ? applicationsData.data.length : 0,
+          hasBidFields,
+          applications: applicationsData.data
+        }
+      );
     } else {
       printTestResult(false, 'Failed to get project applications', {
         statusCode: getApplicationsResponse.statusCode,
@@ -85,10 +94,15 @@ async function testGetProjectApplications() {
     } else if (nonExistentResponse.statusCode === 200) {
       // If it returns 200 with empty array, that's also acceptable
       const emptyData = processApiResponse(nonExistentResponse);
-      printTestResult(true, 'Returned empty array for non-existent project', {
-        statusCode: 200,
-        applicationsCount: emptyData.data ? emptyData.data.length : 0
-      });
+      printTestResult(
+        'Get applications for non-existent project',
+        true,
+        'Returned empty array for non-existent project',
+        {
+          statusCode: 200,
+          applicationsCount: emptyData.data ? emptyData.data.length : 0
+        }
+      );
     } else {
       printTestResult(false, 'Unexpected response for non-existent project', {
         statusCode: nonExistentResponse.statusCode,
@@ -117,7 +131,12 @@ async function testGetProjectApplications() {
     );
 
     if (unauthorizedResponse.statusCode === 403) {
-      printTestResult(true, 'Correctly denied access to non-client user', { statusCode: 403 });
+      printTestResult(
+        'Access denied for non-client user',
+        true,
+        'Correctly denied access to non-client user',
+        { statusCode: 403 }
+      );
     } else {
       printTestResult(false, 'Should have denied access to non-client user', {
         statusCode: unauthorizedResponse.statusCode,

@@ -2,17 +2,19 @@ import { AppliedProjectsDto } from "./applied_projects.dto";
 import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
-import { APPLIED_PROJECTS } from "../../../database/applied_projects.schema";
+import { CreditsService } from "../credits/credits.service";
 
 class AppliedProjectsService {
+    private creditsService = new CreditsService();
 
     public async apply(data: AppliedProjectsDto): Promise<any> {
         // Validate required fields
         if (!data.projects_task_id || !data.user_id) {
             throw new HttpException(400, "Project Task ID and User ID are required");
         }
+
         // Check if already applied
-        const existing = await DB(APPLIED_PROJECTS)
+        const existing = await DB(T.APPLIED_PROJECTS)
             .where({
                 projects_task_id: data.projects_task_id,
                 user_id: data.user_id,
@@ -26,6 +28,45 @@ class AppliedProjectsService {
                 data: existing
             };
         }
+
+        // Check if freelancer has enough credits (assuming 1 credit per application)
+        const CREDITS_PER_APPLICATION = 1;
+        const hasEnoughCredits = await this.creditsService.hasEnoughCredits(
+            data.user_id,
+            CREDITS_PER_APPLICATION
+        );
+
+        if (!hasEnoughCredits) {
+            throw new HttpException(400, "Insufficient credits. Please purchase more credits to apply.");
+        }
+
+        // Check if project has bidding enabled and validate bid_amount
+        const project = await DB(T.PROJECTS_TASK)
+            .where({ projects_task_id: data.projects_task_id, is_deleted: false })
+            .select('bidding_enabled')
+            .first();
+
+        if (!project) {
+            throw new HttpException(404, "Project not found");
+        }
+
+        if (project.bidding_enabled) {
+            if (!data.bid_amount || data.bid_amount <= 0) {
+                throw new HttpException(400, "Bid amount is required and must be greater than 0 for projects with bidding enabled");
+            }
+        }
+
+        // Deduct credits for application
+        try {
+            await this.creditsService.deductCredits(
+                data.user_id,
+                CREDITS_PER_APPLICATION,
+                data.projects_task_id
+            );
+        } catch (creditError) {
+            throw new HttpException(400, "Failed to deduct credits for application");
+        }
+
         const applicationData = {
             ...data,
             status: data.status ?? 0, // 0 = pending
@@ -41,7 +82,8 @@ class AppliedProjectsService {
         return {
             alreadyApplied: false,
             message: "Applied to project successfully",
-            data: appliedProject[0]
+            data: appliedProject[0],
+            credits_deducted: CREDITS_PER_APPLICATION
         };
     }
 
