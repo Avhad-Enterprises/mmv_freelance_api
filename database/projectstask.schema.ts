@@ -61,6 +61,7 @@ export const migrate = async (dropFirst = false) => {
                 table.integer('application_count').defaultTo(0);
                 table.jsonb('shortlisted_freelancer_ids').nullable();
                 table.boolean('is_active').defaultTo(true);
+                table.boolean('bidding_enabled').defaultTo(false);
                 table.integer('created_by').notNullable()
                     .references('user_id')
                     .inTable('users')

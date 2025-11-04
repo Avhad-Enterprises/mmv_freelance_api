@@ -91,6 +91,10 @@ export class ProjectsTaskDto {
   @IsInt()
   is_active: number;
 
+  @IsOptional()
+  @IsBoolean()
+  bidding_enabled?: boolean;
+
   @IsInt()
   created_by: number;
 

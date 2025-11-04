@@ -40,6 +40,22 @@ class AppliedProjectsService {
             throw new HttpException(400, "Insufficient credits. Please purchase more credits to apply.");
         }
 
+        // Check if project has bidding enabled and validate bid_amount
+        const project = await DB(T.PROJECTS_TASK)
+            .where({ projects_task_id: data.projects_task_id, is_deleted: false })
+            .select('bidding_enabled')
+            .first();
+
+        if (!project) {
+            throw new HttpException(404, "Project not found");
+        }
+
+        if (project.bidding_enabled) {
+            if (!data.bid_amount || data.bid_amount <= 0) {
+                throw new HttpException(400, "Bid amount is required and must be greater than 0 for projects with bidding enabled");
+            }
+        }
+
         // Deduct credits for application
         try {
             await this.creditsService.deductCredits(

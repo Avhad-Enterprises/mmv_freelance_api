@@ -54,7 +54,7 @@ async function testInsertProjectTask() {
   const loginSuccess = await loginAsAdmin();
   if (!loginSuccess) {
     console.log('❌ Failed to login as admin');
-    failedTests += 2;
+    failedTests += 5; // Updated for 5 tests now
     return;
   }
 
@@ -105,6 +105,123 @@ async function testInsertProjectTask() {
   } catch (error) {
     printTestResult(
       'Valid project task insertion',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test 1.1: Project with bidding enabled
+  try {
+    const biddingEnabledData = {
+      ...testData,
+      project_title: "Test Bidding Enabled Project",
+      url: "test-bidding-enabled-project-" + Date.now(),
+      bidding_enabled: true
+    };
+
+    const response = await makeRequest(
+      'POST',
+      `${CONFIG.apiVersion}/projects-tasks`,
+      biddingEnabledData,
+      { Authorization: `Bearer ${TOKENS.admin}` }
+    );
+
+    const passed = response.statusCode === 201 && 
+                   response.body?.data?.projects_task_id && 
+                   response.body?.data?.bidding_enabled === true;
+    printTestResult(
+      'Project with bidding enabled',
+      passed,
+      passed ? 'Project created with bidding enabled' : `Expected 201 with bidding_enabled=true, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Project with bidding enabled',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test 1.2: Project with bidding disabled
+  try {
+    const biddingDisabledData = {
+      ...testData,
+      project_title: "Test Bidding Disabled Project",
+      url: "test-bidding-disabled-project-" + Date.now(),
+      bidding_enabled: false
+    };
+
+    const response = await makeRequest(
+      'POST',
+      `${CONFIG.apiVersion}/projects-tasks`,
+      biddingDisabledData,
+      { Authorization: `Bearer ${TOKENS.admin}` }
+    );
+
+    const passed = response.statusCode === 201 && 
+                   response.body?.data?.projects_task_id && 
+                   response.body?.data?.bidding_enabled === false;
+    printTestResult(
+      'Project with bidding disabled',
+      passed,
+      passed ? 'Project created with bidding disabled' : `Expected 201 with bidding_enabled=false, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Project with bidding disabled',
+      false,
+      `Request failed: ${error.message}`,
+      null
+    );
+    failedTests++;
+  }
+
+  // Test 1.3: Project without bidding_enabled (should default to false)
+  try {
+    const defaultBiddingData = {
+      ...testData,
+      project_title: "Test Default Bidding Project",
+      url: "test-default-bidding-project-" + Date.now()
+      // bidding_enabled not specified
+    };
+
+    const response = await makeRequest(
+      'POST',
+      `${CONFIG.apiVersion}/projects-tasks`,
+      defaultBiddingData,
+      { Authorization: `Bearer ${TOKENS.admin}` }
+    );
+
+    const passed = response.statusCode === 201 && 
+                   response.body?.data?.projects_task_id && 
+                   response.body?.data?.bidding_enabled === false;
+    printTestResult(
+      'Project with default bidding (false)',
+      passed,
+      passed ? 'Project created with default bidding_enabled=false' : `Expected 201 with bidding_enabled=false, got ${response.statusCode}`,
+      response.body
+    );
+
+    if (passed) passedTests++;
+    else failedTests++;
+
+  } catch (error) {
+    printTestResult(
+      'Project with default bidding (false)',
       false,
       `Request failed: ${error.message}`,
       null
