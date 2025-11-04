@@ -84,23 +84,23 @@ async function runAllAppliedProjectsTests() {
     const withdrawApplicationTests = require('./test-withdraw-application').testWithdrawApplication;
 
     // Run all test suites
-    await runTestModule('Apply to Project Tests', applyToProjectTests);
-    await runTestModule('Get Application Count Tests', getApplicationCountTests);
-    await runTestModule('Get Applications by Status Tests', getApplicationsByStatusTests);
-    await runTestModule('Get Applied Count Tests', getAppliedCountTests);
-    await runTestModule('Get Completed Projects Count Tests', getCompletedProjectsCountTests);
-    await runTestModule('Get Completed Projects Tests', getCompletedProjectsTests);
-    await runTestModule('Get My Application by Project ID Tests', getMyApplicationByProjectIdTests);
-    await runTestModule('Get My Applications Tests', getMyApplicationsTests);
-    await runTestModule('Get Ongoing Projects Tests', getOngoingProjectsTests);
-    await runTestModule('Get Project Applications Tests', getProjectApplicationsTests);
-    await runTestModule('Update Application Status Tests', updateApplicationStatusTests);
-    await runTestModule('Withdraw Application Tests', withdrawApplicationTests);
+    const results = [];
+    results.push(await runTestModule('Apply to Project Tests', applyToProjectTests));
+    results.push(await runTestModule('Get Application Count Tests', getApplicationCountTests));
+    results.push(await runTestModule('Get Applications by Status Tests', getApplicationsByStatusTests));
+    results.push(await runTestModule('Get Applied Count Tests', getAppliedCountTests));
+    results.push(await runTestModule('Get Completed Projects Count Tests', getCompletedProjectsCountTests));
+    results.push(await runTestModule('Get Completed Projects Tests', getCompletedProjectsTests));
+    results.push(await runTestModule('Get My Application by Project ID Tests', getMyApplicationByProjectIdTests));
+    results.push(await runTestModule('Get My Applications Tests', getMyApplicationsTests));
+    results.push(await runTestModule('Get Ongoing Projects Tests', getOngoingProjectsTests));
+    results.push(await runTestModule('Get Project Applications Tests', getProjectApplicationsTests));
+    results.push(await runTestModule('Update Application Status Tests', updateApplicationStatusTests));
+    results.push(await runTestModule('Withdraw Application Tests', withdrawApplicationTests));
 
-    // Get final counters
-    const finalCounters = getTestCounters();
-    totalPassed = finalCounters.passed;
-    totalFailed = finalCounters.failed;
+    // Accumulate all results
+    totalPassed = results.reduce((sum, result) => sum + result.passed, 0);
+    totalFailed = results.reduce((sum, result) => sum + result.failed, 0);
 
     // Final summary
     console.log('\n' + '='.repeat(60));

@@ -5,6 +5,7 @@ import {
     IsOptional,
     IsString,
     IsDateString,
+    IsNumber,
 } from 'class-validator';
 
 export class AppliedProjectsDto {
@@ -29,6 +30,14 @@ export class AppliedProjectsDto {
     @IsOptional()
     @IsString()
     description?: string;
+
+    @IsOptional({ groups: ['create'] })
+    @IsNumber()
+    bid_amount?: number;
+
+    @IsOptional({ groups: ['create'] })
+    @IsString()
+    bid_message?: string;
 
     @IsOptional({ groups: ['create', 'update'] })
     @IsBoolean({ groups: ['create', 'update'] })

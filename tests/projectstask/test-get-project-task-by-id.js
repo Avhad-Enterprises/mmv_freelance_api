@@ -111,11 +111,13 @@ async function testGetProjectTaskById() {
       { Authorization: `Bearer ${TOKENS.admin}` }
     );
 
-    const passed = response.statusCode === 200 && response.body?.projects;
+    const passed = response.statusCode === 200 && 
+                   response.body?.projects && 
+                   typeof response.body.projects.bidding_enabled === 'boolean';
     printTestResult(
-      'Get existing project task',
+      'Get existing project task with bidding_enabled',
       passed,
-      passed ? 'Project task retrieved successfully' : `Expected 200 with projects data, got ${response.statusCode}`,
+      passed ? 'Project task retrieved successfully with bidding_enabled field' : `Expected 200 with projects data including bidding_enabled, got ${response.statusCode}`,
       response.body
     );
 
