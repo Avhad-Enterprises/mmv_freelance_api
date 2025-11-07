@@ -225,7 +225,7 @@ curl -X PATCH http://localhost:8000/api/v1/contact/messages/1/status \
 
 ## Email Notifications
 
-When a contact form is submitted successfully, an email is automatically sent to `harshalpatilself@gmail.com` with the following format:
+When a contact form is submitted successfully, an email is automatically sent to `helloabundance@makemyvid.io` with the following format:
 
 **Subject:** `Contact Form: {subject}` or `Contact Form Inquiry` (if no subject provided)
 

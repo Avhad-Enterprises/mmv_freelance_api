@@ -42,7 +42,7 @@ export const sendContactNotificationEmail = async (contact: ContactSubmission): 
     try {
         await transporter.sendMail({
             from: `"${APP_NAME} Contact Form" <${EMAIL_SENDER}>`,
-            to: "harshalpatilself@gmail.com", // Company owner email
+            to: "helloabundance@makemyvid.io", // Company owner email
             subject: subject,
             html: htmlContent,
             replyTo: contact.email // Allow direct reply to the contact
