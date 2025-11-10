@@ -203,7 +203,7 @@ class AdminInvitesService {
                 .select('first_name', 'last_name', 'email')
                 .first();
 
-            const inviteUrl = `${process.env.FRONTEND_URL || 'https://makemyvid.io'}/accept-invite?token=${token}`;
+            const inviteUrl = `${process.env.FRONTEND_URL || 'https://makemyvid.io'}/login?token=${token}`;
 
             const emailHtml = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -227,7 +227,7 @@ class AdminInvitesService {
                 firstName: dto.email.split('@')[0], // Using email prefix as firstName if not provided
                 email: dto.email,
                 password: '', // No password for initial invite
-                inviteLink: `${process.env.FRONTEND_URL || 'https://makemyvid.io'}/accept-invite/${token}`
+                inviteLink: `${process.env.FRONTEND_URL || 'https://makemyvid.io'}/login?token=${token}`
             });
         } catch (error) {
             console.error('Failed to send invitation email:', error);
