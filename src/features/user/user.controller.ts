@@ -296,6 +296,27 @@ export class UserController {
   };
 
   /**
+   * Get profile completion status
+   * GET /api/v1/users/me/profile-completion
+   */
+  public getProfileCompletion = async (
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const completion = await this.userService.getProfileCompletion(req.user.user_id);
+      
+      res.status(200).json({
+        success: true,
+        data: completion
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
    * Soft delete account
    * DELETE /api/v1/users/me
    */

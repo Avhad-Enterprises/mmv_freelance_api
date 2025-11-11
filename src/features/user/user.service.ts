@@ -310,6 +310,172 @@ class UserService {
     const res = await DB(T.USERS_TABLE).insert(userData).returning("*");
     return res[0];
   }
+
+  /**
+   * Get profile completion status for a user
+   */
+  public async getProfileCompletion(userId: number): Promise<{
+    completed: number;
+    total: number;
+    percentage: number;
+    completedFields: string[];
+    missingFields: string[];
+  }> {
+    const userProfile = await this.getUserWithProfile(userId);
+    const roles = await this.roleService.getUserRoles(userId);
+    
+    // Extract role names from roles array
+    const roleNames = roles.map((role: any) => role.name);
+
+    // Determine user type
+    let userType: string | null = null;
+    if (roleNames.includes('CLIENT')) {
+      userType = 'CLIENT';
+    } else if (roleNames.includes('VIDEOGRAPHER')) {
+      userType = 'VIDEOGRAPHER';
+    } else if (roleNames.includes('VIDEO_EDITOR')) {
+      userType = 'VIDEO_EDITOR';
+    } else if (roleNames.includes('ADMIN') || roleNames.includes('SUPER_ADMIN')) {
+      userType = 'ADMIN';
+    }
+
+    if (!userType) {
+      return {
+        completed: 0,
+        total: 0,
+        percentage: 0,
+        completedFields: [],
+        missingFields: []
+      };
+    }
+
+    // Define completion criteria for each user type
+    const completionCriteria = this.getCompletionCriteria(userType);
+    
+    // Calculate completion
+    const { completed, total, completedFields, missingFields } = this.calculateCompletion(
+      userProfile,
+      completionCriteria
+    );
+
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    return {
+      completed,
+      total,
+      percentage,
+      completedFields,
+      missingFields
+    };
+  }
+
+    /**
+   * Get completion criteria for different user types
+   */
+  private getCompletionCriteria(userType: string): { [key: string]: string[] } {
+    const criteria = {
+      CLIENT: {
+        user: ['first_name', 'last_name', 'email', 'phone_number', 'address_line_first', 'city', 'state', 'country', 'pincode'],
+        profile: ['company_name', 'company_description', 'industry', 'company_size', 'work_arrangement', 'project_frequency', 'hiring_preferences', 'terms_accepted', 'privacy_policy_accepted']
+      },
+      VIDEOGRAPHER: {
+        user: ['first_name', 'last_name', 'email', 'phone_number', 'address_line_first', 'city', 'state', 'country', 'pincode'],
+        freelancer_profile: ['profile_title', 'short_description', 'experience_level', 'skills', 'languages', 'rate_amount', 'currency', 'availability', 'work_type', 'hours_per_week', 'portfolio_links']
+        // videographer_profile: [] - currently empty
+      },
+      VIDEO_EDITOR: {
+        user: ['first_name', 'last_name', 'email', 'phone_number', 'address_line_first', 'city', 'state', 'country', 'pincode'],
+        freelancer_profile: ['profile_title', 'short_description', 'experience_level', 'skills', 'languages', 'rate_amount', 'currency', 'availability', 'work_type', 'hours_per_week', 'portfolio_links']
+        // videoeditor_profile: [] - currently empty
+      },
+      ADMIN: {
+        user: ['first_name', 'last_name', 'email', 'phone_number']
+      }
+    };
+
+    return criteria[userType] || {};
+  }
+
+  /**
+   * Calculate completion based on criteria
+   */
+  private calculateCompletion(userProfile: any, criteria: { [key: string]: string[] }): {
+    completed: number;
+    total: number;
+    completedFields: string[];
+    missingFields: string[];
+  } {
+    let completed = 0;
+    let total = 0;
+    const completedFields: string[] = [];
+    const missingFields: string[] = [];
+
+    // Check user fields
+    if (criteria.user) {
+      criteria.user.forEach(field => {
+        total++;
+        if (userProfile.user && userProfile.user[field] && userProfile.user[field] !== '') {
+          completed++;
+          completedFields.push(`user.${field}`);
+        } else {
+          missingFields.push(`user.${field}`);
+        }
+      });
+    }
+
+    // Check profile fields
+    if (criteria.profile && userProfile.profile) {
+      criteria.profile.forEach(field => {
+        total++;
+        if (userProfile.profile[field] && userProfile.profile[field] !== '' && userProfile.profile[field] !== false) {
+          completed++;
+          completedFields.push(`profile.${field}`);
+        } else {
+          missingFields.push(`profile.${field}`);
+        }
+      });
+    }
+
+    // Check freelancer profile fields
+    if (criteria.freelancer_profile && userProfile.profile) {
+      criteria.freelancer_profile.forEach(field => {
+        total++;
+        const value = userProfile.profile[field];
+        if (value && value !== '' && 
+            (Array.isArray(value) ? value.length > 0 : true) && 
+            (typeof value === 'number' ? value > 0 : true)) {
+          completed++;
+          completedFields.push(`freelancer_profile.${field}`);
+        } else {
+          missingFields.push(`freelancer_profile.${field}`);
+        }
+      });
+    }
+
+    // Note: videographer_profile and videoeditor_profile are currently empty
+    // When they get fields added, uncomment and update the logic below
+    /*
+    // Check specific profile fields (videographer/videoeditor)
+    const specificProfileKey = userProfile.profile?.videographer ? 'videographer_profile' : 
+                              userProfile.profile?.videoeditor ? 'videoeditor_profile' : null;
+    
+    if (specificProfileKey && criteria[specificProfileKey]) {
+      const specificProfile = userProfile.profile.videographer || userProfile.profile.videoeditor;
+      criteria[specificProfileKey].forEach(field => {
+        total++;
+        const value = specificProfile?.[field];
+        if (value && value !== '' && (Array.isArray(value) ? value.length > 0 : true)) {
+          completed++;
+          completedFields.push(`${specificProfileKey}.${field}`);
+        } else {
+          missingFields.push(`${specificProfileKey}.${field}`);
+        }
+      });
+    }
+    */
+
+    return { completed, total, completedFields, missingFields };
+  }
 }
 
 export default UserService;

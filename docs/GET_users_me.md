@@ -237,5 +237,164 @@ curl -X GET \
 - `PATCH /api/v1/users/me` - Update user profile
 - `GET /api/v1/users/me/roles` - Get user roles
 - `GET /api/v1/users/me/has-profile` - Check if user has profile
-- `DELETE /api/v1/users/me` - Delete user account</content>
+- `GET /api/v1/users/me/profile-completion` - Get profile completion status
+- `DELETE /api/v1/users/me` - Delete user account
+
+---
+
+# GET /users/me/profile-completion - Get Profile Completion Status
+
+Get the completion status of the authenticated user's profile.
+
+## Endpoint
+
+```
+GET /api/v1/users/me/profile-completion
+```
+
+## Authentication
+
+**Required**: JWT Bearer token in Authorization header
+
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+## Response
+
+### Success Response (200 OK)
+
+```json
+{
+  "success": true,
+  "data": {
+    "completed": 16,
+    "total": 20,
+    "percentage": 80,
+    "completedFields": [
+      "user.first_name",
+      "user.last_name",
+      "user.email",
+      "user.phone_number",
+      "user.city",
+      "user.country",
+      "user.pincode",
+      "freelancer_profile.profile_title",
+      "freelancer_profile.short_description",
+      "freelancer_profile.experience_level",
+      "freelancer_profile.skills",
+      "freelancer_profile.languages",
+      "freelancer_profile.rate_amount",
+      "freelancer_profile.currency",
+      "freelancer_profile.availability",
+      "freelancer_profile.portfolio_links"
+    ],
+    "missingFields": [
+      "user.address_line_first",
+      "user.state",
+      "freelancer_profile.work_type",
+      "freelancer_profile.hours_per_week"
+    ]
+  }
+}
+```
+
+## Completion Criteria by User Type
+
+### CLIENT
+**Total Fields**: 18
+- **User Fields** (9): first_name, last_name, email, phone_number, address_line_first, city, state, country, pincode
+- **Profile Fields** (9): company_name, company_description, industry, company_size, work_arrangement, project_frequency, hiring_preferences, terms_accepted, privacy_policy_accepted
+
+### VIDEOGRAPHER
+**Total Fields**: 20
+- **User Fields** (9): first_name, last_name, email, phone_number, address_line_first, city, state, country, pincode
+- **Freelancer Profile Fields** (11): profile_title, short_description, experience_level, skills, languages, rate_amount, currency, availability, work_type, hours_per_week, portfolio_links
+
+### VIDEO_EDITOR
+**Total Fields**: 20
+- **User Fields** (9): first_name, last_name, email, phone_number, address_line_first, city, state, country, pincode
+- **Freelancer Profile Fields** (11): profile_title, short_description, experience_level, skills, languages, rate_amount, currency, availability, work_type, hours_per_week, portfolio_links
+
+### ADMIN
+**Total Fields**: 4
+- **User Fields** (4): first_name, last_name, email, phone_number
+
+## Field Validation Rules
+
+- **String fields**: Must not be empty or null
+- **Array fields**: Must have at least one item
+- **Number fields**: Must be greater than 0
+- **Boolean fields**: Must be true
+
+## Error Responses
+
+### 401 Unauthorized
+```json
+{
+  "success": false,
+  "message": "Unauthorized"
+}
+```
+
+### 404 Not Found
+```json
+{
+  "success": false,
+  "message": "User not found"
+}
+```
+
+### 500 Internal Server Error
+```json
+{
+  "success": false,
+  "message": "Internal server error"
+}
+```
+
+## Usage Examples
+
+### JavaScript (Fetch API)
+```javascript
+const token = localStorage.getItem('authToken');
+
+fetch('/api/v1/users/me/profile-completion', {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+})
+.then(response => response.json())
+.then(data => {
+  if (data.success) {
+    const { completed, total, percentage, completedFields, missingFields } = data.data;
+    console.log(`Profile ${percentage}% complete (${completed}/${total})`);
+    
+    // Show progress bar
+    updateProgressBar(percentage);
+    
+    // Highlight missing fields
+    highlightMissingFields(missingFields);
+  }
+})
+.catch(error => console.error('Error:', error));
+```
+
+### cURL
+```bash
+curl -X GET \
+  'https://api.makemyvid.io/api/v1/users/me/profile-completion' \
+  -H 'Authorization: Bearer YOUR_JWT_TOKEN' \
+  -H 'Content-Type: application/json'
+```
+
+## Notes
+
+- **Authentication Required**: This endpoint requires a valid JWT token
+- **Dynamic Criteria**: Completion criteria vary based on user type (CLIENT, VIDEOGRAPHER, VIDEO_EDITOR, ADMIN)
+- **Real-time Calculation**: Completion is calculated in real-time based on current profile data
+- **Frontend Integration**: Perfect for progress bars, completion checklists, and profile setup wizards
+- **Field-level Detail**: Provides both summary stats and detailed field-level completion information</content>
 <parameter name="filePath">/Users/harshalpatil/Documents/Projects/mmv_freelance_api/docs/GET_users_me.md
