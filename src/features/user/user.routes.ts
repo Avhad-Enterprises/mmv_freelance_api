@@ -100,6 +100,15 @@ export class UserRoutes implements Route {
       this.userController.checkProfile
     );
 
+    /**
+     * Get profile completion status
+     * Requires: Authentication
+     */
+    this.router.get(
+      `${this.path}/me/profile-completion`,
+      this.userController.getProfileCompletion
+    );
+
     // Password management
 
     /**
