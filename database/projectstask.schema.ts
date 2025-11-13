@@ -62,7 +62,7 @@ export const migrate = async (dropFirst = false) => {
                 table.jsonb('shortlisted_freelancer_ids').nullable();
                 table.boolean('is_active').defaultTo(true);
                 table.boolean('bidding_enabled').defaultTo(false);
-                table.integer('created_by').notNullable()
+                table.integer('created_by').nullable()
                     .references('user_id')
                     .inTable('users')
                     .onDelete('SET NULL');
