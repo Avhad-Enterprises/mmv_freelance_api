@@ -35,25 +35,19 @@ class AdminInvitesService {
             // Generate secure token
             const inviteToken = crypto.randomBytes(32).toString('hex');
 
-            // Hash password if provided
-            let hashedPassword = null;
-            if (dto.password) {
-                hashedPassword = await bcrypt.hash(dto.password, 12);
-            }
-
             // Set expiration (7 days from now)
             const expiresAt = new Date();
             expiresAt.setDate(expiresAt.getDate() + 7);
 
-            // Create invitation record
+            // Create invitation record - Admin role is assigned by default
             const invitationId = await DB(INVITATION_TABLE).insert({
-                first_name: dto.first_name,
-                last_name: dto.last_name,
+                first_name: '',
+                last_name: '',
                 email: dto.email,
                 invite_token: inviteToken,
                 status: 'pending',
-                assigned_role: dto.assigned_role || null,
-                password: hashedPassword,
+                assigned_role: 'ADMIN', // Always ADMIN role
+                password: null,
                 invited_by: invitedBy,
                 expires_at: expiresAt,
                 created_at: new Date(),
@@ -62,7 +56,7 @@ class AdminInvitesService {
             }).returning('invitation_id');
 
             // Send invitation email
-            await this.sendInvitationEmail(dto, inviteToken, invitedBy);
+            await this.sendInvitationEmail(dto.email, inviteToken, invitedBy);
 
             // Return the created invitation
             const invitation = await DB(INVITATION_TABLE)
@@ -194,29 +188,186 @@ class AdminInvitesService {
     }
 
     /**
+     * Verify invitation token
+     */
+    public async verifyToken(token: string): Promise<{ email: string; expires_at: string }> {
+        try {
+            const invitation = await DB(INVITATION_TABLE)
+                .where('invite_token', token)
+                .where('status', 'pending')
+                .first();
+
+            if (!invitation) {
+                throw new HttpException(404, 'Invalid or expired invitation token');
+            }
+
+            // Check if invitation has expired
+            if (new Date() > new Date(invitation.expires_at)) {
+                await DB(INVITATION_TABLE)
+                    .where('invitation_id', invitation.invitation_id)
+                    .update({ status: 'expired', updated_at: new Date() });
+                throw new HttpException(400, 'Invitation has expired');
+            }
+
+            return {
+                email: invitation.email,
+                expires_at: invitation.expires_at
+            };
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Complete registration
+     */
+    public async completeRegistration(dto: any): Promise<{ user: any; token: string }> {
+        try {
+            // Validate token
+            const invitation = await DB(INVITATION_TABLE)
+                .where('invite_token', dto.token)
+                .where('status', 'pending')
+                .first();
+
+            if (!invitation) {
+                throw new HttpException(404, 'Invalid or expired invitation token');
+            }
+
+            // Check if invitation has expired
+            if (new Date() > new Date(invitation.expires_at)) {
+                await DB(INVITATION_TABLE)
+                    .where('invitation_id', invitation.invitation_id)
+                    .update({ status: 'expired', updated_at: new Date() });
+                throw new HttpException(400, 'Invitation has expired');
+            }
+
+            // Validate email matches invitation
+            if (dto.email !== invitation.email) {
+                throw new HttpException(400, 'Email does not match invitation');
+            }
+
+            // Validate password match
+            if (dto.password !== dto.confirm_password) {
+                throw new HttpException(400, 'Passwords do not match');
+            }
+
+            // Check if user already exists
+            const existingUser = await DB(T.USERS_TABLE).where('email', dto.email).first();
+            if (existingUser) {
+                throw new HttpException(400, 'User with this email already exists');
+            }
+
+            // Start transaction
+            const trx = await DB.transaction();
+
+            try {
+                // Create the user account
+                const username = dto.email.split('@')[0] + Math.random().toString(36).substring(2, 8);
+                const hashedPassword = await bcrypt.hash(dto.password, 12);
+
+                const userResult = await trx(T.USERS_TABLE).insert({
+                    first_name: dto.first_name,
+                    last_name: dto.last_name,
+                    username: username,
+                    email: dto.email,
+                    password: hashedPassword,
+                    is_active: true,
+                    is_banned: false,
+                    email_verified: true,
+                    created_at: new Date(),
+                    updated_at: new Date()
+                }).returning('user_id');
+
+                const userId = userResult[0].user_id;
+
+                // Assign ADMIN role
+                const role = await trx(T.ROLE)
+                    .where('name', 'ADMIN')
+                    .first();
+
+                if (role) {
+                    await trx(T.USER_ROLES).insert({
+                        user_id: userId,
+                        role_id: role.role_id
+                    });
+                }
+
+                // Create admin profile
+                await trx('admin_profiles').insert({
+                    user_id: userId
+                });
+
+                // Update invitation status
+                await trx(INVITATION_TABLE)
+                    .where('invitation_id', invitation.invitation_id)
+                    .update({
+                        status: 'accepted',
+                        accepted_at: new Date(),
+                        updated_at: new Date()
+                    });
+
+                await trx.commit();
+
+                // Generate JWT token
+                const jwt = require('jsonwebtoken');
+                const token = jwt.sign(
+                    {
+                        id: userId,
+                        user_id: userId,
+                        email: dto.email,
+                        roles: ['ADMIN']
+                    },
+                    process.env.JWT_SECRET,
+                    { expiresIn: '24h' }
+                );
+
+                // Get full user data
+                const user = await DB(T.USERS_TABLE)
+                    .where('user_id', userId)
+                    .select('user_id', 'email', 'first_name', 'last_name', 'username')
+                    .first();
+
+                return {
+                    user: {
+                        ...user,
+                        roles: ['ADMIN']
+                    },
+                    token
+                };
+            } catch (error) {
+                await trx.rollback();
+                throw error;
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
      * Send invitation email
      */
-    private async sendInvitationEmail(dto: CreateAdminInviteDto, token: string, invitedBy: number): Promise<void> {
+    private async sendInvitationEmail(email: string, token: string, invitedBy: number): Promise<void> {
         try {
             const inviter = await DB(T.USERS_TABLE)
                 .where('user_id', invitedBy)
                 .select('first_name', 'last_name', 'email')
                 .first();
 
-            const inviteUrl = `${process.env.ADMIN_PANEL_URL || 'http://localhost:3000'}/login?token=${token}`;
+            const inviteUrl = `${process.env.ADMIN_PANEL_URL || 'http://localhost:3000'}/register?token=${token}`;
 
             const emailHtml = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>Welcome to MMV Freelance Platform!</h2>
-                    <p>Hi ${dto.first_name} ${dto.last_name},</p>
-                    <p>You've been invited to join the MMV Freelance Platform by ${inviter?.first_name} ${inviter?.last_name}.</p>
-                    <p>Please click the link below to accept your invitation and set up your account:</p>
+                    <h2>You're Invited to Join MMV Admin Panel!</h2>
+                    <p>Hello,</p>
+                    <p>You've been invited to join the MMV Admin Panel by ${inviter?.first_name} ${inviter?.last_name}.</p>
+                    <p>Click the button below to accept your invitation and create your account:</p>
                     <p style="margin: 20px 0;">
                         <a href="${inviteUrl}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
-                            Accept Invitation
+                            Accept Invitation & Register
                         </a>
                     </p>
                     <p><strong>Important:</strong> This invitation will expire in 7 days.</p>
+                    <p>You will be able to set up your account details during registration.</p>
                     <p>If you have any questions, please contact the administrator.</p>
                     <p>Best regards,<br>The MMV Team</p>
                 </div>
@@ -226,8 +377,8 @@ class AdminInvitesService {
 
             await transporter.sendMail({
                 from: `"${APP_NAME}" <${EMAIL_SENDER}>`,
-                to: dto.email,
-                subject: `You're Invited to Join ${APP_NAME}`,
+                to: email,
+                subject: `You're Invited to Join ${APP_NAME} Admin Panel`,
                 html: emailHtml
             });
         } catch (error) {
@@ -242,11 +393,8 @@ class AdminInvitesService {
     private mapToResponseDto(invite: any): AdminInviteResponseDto {
         return {
             invitation_id: invite.invitation_id,
-            first_name: invite.first_name,
-            last_name: invite.last_name,
             email: invite.email,
             status: invite.status,
-            assigned_role: invite.assigned_role,
             invited_by: invite.invited_by,
             expires_at: invite.expires_at,
             created_at: invite.created_at,
