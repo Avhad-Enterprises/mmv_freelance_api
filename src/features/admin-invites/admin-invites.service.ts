@@ -7,7 +7,7 @@ import { INVITATION_TABLE } from '../../../database/admin_invites.schema';
 import { IAdminInvite } from './admin_invites.interface';
 import { CreateAdminInviteDto, AdminInviteResponseDto, AcceptInviteDto } from './admin-invites.dto';
 import HttpException from '../../exceptions/HttpException';
-import { sendInvitationEmail } from '../../utils/email/sendInvitationEmail';
+import { createTransporter, EMAIL_SENDER, APP_NAME } from '../../utils/email/emailConfig';
 
 class AdminInvitesService {
 
@@ -203,7 +203,7 @@ class AdminInvitesService {
                 .select('first_name', 'last_name', 'email')
                 .first();
 
-            const inviteUrl = `${process.env.ADMIN_PANEL_URL || 'http://localhost:3000'}/admin/login?token=${token}`;
+            const inviteUrl = `${process.env.ADMIN_PANEL_URL || 'http://localhost:3000'}/login?token=${token}`;
 
             const emailHtml = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -222,12 +222,13 @@ class AdminInvitesService {
                 </div>
             `;
 
-            await sendInvitationEmail({
+            const transporter = createTransporter();
+
+            await transporter.sendMail({
+                from: `"${APP_NAME}" <${EMAIL_SENDER}>`,
                 to: dto.email,
-                firstName: dto.email.split('@')[0], // Using email prefix as firstName if not provided
-                email: dto.email,
-                password: '', // No password for initial invite
-                inviteLink: `${process.env.ADMIN_PANEL_URL || 'http://localhost:3000'}/admin/login?token=${token}`
+                subject: `You're Invited to Join ${APP_NAME}`,
+                html: emailHtml
             });
         } catch (error) {
             console.error('Failed to send invitation email:', error);

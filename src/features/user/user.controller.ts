@@ -5,7 +5,7 @@ import { UserUpdateDto, ChangePasswordDto, PasswordResetRequestDto, PasswordRese
 import { RequestWithUser } from '../../interfaces/auth.interface';
 import HttpException from '../../exceptions/HttpException';
 import { Users } from './user.interface';
-import { sendPasswordResetEmail, sendInvitationEmail } from '../../utils/email';
+import { sendPasswordResetEmail } from '../../utils/email';
 import * as crypto from 'crypto';
 
 /**
@@ -578,33 +578,6 @@ export class UserController {
         success: true,
         data: permissions
       });
-    } catch (error) {
-      next(error);
-    }
-  };
-    public sendInvitation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const {
-        first_name,
-        last_name,
-        username,
-        email,
-        phone_number,
-        password
-      } = req.body;
-      console.log(req.body);
-      const locationData: Users = await this.userService.createuserInvitation(req.body);
-      const token = crypto.randomBytes(32).toString("hex");
-      const inviteLink = `${process.env.FRONTEND_URL || 'https://makemyvid.io'}/register?token=${token}`;
-
-      await sendInvitationEmail({
-        to: email,
-        firstName: first_name,
-        email: email,
-        password: password,
-        inviteLink: inviteLink
-      });
-      res.status(201).json({ data: locationData, message: "Inserted" });
     } catch (error) {
       next(error);
     }
