@@ -1,8 +1,8 @@
 // src/features/admin-invites/controllers/admin-invites.controller.ts
 
-import { NextFunction, Response } from 'express';
+import { NextFunction, Response, Request } from 'express';
 import AdminInvitesService from './admin-invites.service';
-import { CreateAdminInviteDto, AcceptInviteDto } from './admin-invites.dto';
+import { CreateAdminInviteDto, AcceptInviteDto, CompleteRegistrationDto } from './admin-invites.dto';
 import { RequestWithUser } from '../../interfaces/auth.interface';
 import { isEmpty } from '../../utils/common';
 
@@ -94,6 +94,54 @@ class AdminInvitesController {
 
             res.status(200).json({
                 message: 'Invitation revoked successfully'
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * Verify invitation token (public)
+     * GET /admin/invites/verify?token=xxx
+     */
+    public verifyToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const token = req.query.token as string;
+
+            if (!token || typeof token !== 'string') {
+                res.status(400).json({ message: 'Invitation token is required' });
+                return;
+            }
+
+            const result = await this.adminInvitesService.verifyToken(token);
+
+            res.status(200).json({
+                data: result,
+                message: 'Token is valid'
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * Complete registration with invitation token (public)
+     * POST /admin/invites/register
+     */
+    public completeRegistration = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const registrationData: CompleteRegistrationDto = req.body;
+
+            if (isEmpty(registrationData)) {
+                res.status(400).json({ message: 'Invalid registration data' });
+                return;
+            }
+
+            const result = await this.adminInvitesService.completeRegistration(registrationData);
+
+            res.status(201).json({
+                data: result,
+                message: 'Registration completed successfully'
             });
         } catch (error) {
             next(error);

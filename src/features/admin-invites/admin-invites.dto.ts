@@ -3,6 +3,31 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString, IsEnum, MinLength } from 'class-validator';
 
 export class CreateAdminInviteDto {
+    @IsEmail()
+    @IsNotEmpty()
+    email: string;
+}
+
+export class AdminInviteResponseDto {
+    invitation_id: number;
+    email: string;
+    status: 'pending' | 'accepted' | 'revoked' | 'expired';
+    invited_by: number;
+    expires_at: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export class VerifyTokenResponseDto {
+    email: string;
+    expires_at: string;
+}
+
+export class CompleteRegistrationDto {
+    @IsNotEmpty()
+    @IsString()
+    token: string;
+
     @IsNotEmpty()
     @IsString()
     first_name: string;
@@ -15,28 +40,16 @@ export class CreateAdminInviteDto {
     @IsNotEmpty()
     email: string;
 
-    @IsOptional()
-    @IsString()
-    assigned_role?: string; // Role name like 'ADMIN', 'CLIENT', etc.
-
-    @IsOptional()
+    @IsNotEmpty()
     @MinLength(8)
-    password?: string; // Optional temporary password
+    password: string;
+
+    @IsNotEmpty()
+    @MinLength(8)
+    confirm_password: string;
 }
 
-export class AdminInviteResponseDto {
-    invitation_id: number;
-    first_name: string;
-    last_name: string;
-    email: string;
-    status: 'pending' | 'accepted' | 'revoked' | 'expired';
-    assigned_role: string | null;
-    invited_by: number;
-    expires_at: string;
-    created_at: string;
-    updated_at: string;
-}
-
+// Deprecated - kept for backward compatibility
 export class AcceptInviteDto {
     @IsNotEmpty()
     @IsString()
@@ -44,5 +57,5 @@ export class AcceptInviteDto {
 
     @IsOptional()
     @MinLength(8)
-    new_password?: string; // If user wants to change the temporary password
+    new_password?: string;
 }

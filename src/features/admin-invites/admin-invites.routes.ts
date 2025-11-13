@@ -17,6 +17,18 @@ class AdminInvitesRoutes implements Route {
 
     private initializeRoutes() {
         /**
+         * Verify invitation token (Public route - no auth required)
+         * GET /admin/invites/verify?token=xxx
+         */
+        this.router.get(`${this.path}/verify`, this.adminInvitesController.verifyToken);
+
+        /**
+         * Complete registration with token (Public route - no auth required)
+         * POST /admin/invites/register
+         */
+        this.router.post(`${this.path}/register`, this.adminInvitesController.completeRegistration);
+
+        /**
          * Create invitation (Admin only)
          * POST /admin/invites
          */
