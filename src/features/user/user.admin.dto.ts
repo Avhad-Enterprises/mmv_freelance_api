@@ -31,7 +31,7 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsString()
-  address_line_first?: string;
+  address?: string;
 
   @IsOptional()
   @IsString()
@@ -84,7 +84,7 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  address_line_first?: string;
+  address?: string;
 
   @IsOptional()
   @IsString()

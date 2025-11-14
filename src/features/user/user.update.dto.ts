@@ -60,18 +60,10 @@ export class UserUpdateDto {
   @IsString()
   bio?: string;
 
-  @IsOptional()
-  @IsString()
-  timezone?: string;
-
   // Address
   @IsOptional()
   @IsString()
-  address_line_first?: string;
-
-  @IsOptional()
-  @IsString()
-  address_line_second?: string;
+  address?: string;
 
   @IsOptional()
   @IsString()

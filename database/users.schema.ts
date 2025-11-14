@@ -41,12 +41,9 @@ export const migrate = async (dropFirst = false) => {
             // Profile
             table.text('profile_picture').nullable();
             table.text('bio').nullable();
-            table.string('timezone', 50).nullable();
-            table.string('category', 255).nullable();
             
             // Address (shared by all user types)
-            table.string('address_line_first', 255).nullable();
-            table.string('address_line_second', 255).nullable();
+            table.string('address', 255).nullable();
             table.string('city', 100).nullable();
             table.string('state', 100).nullable();
             table.string('country', 100).nullable();
@@ -59,6 +56,10 @@ export const migrate = async (dropFirst = false) => {
             table.boolean('is_banned').defaultTo(false);
             table.boolean('is_deleted').defaultTo(false);
             table.text('banned_reason').nullable();
+            
+            // Terms and Privacy
+            table.boolean('terms_accepted').defaultTo(false).comment('Terms and conditions accepted');
+            table.boolean('privacy_policy_accepted').defaultTo(false).comment('Privacy policy accepted');
             
             // Security
             table.text('reset_token').nullable();

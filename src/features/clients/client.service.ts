@@ -32,6 +32,19 @@ class ClientService extends UserService {
       .where({ user_id })
       .first();
 
+    // Parse JSON fields
+    const jsonFields = ['projects_created', 'payment_method', 'bank_account_info', 'business_document_urls'];
+    jsonFields.forEach(field => {
+      if (profile && profile[field]) {
+        try {
+          profile[field] = JSON.parse(profile[field]);
+        } catch (e) {
+          // If parsing fails, keep as string
+          console.warn(`Failed to parse JSON field ${field}:`, e);
+        }
+      }
+    });
+
     return {
       user,
       profile,
@@ -63,7 +76,7 @@ class ClientService extends UserService {
 
     // Handle array and object fields that need to be stored as JSON
     const processedData = { ...profileData };
-    const jsonFields = ['business_documents', 'projects_created', 'payment_method'];
+    const jsonFields = ['projects_created', 'payment_method', 'bank_account_info', 'business_document_urls'];
     
     jsonFields.forEach(field => {
       if (processedData[field] && (Array.isArray(processedData[field]) || typeof processedData[field] === 'object')) {
@@ -100,30 +113,22 @@ class ClientService extends UserService {
       )
       .orderBy(`${T.USERS_TABLE}.created_at`, "desc");
 
+    // Parse JSON fields for each client
+    const jsonFields = ['projects_created', 'payment_method', 'bank_account_info', 'business_document_urls'];
+    clients.forEach(client => {
+      jsonFields.forEach(field => {
+        if (client && client[field]) {
+          try {
+            client[field] = JSON.parse(client[field]);
+          } catch (e) {
+            // If parsing fails, keep as string
+            console.warn(`Failed to parse JSON field ${field} for client ${client.user_id}:`, e);
+          }
+        }
+      });
+    });
+
     return clients;
-  }
-
-  /**
-   * Update client business documents
-   */
-  public async updateBusinessDocuments(
-    user_id: number,
-    documentUrls: string[]
-  ): Promise<any> {
-    const hasClientRole = await this.userHasRole(user_id, 'CLIENT');
-    if (!hasClientRole) {
-      throw new HttpException(403, "User is not a client");
-    }
-
-    const updated = await DB(T.CLIENT_PROFILES)
-      .where({ user_id })
-      .update({
-        business_documents: JSON.stringify(documentUrls),
-        updated_at: DB.fn.now()
-      })
-      .returning("*");
-
-    return updated[0];
   }
 
   /**

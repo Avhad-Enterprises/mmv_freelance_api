@@ -66,7 +66,7 @@ Authorization: Bearer <jwt_token>
       "username": "johndoe",
       "company_name": "ABC Corp",
       "phone_number": "+1234567890",
-      "address_line_first": "123 Main St",
+      "address": "123 Main St",
       "city": "New York",
       "state": "NY",
       "country": "USA",
@@ -81,7 +81,7 @@ Authorization: Bearer <jwt_token>
       "company_name": "ABC Corp",
       "industry": "film_production",
       "website": "https://abc.com",
-      "business_documents": ["https://example.com/doc1.pdf"]
+      "business_document_url": "https://example.com/business-doc.pdf"
     },
     "userType": "CLIENT"
   }
@@ -108,9 +108,19 @@ Authorization: Bearer <jwt_token>
   "required_skills": ["premiere_pro", "after_effects"],
   "budget_min": 1000,
   "budget_max": 5000,
-  "business_documents": ["https://example.com/doc1.pdf"],
+  "business_document_url": "https://example.com/business-doc.pdf",
   "work_arrangement": "remote",
-  "project_frequency": "recurring"
+  "project_frequency": "recurring",
+  "payment_method": {
+    "type": "bank_transfer",
+    "currency": "USD"
+  },
+  "bank_account_info": {
+    "account_holder_name": "ABC Corporation",
+    "account_number": "****1234",
+    "bank_name": "Chase Bank",
+    "routing_number": "021000021"
+  }
 }
 ```
 
@@ -129,7 +139,7 @@ Authorization: Bearer <jwt_token>
       "email": "john@example.com",
       "company_name": "ABC Corporation",
       "phone_number": "+1234567890",
-      "address_line_first": "123 Main Street",
+      "address": "123 Main Street",
       "city": "New York",
       "state": "NY",
       "country": "USA",
@@ -145,7 +155,17 @@ Authorization: Bearer <jwt_token>
       "company_size": "11-50",
       "required_services": ["video_editing", "videography"],
       "budget_min": 1000,
-      "budget_max": 5000
+      "budget_max": 5000,
+      "payment_method": {
+        "type": "bank_transfer",
+        "currency": "USD"
+      },
+      "bank_account_info": {
+        "account_holder_name": "ABC Corporation",
+        "account_number": "****1234",
+        "bank_name": "Chase Bank",
+        "routing_number": "021000021"
+      }
     },
     "userType": "CLIENT"
   }
@@ -175,37 +195,7 @@ Authorization: Bearer <jwt_token>
 
 ---
 
-### 5. Update Business Documents
-**PATCH** `/clients/profile/documents`
-
-**Required Roles:** CLIENT
-
-**Description:** Update business documents for the current authenticated client.
-
-**Request Body:**
-```json
-{
-  "document_urls": [
-    "https://example.com/license.pdf",
-    "https://example.com/tax-id.pdf",
-    "https://example.com/insurance.pdf"
-  ]
-}
-```
-
-**Validation:** document_urls must be an array of strings.
-
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Business documents updated successfully"
-}
-```
-
----
-
-### 6. Get Client by ID
+### 5. Get Client by ID
 **GET** `/clients/:id`
 
 **Required Roles:** ADMIN, SUPER_ADMIN
@@ -228,7 +218,7 @@ Authorization: Bearer <jwt_token>
       "username": "johndoe",
       "company_name": "ABC Corp",
       "phone_number": "+1234567890",
-      "address_line_first": "123 Main St",
+      "address": "123 Main St",
       "city": "New York",
       "state": "NY",
       "country": "USA",
@@ -242,7 +232,7 @@ Authorization: Bearer <jwt_token>
     "profile": {
       "company_name": "ABC Corp",
       "industry": "film_production",
-      "business_documents": ["https://example.com/doc1.pdf"]
+      "business_document_url": "https://example.com/business-doc.pdf"
     },
     "userType": "CLIENT"
   }
@@ -292,6 +282,6 @@ Authorization: Bearer <jwt_token>
 1. **Authentication:** All requests must include the JWT token in the Authorization header
 2. **Role-based Access:** Different endpoints require different user roles (CLIENT, ADMIN, SUPER_ADMIN)
 3. **Validation:** Profile update requests are validated using ClientProfileUpdateDto with support for arrays and enums
-4. **Document Uploads:** Business documents are stored as an array of URLs in the `business_documents` field
+4. **Document Uploads:** Business documents are stored as a single URL in the `business_document_url` field
 5. **Response Structure:** All responses follow the standard API response format with `success`, `data`, and optional `message` fields
 6. **Separation of Concerns:** `/clients/profile` only updates client_profiles table fields. Use `/users/me` to update basic user information (users table)

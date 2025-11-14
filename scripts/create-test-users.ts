@@ -43,6 +43,8 @@ async function createTestUser(options: TestUserOptions) {
       password: hashedPassword,
       phone_number: '+1234567890',
       email_verified: true,
+      terms_accepted: true,
+      privacy_policy_accepted: true,
       created_at: new Date(),
       updated_at: new Date()
     }).returning('*');
@@ -61,8 +63,6 @@ async function createTestUser(options: TestUserOptions) {
         company_description: `Test client for API testing`,
         industry: 'Technology',
         company_size: '1-10',
-        terms_accepted: true,
-        privacy_policy_accepted: true,
         created_at: new Date(),
         updated_at: new Date()
       }).returning('*');
@@ -72,7 +72,6 @@ async function createTestUser(options: TestUserOptions) {
       const [freelancerProfile] = await DB(FREELANCER_PROFILES).insert({
         user_id: user.user_id,
         profile_title: `${options.role} Profile`,
-        role: options.role,
         short_description: `Test ${options.role.toLowerCase()} for API testing`,
         experience_level: 'intermediate',
         skills: JSON.stringify(['test skill']),

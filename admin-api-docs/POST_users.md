@@ -30,7 +30,7 @@ All parameters are validated using the `CreateUserDto`.
 - `phone_number` (string): User's phone number
 - `city` (string): User's city
 - `country` (string): User's country
-- `address_line_first` (string): User's address
+- `address` (string): User's address
 - `username` (string): Custom username (auto-generated from email if not provided)
 - `roleName` (string): User role - one of: `CLIENT`, `VIDEOGRAPHER`, `VIDEO_EDITOR`, `ADMIN`, `SUPER_ADMIN`
 - `profileData` (object): Profile-specific data based on the role
@@ -51,7 +51,7 @@ All parameters are validated using the `CreateUserDto`.
     "phone_number": "+1234567890",
     "city": "New York",
     "country": "USA",
-    "address_line_first": "123 Main St",
+    "address": "123 Main St",
     "is_active": true,
     "is_banned": false,
     "banned_reason": null,
@@ -124,7 +124,7 @@ All parameters are validated using the `CreateUserDto`.
   "phone_number": "+1234567890",
   "city": "Los Angeles",
   "country": "USA",
-  "address_line_first": "456 Oak Avenue"
+  "address": "456 Oak Avenue"
 }
 ```
 
@@ -735,7 +735,7 @@ export interface CreateUserRequest {
   phone_number?: string;
   city?: string;
   country?: string;
-  address_line_first?: string;
+  address?: string;
   username?: string;
   roleName?: 'CLIENT' | 'VIDEOGRAPHER' | 'VIDEO_EDITOR' | 'ADMIN' | 'SUPER_ADMIN';
   profileData?: any;
@@ -750,7 +750,7 @@ export interface User {
   phone_number?: string;
   city?: string;
   country?: string;
-  address_line_first?: string;
+  address?: string;
   is_active: boolean;
   is_banned: boolean;
   banned_reason?: string;

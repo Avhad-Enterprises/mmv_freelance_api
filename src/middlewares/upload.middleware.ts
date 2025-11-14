@@ -16,12 +16,26 @@ const fileFilter = (req: Request, file: MulterFile, cb: Function) => {
       cb(new Error('Profile picture must be an image file'), false);
     }
   }
-  // Allow images and PDFs for documents
-  else if (file.fieldname === 'id_document' || file.fieldname === 'business_document' || file.fieldname === 'business_documents') {
-    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+  // Allow images, PDFs, and office documents for business/ID documents
+  else if (file.fieldname === 'id_document' || file.fieldname === 'business_document') {
+    const allowedTypes = [
+      'image/',                                           // All image types
+      'application/pdf',                                  // PDF
+      'application/msword',                               // .doc
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'application/vnd.ms-excel',                         // .xls
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'text/plain',                                       // .txt
+    ];
+    
+    const isAllowed = allowedTypes.some(type => 
+      type.endsWith('/') ? file.mimetype.startsWith(type) : file.mimetype === type
+    );
+    
+    if (isAllowed) {
       cb(null, true);
     } else {
-      cb(new Error('Documents must be image or PDF files'), false);
+      cb(new Error('Documents must be image, PDF, DOC, DOCX, XLS, XLSX, or TXT files'), false);
     }
   }
   else {
@@ -35,7 +49,7 @@ const upload = multer({
   fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
-    files: 3, // Maximum 3 files (profile, id, business)
+    files: 10, // Maximum 10 files (profile, id, multiple business docs)
   },
 });
 
@@ -44,9 +58,7 @@ export const registrationUpload = upload.fields([
   { name: 'profile_picture', maxCount: 1 }, // For clients and videographers
   { name: 'profile_photo', maxCount: 1 },   // For video editors
   { name: 'id_document', maxCount: 1 },
-  { name: 'business_document', maxCount: 1 }, // Only for clients
-  // Note: business_documents support kept for backward compatibility
-  { name: 'business_documents', maxCount: 1 }, // Legacy field name support
+  { name: 'business_document', maxCount: 5 }, // Multiple business documents for clients
 ]);
 
 export default { registrationUpload };

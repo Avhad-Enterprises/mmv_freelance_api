@@ -10,29 +10,9 @@ export interface ClientProfile {
   industry?: string;
   company_size?: string;
 
-  // Project Information
-  project_title?: string;
-  project_description?: string;
-  project_category?: string;
-  project_budget?: number;
-  project_timeline?: string;
-
-  // Terms and Privacy
-  terms_accepted?: boolean;
-  privacy_policy_accepted?: boolean;
-
   // Business Details
   tax_id?: string;
-  business_documents?: string[];
-  id_document_url?: string;
-  business_document_url?: string;
-
-  // Work Preferences (legacy fields - may be deprecated)
-  work_arrangement?: string;
-  project_frequency?: string;
-  hiring_preferences?: string;
-  expected_start_date?: string;
-  project_duration?: string;
+  business_document_urls?: string[];
 
   // Stats
   projects_created?: any[];
@@ -40,6 +20,7 @@ export interface ClientProfile {
 
   // Payment
   payment_method?: any;
+  bank_account_info?: any;
 
   // Timestamps
   created_at?: Date;

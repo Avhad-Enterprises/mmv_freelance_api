@@ -114,7 +114,7 @@ export class BusinessValidationMiddleware {
       if (account_type === 'freelancer') {
         const requiredFreelancerFields = [
           'profile_title', 'skills', 'experience_level', 'hourly_rate',
-          'street_address', 'zip_code', 'id_type', 'availability', 
+          'address', 'pincode', 'id_type', 'availability', 
           'hours_per_week', 'work_type', 'languages'
         ];
 

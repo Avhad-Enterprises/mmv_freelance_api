@@ -49,7 +49,6 @@ export const migrate = async (dropFirst = false) => {
 
         // Professional Info
         table.string('profile_title', 255).notNullable();
-        table.string('role', 100).nullable().comment('Professional role/title');
         table.text('short_description').nullable();
         table.string('experience_level', 50).nullable().comment('entry, intermediate, expert, master');
 

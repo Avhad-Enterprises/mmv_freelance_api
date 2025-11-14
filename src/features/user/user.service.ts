@@ -328,16 +328,16 @@ class UserService {
   private getCompletionCriteria(userType: string): { [key: string]: string[] } {
     const criteria = {
       CLIENT: {
-        user: ['first_name', 'last_name', 'email', 'phone_number', 'address_line_first', 'city', 'state', 'country', 'pincode'],
-        profile: ['company_name', 'company_description', 'industry', 'company_size', 'work_arrangement', 'project_frequency', 'hiring_preferences', 'terms_accepted', 'privacy_policy_accepted']
+        user: ['first_name', 'last_name', 'email', 'phone_number', 'address', 'city', 'state', 'country', 'pincode', 'terms_accepted', 'privacy_policy_accepted'],
+        profile: ['company_name', 'company_description', 'industry', 'company_size', 'work_arrangement', 'project_frequency', 'hiring_preferences']
       },
       VIDEOGRAPHER: {
-        user: ['first_name', 'last_name', 'email', 'phone_number', 'address_line_first', 'city', 'state', 'country', 'pincode'],
+        user: ['first_name', 'last_name', 'email', 'phone_number', 'address', 'city', 'state', 'country', 'pincode'],
         freelancer_profile: ['profile_title', 'short_description', 'experience_level', 'skills', 'languages', 'rate_amount', 'currency', 'availability', 'work_type', 'hours_per_week', 'portfolio_links']
         // videographer_profile: [] - currently empty
       },
       VIDEO_EDITOR: {
-        user: ['first_name', 'last_name', 'email', 'phone_number', 'address_line_first', 'city', 'state', 'country', 'pincode'],
+        user: ['first_name', 'last_name', 'email', 'phone_number', 'address', 'city', 'state', 'country', 'pincode'],
         freelancer_profile: ['profile_title', 'short_description', 'experience_level', 'skills', 'languages', 'rate_amount', 'currency', 'availability', 'work_type', 'hours_per_week', 'portfolio_links']
         // videoeditor_profile: [] - currently empty
       },

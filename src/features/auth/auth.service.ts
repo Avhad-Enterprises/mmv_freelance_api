@@ -27,7 +27,7 @@ export class AuthService {
     // Handle file uploads
     let profilePictureUrl = data.profile_picture || null;
     let idDocumentUrl = null;
-    let businessDocumentUrl = null;
+    let businessDocumentUrls: string[] = [];
 
     if (files) {
       console.log('📁 Files received for client registration:', Object.keys(files));
@@ -49,33 +49,38 @@ export class AuthService {
           profilePictureUrl = profileUpload.url;
         }
 
-        // Upload ID document
+        // Upload ID document (clients don't need this, but keeping for compatibility)
         if (files.id_document && files.id_document[0]) {
-          const idUpload = await uploadRegistrationFile(
-            files.id_document[0],
-            data.email,
-            DocumentType.ID_DOCUMENT,
-            AccountType.CLIENT
-          );
-          idDocumentUrl = idUpload.url;
+          console.log('⚠️ Client registration received ID document, but clients do not require ID documents');
         }
 
-        // Upload business document (specific to clients)
-        // Primary field name: business_document, fallback: business_documents (legacy)
-        const businessFile = files.business_document?.[0] || files.business_documents?.[0];
-        if (businessFile) {
-          // Frontend should now prevent empty files, but keep validation for safety
-          if (businessFile.size === 0 || !businessFile.buffer || businessFile.buffer.length === 0) {
-            console.warn('⚠️ Skipping empty business document upload (frontend should prevent this)');
-          } else {
-            const businessUpload = await uploadRegistrationFile(
-              businessFile,
-              data.email,
-              DocumentType.BUSINESS_DOCUMENT,
-              AccountType.CLIENT
-            );
-            businessDocumentUrl = businessUpload.url;
+        // Upload business documents (multiple allowed for clients)
+        const businessFiles = files.business_document;
+        if (businessFiles && businessFiles.length > 0) {
+          console.log(`📄 Processing ${businessFiles.length} business document(s) for client`);
+          
+          for (const businessFile of businessFiles) {
+            if (businessFile.size === 0 || !businessFile.buffer || businessFile.buffer.length === 0) {
+              console.warn('⚠️ Skipping empty business document upload');
+              continue;
+            }
+            
+            try {
+              const businessUpload = await uploadRegistrationFile(
+                businessFile,
+                data.email,
+                DocumentType.BUSINESS_DOCUMENT,
+                AccountType.CLIENT
+              );
+              businessDocumentUrls.push(businessUpload.url);
+              console.log(`✅ Uploaded business document: ${businessUpload.url}`);
+            } catch (uploadError) {
+              console.error(`❌ Failed to upload business document ${businessFile.originalname}:`, uploadError);
+              // Continue with other files instead of failing completely
+            }
           }
+          
+          console.log(`📄 Successfully uploaded ${businessDocumentUrls.length} business document(s)`);
         }
       } catch (error: any) {
         console.error('❌ File upload error in auth service:', error.message);
@@ -91,12 +96,16 @@ export class AuthService {
       password: hashedPassword,
       phone_number: data.phone_number,
       profile_picture: profilePictureUrl,
+      bio: data.bio || null,
+      address: data.address,
       country: data.country,
       state: data.state,
       city: data.city,
       pincode: data.zip_code || data.pincode || null,
       latitude: data.latitude || null,
       longitude: data.longitude || null,
+      terms_accepted: data.terms_accepted || false,
+      privacy_policy_accepted: data.privacy_policy_accepted || false,
       is_active: true,
     }).returning('*');
 
@@ -110,17 +119,10 @@ export class AuthService {
       company_description: data.company_description || 'No description provided',
       industry: data.industry,
       company_size: data.company_size,
-      project_title: data.project_title || 'Untitled Project',
-      project_description: data.project_description || 'No description provided',
-      project_category: data.project_category || 'General',
-      project_budget: data.project_budget || 0,
-      project_timeline: data.project_timeline || 'Not specified',
       work_arrangement: data.work_arrangement || null,
       project_frequency: data.project_frequency || null,
       hiring_preferences: data.hiring_preferences || null,
-      terms_accepted: data.terms_accepted || false,
-      privacy_policy_accepted: data.privacy_policy_accepted || false,
-      business_document_url: businessDocumentUrl,
+      business_document_urls: JSON.stringify(businessDocumentUrls),
     });
 
     // Generate token
@@ -194,12 +196,16 @@ export class AuthService {
       password: hashedPassword,
       phone_number: data.phone_number,
       profile_picture: profilePictureUrl,
+      bio: data.bio || null,
+      address: data.address || data.street_address,
       city: data.city,
       state: data.state || null,
       country: data.country,
       pincode: data.pincode || null,
       latitude: data.latitude || null,
       longitude: data.longitude || null,
+      terms_accepted: data.terms_accepted || false,
+      privacy_policy_accepted: data.privacy_policy_accepted || false,
       is_active: true,
     }).returning('*');
 
@@ -223,7 +229,6 @@ export class AuthService {
       id_type: data.id_type,
       id_document_url: idDocumentUrl,
       experience_level: data.experience_level,
-      role: data.role,
       base_skills: Array.isArray(data.base_skills) ? JSON.stringify(data.base_skills) : data.base_skills,
     }).returning('*');
 
@@ -304,12 +309,16 @@ export class AuthService {
       password: hashedPassword,
       phone_number: data.phone_number,
       profile_picture: profilePictureUrl,
+      bio: data.bio || null,
+      address: data.address || data.street_address,
       country: data.country,
       state: data.state || null,
       city: data.city,
       pincode: data.pincode || null,
       latitude: data.latitude || null,
       longitude: data.longitude || null,
+      terms_accepted: data.terms_accepted || false,
+      privacy_policy_accepted: data.privacy_policy_accepted || false,
       is_active: true,
     }).returning('*');
 
@@ -333,7 +342,6 @@ export class AuthService {
       id_type: data.id_type,
       id_document_url: idDocumentUrl,
       experience_level: data.experience_level,
-      role: data.role,
       base_skills: Array.isArray(data.base_skills) ? JSON.stringify(data.base_skills) : data.base_skills,
     }).returning('*');
 

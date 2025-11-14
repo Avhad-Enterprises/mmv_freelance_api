@@ -5,7 +5,6 @@ export interface VideoEditorProfile {
 
   // Professional Info
   profile_title: string;
-  role?: string;
   short_description?: string;
   experience_level?: 'entry' | 'intermediate' | 'expert' | 'master';
 
@@ -82,7 +81,6 @@ export interface VideoEditorRegistrationData {
   city?: string;
   country?: string;
   pincode?: string;
-  role?: string;
   base_skills?: string[];
 
   // File uploads (required)

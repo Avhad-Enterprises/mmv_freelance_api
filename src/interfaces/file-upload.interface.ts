@@ -27,7 +27,7 @@ export interface FileUploadResult {
 // Document types for folder organization
 export enum DocumentType {
   ID_DOCUMENT = 'id_documents',
-  BUSINESS_DOCUMENT = 'business_documents',
+  BUSINESS_DOCUMENT = 'business_document',
   PROFILE_PHOTO = 'profile_photos'
 }
 
