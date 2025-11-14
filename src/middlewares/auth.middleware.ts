@@ -8,6 +8,10 @@ import { IsEmpty } from 'class-validator';
 const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFunction) => {
 
   try {
+    // Allow OPTIONS requests for CORS preflight
+    if (req.method === 'OPTIONS') {
+      return next();
+    }
 
     // Public routes that don't require authentication
     const publicRoutes = [
@@ -19,6 +23,8 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/auth/register/videographer',
       '/auth/register/videoeditor',
       '/admin/invites/accept',
+      '/admin/invites/verify',
+      '/admin/invites/register',
       '/health',
       '/projects-tasks/listings',
       '/freelancers/getfreelancers-public',  // GET /freelancers/getfreelancers-public (public-safe)
