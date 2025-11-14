@@ -55,17 +55,10 @@ export class VideographerUpdateDto {
   @IsString()
   bio?: string;
 
+  // Address
   @IsOptional()
   @IsString()
-  timezone?: string;
-
-  @IsOptional()
-  @IsString()
-  address_line_first?: string;
-
-  @IsOptional()
-  @IsString()
-  address_line_second?: string;
+  address?: string;
 
   @IsOptional()
   @IsString()
@@ -91,10 +84,6 @@ export class VideographerUpdateDto {
   @IsOptional()
   @IsString()
   profile_title?: string;
-
-  @IsOptional()
-  @IsString()
-  role?: string;
 
   @IsOptional()
   @IsString()

@@ -54,29 +54,14 @@ export const migrate = async (dropFirst = false) => {
       table.string('social_links', 255).nullable().comment('Social media links');
       table.string('company_size', 50).nullable().comment('1-10, 11-50, 51-200, 200+');
 
-      // Project Information
-      table.string('project_title', 255).nullable().comment('Current project title');
-      table.text('project_description').nullable().comment('Project description');
-      table.string('project_category', 100).nullable().comment('Project category');
-      table.decimal('project_budget', 12, 2).nullable().comment('Project budget');
-      table.string('project_timeline', 100).nullable().comment('Project timeline');
-
-      // Terms and Privacy
-      table.boolean('terms_accepted').defaultTo(false).comment('Terms and conditions accepted');
-      table.boolean('privacy_policy_accepted').defaultTo(false).comment('Privacy policy accepted');
-
       // Business Details
       table.string('tax_id', 100).nullable().comment('Tax identification number');
-      table.jsonb('business_documents').nullable().comment('Array of business document URLs');
-      table.text('id_document_url').nullable().comment('ID document upload URL');
-      table.text('business_document_url').nullable().comment('Business document upload URL');
+      table.jsonb('business_document_urls').defaultTo('[]').comment('Array of business document upload URLs');
 
       // Work Preferences
       table.string('work_arrangement', 50).nullable().comment('remote, on_site, hybrid');
       table.string('project_frequency', 50).nullable().comment('one_time, occasional, ongoing');
       table.string('hiring_preferences', 50).nullable().comment('individuals, agencies, both');
-      table.string('expected_start_date', 100).nullable().comment('Expected project start date');
-      table.string('project_duration', 50).nullable().comment('less_than_week, 1_2_weeks, 2_4_weeks, 1_3_months, 3_plus_months');
 
       // Stats
       table.jsonb('projects_created').defaultTo('[]');
@@ -84,6 +69,7 @@ export const migrate = async (dropFirst = false) => {
 
       // Payment
       table.jsonb('payment_method').nullable();
+      table.jsonb('bank_account_info').nullable();
 
       // Timestamps
       table.timestamp('created_at').defaultTo(DB.fn.now());

@@ -112,31 +112,7 @@ export class ClientRegistrationDto {
   @IsEnum(['individuals', 'agencies', 'both'])
   hiring_preferences?: string;
 
-  // Step 5: Project Information (Optional)
-  @IsOptional()
-  project_title?: string;
-
-  @IsOptional()
-  project_description?: string;
-
-  @IsOptional()
-  project_category?: string;
-
-  @IsOptional()
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      const parsed = parseFloat(value);
-      return isNaN(parsed) ? value : parsed;
-    }
-    return value;
-  })
-  @IsNumber()
-  project_budget?: number;
-
-  @IsOptional()
-  project_timeline?: string;
-
-  // Step 6: Additional Information (Required)
+  // Step 5: Additional Information (Required)
   @IsNotEmpty()
   @Transform(({ value }) => {
     if (typeof value === 'string') {

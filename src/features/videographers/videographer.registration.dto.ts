@@ -80,6 +80,14 @@ export class VideographerRegistrationDto {
 
   @IsOptional()
   @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
   city?: string;
 
   @IsOptional()
@@ -175,10 +183,6 @@ export class VideographerRegistrationDto {
   @IsString()
   @IsEnum(['entry', 'intermediate', 'expert', 'master'])
   experience_level?: string;
-
-  @IsOptional()
-  @IsString()
-  role?: string;
 
   @IsOptional()
   @Transform(({ value }) => {

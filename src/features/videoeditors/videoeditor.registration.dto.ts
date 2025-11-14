@@ -132,6 +132,14 @@ export class VideoEditorRegistrationDto {
 
   @IsOptional()
   @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
   city?: string;
 
   @IsOptional()
@@ -151,10 +159,6 @@ export class VideoEditorRegistrationDto {
 
   @IsOptional()
   longitude?: number;
-
-  @IsOptional()
-  @IsString()
-  role?: string;
 
   @IsOptional()
   @Transform(({ value }) => {

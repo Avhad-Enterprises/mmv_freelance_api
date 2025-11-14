@@ -131,11 +131,7 @@ export class UsersDto {
 
   @IsOptional()
   @IsString()
-  address_line_first: string;
-
-  @IsOptional()
-  @IsString()
-  address_line_second: string;
+  address: string;
 
   @IsOptional()
   @IsString()
@@ -196,10 +192,6 @@ export class UsersDto {
   @IsOptional()
   @IsString()
   bio: string;
-
-  @IsOptional()
-  @IsString()
-  timezone: string;
 
   @IsOptional()
   @IsBoolean()

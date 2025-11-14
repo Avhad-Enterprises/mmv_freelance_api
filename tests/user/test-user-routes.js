@@ -165,7 +165,6 @@ async function testUpdateProfile() {
         first_name: 'Updated',
         last_name: 'Name',
         bio: 'This is my updated bio',
-        timezone: 'America/New_York',
       },
       { Authorization: `Bearer ${testUserToken}` }
     );

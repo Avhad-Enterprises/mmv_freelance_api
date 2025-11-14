@@ -18,7 +18,7 @@ This document specifies the required fields for bulk registration CSV files for 
 
 ### Required Fields:
 ```
-first_name,last_name,email,password,company_name,industry,company_size,country,phone_number,terms_accepted,privacy_policy_accepted,company_website,company_description,social_links,city,state,zip_code,work_arrangement,project_frequency,hiring_preferences,project_title,project_description,project_category,project_budget,project_timeline,profile_picture,business_document
+first_name,last_name,email,password,company_name,industry,company_size,country,phone_number,terms_accepted,privacy_policy_accepted,company_website,company_description,social_links,address,city,state,zip_code,work_arrangement,project_frequency,hiring_preferences,project_title,project_description,project_category,project_budget,project_timeline,profile_picture,business_document
 ```
 
 ### Field Descriptions:
@@ -36,6 +36,7 @@ first_name,last_name,email,password,company_name,industry,company_size,country,p
 - **company_website**: Company website URL (string, optional)
 - **company_description**: Company description (string, optional)
 - **social_links**: Social media links as JSON array (string, optional, e.g., "https://linkedin.com/company,https://twitter.com/company")
+- **address**: Street address (string, optional)
 - **city**: City name (string, optional)
 - **state**: State/Province (string, optional)
 - **zip_code**: ZIP/Postal code (string, optional)
@@ -52,7 +53,7 @@ first_name,last_name,email,password,company_name,industry,company_size,country,p
 
 ### Sample CSV Row:
 ```
-John,Doe,john.doe@example.com,Password123!,TechCorp,technology,51-200,United States,+1-555-0123,true,true,https://techcorp.com,"Leading technology solutions provider","https://linkedin.com/company/techcorp,https://twitter.com/techcorp",New York,NY,10001,remote,ongoing,both,"Mobile App Development","Developing a comprehensive mobile application for our clients",Technology,50000,"3-6 months",/path/to/profile.jpg,/path/to/business_doc.pdf
+John,Doe,john.doe@example.com,Password123!,TechCorp,technology,51-200,United States,+1-555-0123,true,true,https://techcorp.com,"Leading technology solutions provider","https://linkedin.com/company/techcorp,https://twitter.com/techcorp","123 Tech Street",New York,NY,10001,remote,ongoing,both,"Mobile App Development","Developing a comprehensive mobile application for our clients",Technology,50000,"3-6 months",/path/to/profile.jpg,/path/to/business_doc.pdf
 ```
 
 ---
@@ -61,7 +62,7 @@ John,Doe,john.doe@example.com,Password123!,TechCorp,technology,51-200,United Sta
 
 ### Required Fields:
 ```
-first_name,last_name,email,password,skill_tags,superpowers,country,portfolio_links,phone_number,id_type,short_description,languages,terms_accepted,privacy_policy_accepted,city,state,pincode,rate_amount,rate_currency,availability,experience_level,role,base_skills,profile_photo,id_document
+first_name,last_name,email,password,skill_tags,superpowers,country,portfolio_links,phone_number,id_type,short_description,languages,terms_accepted,privacy_policy_accepted,address,city,state,pincode,rate_amount,rate_currency,availability,experience_level,base_skills,profile_photo,id_document
 ```
 
 ### Field Descriptions:
@@ -79,6 +80,7 @@ first_name,last_name,email,password,skill_tags,superpowers,country,portfolio_lin
 - **languages**: Spoken languages as JSON array (string, required, e.g., "English,Spanish,French")
 - **terms_accepted**: Terms acceptance flag (boolean: "true", required)
 - **privacy_policy_accepted**: Privacy policy acceptance flag (boolean: "true", required)
+- **address**: Street address (string, optional)
 - **city**: City name (string, optional)
 - **state**: State/Province (string, optional)
 - **pincode**: ZIP/Postal code (string, optional)
@@ -86,14 +88,13 @@ first_name,last_name,email,password,skill_tags,superpowers,country,portfolio_lin
 - **rate_currency**: Currency code (string, optional, e.g., "USD", "EUR", "GBP", "INR")
 - **availability**: Availability status (string, optional, e.g., "part-time", "full-time", "flexible", "on-demand")
 - **experience_level**: Experience level (enum: "entry", "intermediate", "expert", "master", optional)
-- **role**: Professional role/title (string, optional, e.g., "Lead Videographer", "Cinematographer")
 - **base_skills**: Core skills as JSON array (string, optional, e.g., "camera operation,lighting,sound")
 - **profile_photo**: Profile photo file path/URL (string, optional)
 - **id_document**: ID document file path/URL (string, optional)
 
 ### Sample CSV Row:
 ```
-John,Videographer,john.videographer@example.com,Password123!,"Cinematography,Camera Operation,Lighting Setup","Color Grading,Motion Graphics,VFX",United States,"https://vimeo.com/portfolio,https://youtube.com/channel",+1-555-0123,passport,"Professional videographer with 5 years of experience in commercial shoots","English,Spanish",true,true,Los Angeles,CA,90210,150,USD,full-time,expert,Lead Videographer,"camera operation,lighting,sound",/path/to/profile.jpg,/path/to/id.pdf
+John,Videographer,john.videographer@example.com,Password123!,"Cinematography,Camera Operation,Lighting Setup","Color Grading,Motion Graphics,VFX",United States,"https://vimeo.com/portfolio,https://youtube.com/channel",+1-555-0123,passport,"Professional videographer with 5 years of experience in commercial shoots","English,Spanish",true,true,"456 Hollywood Blvd",Los Angeles,CA,90210,150,USD,full-time,expert,"camera operation,lighting,sound",/path/to/profile.jpg,/path/to/id.pdf
 ```
 
 ---
@@ -102,7 +103,7 @@ John,Videographer,john.videographer@example.com,Password123!,"Cinematography,Cam
 
 ### Required Fields:
 ```
-first_name,last_name,email,password,skill_tags,superpowers,portfolio_links,rate_amount,phone_number,id_type,short_description,availability,languages,terms_accepted,privacy_policy_accepted,experience_level,city,state,country,role,base_skills,profile_photo,id_document
+first_name,last_name,email,password,skill_tags,superpowers,portfolio_links,rate_amount,phone_number,id_type,short_description,availability,languages,terms_accepted,privacy_policy_accepted,experience_level,address,city,state,country,base_skills,profile_photo,id_document
 ```
 
 ### Field Descriptions:
@@ -122,17 +123,17 @@ first_name,last_name,email,password,skill_tags,superpowers,portfolio_links,rate_
 - **terms_accepted**: Terms acceptance flag (boolean: "true", required)
 - **privacy_policy_accepted**: Privacy policy acceptance flag (boolean: "true", required)
 - **experience_level**: Experience level (enum: "entry", "intermediate", "expert", "master", optional)
+- **address**: Street address (string, optional)
 - **city**: City name (string, optional)
 - **state**: State/Province (string, optional)
 - **country**: Country name (string, optional)
-- **role**: Professional role/title (string, optional, e.g., "Senior Video Editor", "Post-Production Specialist")
 - **base_skills**: Core skills as JSON array (string, optional, e.g., "editing,color correction,audio mixing")
 - **profile_photo**: Profile photo file path/URL (string, optional)
 - **id_document**: ID document file path/URL (string, optional)
 
 ### Sample CSV Row:
 ```
-Jane,Editor,jane.editor@example.com,Password123!,"Color Correction,Color Grading,VFX","Adobe Premiere Pro,DaVinci Resolve,After Effects","https://vimeo.com/portfolio,https://behance.net/portfolio",120,+1-555-0124,passport,"Expert video editor specializing in post-production",full-time,"English,Spanish",true,true,expert,Los Angeles,CA,United States,Senior Video Editor,"editing,color correction,audio mixing",/path/to/profile.jpg,/path/to/id.pdf
+Jane,Editor,jane.editor@example.com,Password123!,"Color Correction,Color Grading,VFX","Adobe Premiere Pro,DaVinci Resolve,After Effects","https://vimeo.com/portfolio,https://behance.net/portfolio",120,+1-555-0124,passport,"Expert video editor specializing in post-production",full-time,"English,Spanish",true,true,expert,"789 Editing St",Los Angeles,CA,United States,"editing,color correction,audio mixing",/path/to/profile.jpg,/path/to/id.pdf
 ```
 
 ---

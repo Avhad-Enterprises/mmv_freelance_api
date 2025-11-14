@@ -35,10 +35,7 @@ Authorization: Bearer <your_jwt_token>
       "email_verified": true,
       "profile_picture": "https://supabase-endpoint/object/public/bucket/profile_photos/user123/PROFILE_PHOTO_1234567890_abc123.jpg",
       "bio": "Professional videographer with 5+ years experience",
-      "timezone": "America/New_York",
-      "category": "videography",
-      "address_line_first": "123 Main St",
-      "address_line_second": "Apt 4B",
+      "address": "123 Main St",
       "city": "New York",
       "state": "NY",
       "country": "USA",
@@ -290,7 +287,7 @@ Authorization: Bearer <your_jwt_token>
       "freelancer_profile.portfolio_links"
     ],
     "missingFields": [
-      "user.address_line_first",
+      "user.address",
       "user.state",
       "freelancer_profile.work_type",
       "freelancer_profile.hours_per_week"
@@ -303,17 +300,17 @@ Authorization: Bearer <your_jwt_token>
 
 ### CLIENT
 **Total Fields**: 18
-- **User Fields** (9): first_name, last_name, email, phone_number, address_line_first, city, state, country, pincode
-- **Profile Fields** (9): company_name, company_description, industry, company_size, work_arrangement, project_frequency, hiring_preferences, terms_accepted, privacy_policy_accepted
+- **User Fields** (11): first_name, last_name, email, phone_number, address, city, state, country, pincode, terms_accepted, privacy_policy_accepted
+- **Profile Fields** (7): company_name, company_description, industry, company_size, work_arrangement, project_frequency, hiring_preferences
 
 ### VIDEOGRAPHER
 **Total Fields**: 20
-- **User Fields** (9): first_name, last_name, email, phone_number, address_line_first, city, state, country, pincode
+- **User Fields** (9): first_name, last_name, email, phone_number, address, city, state, country, pincode
 - **Freelancer Profile Fields** (11): profile_title, short_description, experience_level, skills, languages, rate_amount, currency, availability, work_type, hours_per_week, portfolio_links
 
 ### VIDEO_EDITOR
 **Total Fields**: 20
-- **User Fields** (9): first_name, last_name, email, phone_number, address_line_first, city, state, country, pincode
+- **User Fields** (9): first_name, last_name, email, phone_number, address, city, state, country, pincode
 - **Freelancer Profile Fields** (11): profile_title, short_description, experience_level, skills, languages, rate_amount, currency, availability, work_type, hours_per_week, portfolio_links
 
 ### ADMIN

@@ -102,9 +102,7 @@ export class ClientController {
         email_verified: updateData.email_verified,
         profile_picture: updateData.profile_picture,
         bio: updateData.bio,
-        timezone: updateData.timezone,
-        address_line_first: updateData.address_line_first,
-        address_line_second: updateData.address_line_second,
+        address: updateData.address,
         city: updateData.city,
         state: updateData.state,
         country: updateData.country,
@@ -125,13 +123,12 @@ export class ClientController {
         budget_min: updateData.budget_min,
         budget_max: updateData.budget_max,
         tax_id: updateData.tax_id,
-        business_documents: updateData.business_documents,
+        business_document_urls: updateData.business_document_urls,
         work_arrangement: updateData.work_arrangement,
         project_frequency: updateData.project_frequency,
         hiring_preferences: updateData.hiring_preferences,
-        expected_start_date: updateData.expected_start_date,
-        project_duration: updateData.project_duration,
-        payment_method: updateData.payment_method
+        payment_method: updateData.payment_method,
+        bank_account_info: updateData.bank_account_info
       };
 
       // Update user table fields if any are provided
@@ -174,33 +171,6 @@ export class ClientController {
       res.status(200).json({
         success: true,
         data: stats
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * Update business documents
-   * PATCH /api/v1/clients/profile/documents
-   */
-  public updateDocuments = async (
-    req: RequestWithUser,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const { document_urls } = req.body;
-      
-      if (!Array.isArray(document_urls)) {
-        throw new HttpException(400, 'document_urls must be an array');
-      }
-      
-      await this.clientService.updateBusinessDocuments(req.user.user_id, document_urls);
-      
-      res.status(200).json({
-        success: true,
-        message: 'Business documents updated successfully'
       });
     } catch (error) {
       next(error);

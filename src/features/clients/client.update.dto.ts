@@ -56,17 +56,10 @@ export class ClientProfileUpdateDto {
   @IsString()
   bio?: string;
 
+  // Address
   @IsOptional()
   @IsString()
-  timezone?: string;
-
-  @IsOptional()
-  @IsString()
-  address_line_first?: string;
-
-  @IsOptional()
-  @IsString()
-  address_line_second?: string;
+  address?: string;
 
   @IsOptional()
   @IsString()
@@ -201,7 +194,7 @@ export class ClientProfileUpdateDto {
     }
     return value;
   })
-  business_documents?: string[];
+  business_document_urls?: string[];
 
   // Preferences
   @IsOptional()
@@ -216,14 +209,6 @@ export class ClientProfileUpdateDto {
   @IsEnum(['individuals', 'agencies', 'both'])
   hiring_preferences?: string;
 
-  @IsOptional()
-  @IsString()
-  expected_start_date?: string;
-
-  @IsOptional()
-  @IsEnum(['less_than_1_month', '1_3_months', '3_6_months', '6_months_plus'])
-  project_duration?: string;
-
   // Payment
   @IsOptional()
   @Transform(({ value }) => {
@@ -233,4 +218,13 @@ export class ClientProfileUpdateDto {
     return value;
   })
   payment_method?: object;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return JSON.parse(value);
+    }
+    return value;
+  })
+  bank_account_info?: object;
 }

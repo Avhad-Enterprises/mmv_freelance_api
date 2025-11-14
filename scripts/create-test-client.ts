@@ -19,8 +19,6 @@ async function createClientProfile() {
       company_description: 'Test client for API testing',
       industry: 'Technology',
       company_size: '1-10',
-      terms_accepted: true,
-      privacy_policy_accepted: true,
       created_at: new Date(),
       updated_at: new Date()
     }).returning('*');

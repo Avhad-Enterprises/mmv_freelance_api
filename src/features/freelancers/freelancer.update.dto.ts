@@ -44,10 +44,6 @@ export class FreelancerUpdateDto {
   @IsString()
   bio?: string;
 
-  @IsOptional()
-  @IsString()
-  timezone?: string;
-
   // Professional Info
   @IsOptional()
   @IsString()
@@ -171,11 +167,7 @@ export class FreelancerUpdateDto {
   // Address
   @IsOptional()
   @IsString()
-  address_line_first?: string;
-
-  @IsOptional()
-  @IsString()
-  address_line_second?: string;
+  address?: string;
 
   @IsOptional()
   @IsString()

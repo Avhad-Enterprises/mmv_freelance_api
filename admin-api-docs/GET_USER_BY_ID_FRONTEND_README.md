@@ -42,9 +42,7 @@ Authorization: Bearer <jwt_token>
     "phone_number": "+1234567890",
     "profile_picture": "https://example.com/avatar.jpg",
     "bio": "Professional developer",
-    "timezone": "UTC",
-    "address_line_first": "123 Main St",
-    "address_line_second": "Apt 4B",
+    "address": "123 Main St",
     "city": "New York",
     "state": "NY",
     "country": "USA",
@@ -333,8 +331,8 @@ export class UserDetailsComponent implements OnChanges {
 The response includes all core user fields from the users table:
 - **Identity**: user_id, first_name, last_name, username, email
 - **Contact**: phone_number, email_verified, phone_verified
-- **Profile**: profile_picture, bio, timezone
-- **Address**: address_line_first, address_line_second, city, state, country, pincode
+- **Profile**: profile_picture, bio
+- **Address**: address, city, state, country, pincode
 - **Account Status**: is_active, is_banned, is_deleted, banned_reason
 - **Preferences**: email_notifications
 - **Timestamps**: created_at, updated_at

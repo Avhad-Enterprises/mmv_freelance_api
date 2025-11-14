@@ -31,7 +31,7 @@ All parameters are optional and validated using the `UpdateUserDto`. Only provid
 - `phone_number` (string): User's phone number
 - `city` (string): User's city
 - `country` (string): User's country
-- `address_line_first` (string): User's address
+- `address` (string): User's address
 - `username` (string): Custom username
 
 ## Response
@@ -50,7 +50,7 @@ All parameters are optional and validated using the `UpdateUserDto`. Only provid
     "phone_number": "+1234567890",
     "city": "New York",
     "country": "USA",
-    "address_line_first": "123 Updated St",
+    "address": "123 Updated St",
     "is_active": true,
     "is_banned": false,
     "banned_reason": null,
@@ -124,7 +124,7 @@ All parameters are optional and validated using the `UpdateUserDto`. Only provid
 {
   "city": "Los Angeles",
   "country": "USA",
-  "address_line_first": "456 Updated Avenue"
+  "address": "456 Updated Avenue"
 }
 ```
 
@@ -268,7 +268,7 @@ function EditUserForm({ userId, initialData, onSuccess, onCancel }) {
     phone_number: initialData?.phone_number || '',
     city: initialData?.city || '',
     country: initialData?.country || '',
-    address_line_first: initialData?.address_line_first || '',
+    address: initialData?.address || '',
     username: initialData?.username || ''
   });
   const [passwordData, setPasswordData] = useState({
@@ -414,12 +414,12 @@ function EditUserForm({ userId, initialData, onSuccess, onCancel }) {
         </div>
 
         <div className="form-group">
-          <label htmlFor="address_line_first">Address</label>
+          <label htmlFor="address">Address</label>
           <input
             type="text"
-            id="address_line_first"
-            name="address_line_first"
-            value={formData.address_line_first}
+            id="address"
+            name="address"
+            value={formData.address}
             onChange={handleChange}
           />
         </div>
@@ -550,11 +550,11 @@ function EditUserForm({ userId, initialData, onSuccess, onCancel }) {
         </div>
 
         <div class="form-group">
-          <label for="address_line_first">Address</label>
+          <label for="address">Address</label>
           <input
             type="text"
-            id="address_line_first"
-            v-model="formData.address_line_first"
+            id="address"
+            v-model="formData.address"
           />
         </div>
       </div>
@@ -620,7 +620,7 @@ const formData = reactive({
   phone_number: props.initialData?.phone_number || '',
   city: props.initialData?.city || '',
   country: props.initialData?.country || '',
-  address_line_first: props.initialData?.address_line_first || '',
+  address: props.initialData?.address || '',
   username: props.initialData?.username || ''
 });
 
@@ -805,7 +805,7 @@ export interface UpdateUserRequest {
   phone_number?: string;
   city?: string;
   country?: string;
-  address_line_first?: string;
+  address?: string;
   username?: string;
 }
 
@@ -818,7 +818,7 @@ export interface User {
   phone_number?: string;
   city?: string;
   country?: string;
-  address_line_first?: string;
+  address?: string;
   is_active: boolean;
   is_banned: boolean;
   banned_reason?: string;
@@ -959,11 +959,11 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
           </div>
 
           <div class="form-group">
-            <label for="address_line_first">Address</label>
+            <label for="address">Address</label>
             <input
               type="text"
-              id="address_line_first"
-              formControlName="address_line_first"
+              id="address"
+              formControlName="address"
             />
           </div>
         </div>
@@ -1137,7 +1137,7 @@ export class EditUserComponent {
       phone_number: [''],
       city: [''],
       country: [''],
-      address_line_first: [''],
+      address: [''],
       password: [''],
       confirmPassword: ['']
     });
@@ -1153,7 +1153,7 @@ export class EditUserComponent {
         phone_number: this.initialData.phone_number || '',
         city: this.initialData.city || '',
         country: this.initialData.country || '',
-        address_line_first: this.initialData.address_line_first || ''
+        address: this.initialData.address || ''
       });
     }
   }

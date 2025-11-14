@@ -66,16 +66,6 @@ export class ClientRoutes implements Route {
       this.clientController.getStats
     );
 
-    /**
-     * Update business documents
-     * Requires: CLIENT role
-     */
-    this.router.patch(
-      `${this.path}/profile/documents`,
-      requireRole('CLIENT'),
-      this.clientController.updateDocuments
-    );
-
     // Admin routes
 
     /**

@@ -9,8 +9,7 @@ export interface Users {
   password?: string;
   
   // Address fields
-  address_line_first?: string;
-  address_line_second?: string;
+  address?: string;
   city?: string;
   state?: string;
   country?: string;
@@ -43,15 +42,12 @@ export interface Users {
   // Document fields
   id_type?: string;
   id_document?: string; // URL after upload
-  business_documents?: string[]; // URLs after upload
   tax_id?: string;
   
   // Work preferences
   work_arrangement?: string;
   project_frequency?: string;
   hiring_preferences?: string;
-  expected_start_date?: string;
-  project_duration?: string;
   
   // Verification fields
   aadhaar_verification?: boolean;
@@ -59,12 +55,15 @@ export interface Users {
   phone_verified?: boolean;
   kyc_verified?: boolean;
   
+  // Terms and Privacy
+  terms_accepted?: boolean;
+  privacy_policy_accepted?: boolean;
+  
   // Account fields
   account_type: 'freelancer' | 'client';
   role?: string;
   banned_reason?: string;
   bio?: string;
-  timezone?: string;
   email_notifications?: boolean;
   
   // System fields

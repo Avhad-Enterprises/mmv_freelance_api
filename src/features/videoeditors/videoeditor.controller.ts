@@ -168,9 +168,7 @@ export class VideoEditorController {
         email_verified: updateData.email_verified,
         profile_picture: updateData.profile_picture,
         bio: updateData.bio,
-        timezone: updateData.timezone,
-        address_line_first: updateData.address_line_first,
-        address_line_second: updateData.address_line_second,
+        address: updateData.address,
         city: updateData.city,
         state: updateData.state,
         country: updateData.country,
@@ -180,7 +178,6 @@ export class VideoEditorController {
 
       const profileFields = {
         profile_title: updateData.profile_title,
-        role: updateData.role,
         short_description: updateData.short_description,
         experience_level: updateData.experience_level,
         skills: updateData.skills,
