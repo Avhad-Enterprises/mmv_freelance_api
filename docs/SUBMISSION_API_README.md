@@ -184,7 +184,7 @@ Retrieve all submissions made by a specific freelancer.
 
 Retrieve all submissions with optional filtering (admin only).
 
-**Required Role:** ADMIN, SUPER_ADMIN
+**Required Role:** ADMIN, SUPER_ADMINc
 
 **Query Parameters:**
 - `status` (optional): Filter by submission status (0, 1, or 2)
