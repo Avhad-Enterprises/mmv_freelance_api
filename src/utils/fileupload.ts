@@ -13,7 +13,13 @@ export function isEmpty(data: any): boolean {
 
 // Upload file to AWS S3 (base64 string version)
 export async function uploadToAws(filename: string, base64String: string): Promise<string> {
-  const buffer = Buffer.from(base64String, 'base64');
+  // Strip the data URI prefix if present (e.g., "data:image/png;base64,")
+  let cleanBase64 = base64String;
+  if (base64String.includes(',')) {
+    cleanBase64 = base64String.split(',')[1];
+  }
+  
+  const buffer = Buffer.from(cleanBase64, 'base64');
   
   const params = {
     Bucket: process.env.AWS_BUCKET_NAME,

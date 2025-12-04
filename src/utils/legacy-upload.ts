@@ -21,11 +21,17 @@ export const s3 = new S3Client({
  * Upload file to AWS S3 (base64 string version)
  * @deprecated Use registration-upload.ts for new upload functionality
  * @param filename - Name of the file to upload
- * @param base64String - Base64 encoded file content
+ * @param base64String - Base64 encoded file content (may include data URI prefix)
  * @returns Promise<string> - URL of uploaded file
  */
 export async function uploadToAws(filename: string, base64String: string): Promise<string> {
-  const buffer = Buffer.from(base64String, 'base64');
+  // Strip the data URI prefix if present (e.g., "data:image/png;base64,")
+  let cleanBase64 = base64String;
+  if (base64String.includes(',')) {
+    cleanBase64 = base64String.split(',')[1];
+  }
+  
+  const buffer = Buffer.from(cleanBase64, 'base64');
   
   const params = {
     Bucket: process.env.AWS_BUCKET_NAME,
