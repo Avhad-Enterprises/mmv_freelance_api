@@ -38,14 +38,26 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
 
     // Check if the current path matches any public route
     // GET requests to public routes don't require auth
-    // POST requests to registration, login, password reset, and contact submit routes don't require auth
+    // Only specific POST routes don't require auth (registration, login, password reset, contact submit)
     const isPublicGetRoute = publicRoutes.some(route => req.path.includes(route)) && req.method === 'GET';
-    const isPublicPostRoute = publicRoutes.some(route => req.path.includes(route)) && req.method === 'POST';
-    const isPublicRegistrationRoute = req.path.includes('/auth/register') && req.method === 'POST';
-    const isPublicLoginRoute = req.path.includes('/auth/login') && req.method === 'POST';
-    const isPublicPasswordResetRoute = (req.path.includes('/users/password-reset-request') || req.path.includes('/users/password-reset')) && req.method === 'POST';
     
-    if (isPublicGetRoute || isPublicPostRoute || isPublicRegistrationRoute || isPublicLoginRoute || isPublicPasswordResetRoute) {
+    // Specific POST routes that are allowed without authentication
+    const publicPostRoutes = [
+      '/auth/login',
+      '/auth/register',
+      '/auth/register/client',
+      '/auth/register/videographer',
+      '/auth/register/videoeditor',
+      '/admin/invites/accept',
+      '/admin/invites/verify',
+      '/admin/invites/register',
+      '/users/password-reset-request',
+      '/users/password-reset',
+      '/contact/submit'
+    ];
+    const isPublicPostRoute = publicPostRoutes.some(route => req.path.includes(route)) && req.method === 'POST';
+    
+    if (isPublicGetRoute || isPublicPostRoute) {
       await DB.raw("SET search_path TO public");
       return next();
     }
@@ -59,31 +71,44 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
         
         const secret = process.env.JWT_SECRET;
         
-        const verificationResponse = (await jwt.verify(bearerToken, secret)) as any;
-       
-        if (verificationResponse) {
-          const userId = verificationResponse.id;
-          const findUser = await DB(T.USERS_TABLE).where({ user_id: userId }).first();
-          
-          if (findUser) {
-            req.user = findUser;
+        try {
+          const verificationResponse = (await jwt.verify(bearerToken, secret)) as any;
+         
+          if (verificationResponse) {
+            const userId = verificationResponse.id;
+            const findUser = await DB(T.USERS_TABLE).where({ user_id: userId }).first();
             
-            // Fetch user roles from database
-            const userRoles = await DB('user_roles')
-              .join('role', 'user_roles.role_id', 'role.role_id')
-              .where('user_roles.user_id', userId)
-              .select('role.name');
-            
-            // Attach roles to user object
-            req.user.roles = userRoles.map(r => r.name);
-            
-            await DB.raw("SET search_path TO public");
-            next();
-          } else {
+            if (findUser) {
+              req.user = findUser;
+              
+              // Fetch user roles from database
+              const userRoles = await DB('user_roles')
+                .join('role', 'user_roles.role_id', 'role.role_id')
+                .where('user_roles.user_id', userId)
+                .select('role.name');
+              
+              // Attach roles to user object
+              req.user.roles = userRoles.map(r => r.name);
+              
+              await DB.raw("SET search_path TO public");
+              next();
+            } else {
+              next(new HttpException(401, 'Invalid authentication token'));
+            }
+          }
+          else { next(new HttpException(401, 'UnAuthorized User')); }
+        } catch (error: any) {
+          // Handle specific JWT errors
+          if (error.name === 'TokenExpiredError') {
+            next(new HttpException(401, 'Authentication token has expired. Please login again.'));
+          } else if (error.name === 'JsonWebTokenError') {
             next(new HttpException(401, 'Invalid authentication token'));
+          } else if (error.name === 'NotBeforeError') {
+            next(new HttpException(401, 'Authentication token not active'));
+          } else {
+            next(new HttpException(401, 'Authentication token verification failed'));
           }
         }
-        else { next(new HttpException(401, 'UnAuthorized User')); }
       } else {
         next(new HttpException(401, 'Authentication token missing'));
       }
@@ -92,7 +117,7 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
     }
 
   } catch (error) {
-    next(new HttpException(401, 'Auth Middleware Exception Occured'));
+    next(new HttpException(401, 'Authentication failed'));
   }
 };
 
