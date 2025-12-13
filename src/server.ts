@@ -50,56 +50,60 @@ import AdminInvitesRoutes from './features/admin-invites/admin-invites.routes';
 import validateEnv from './utils/validation/validateEnv';
 import { FreelancerRoutes } from './features/freelancers/freelancer.routes';
 import { CreditsRoutes } from './features/credits/credits.routes';
+import { OAuthRoutes } from './features/oauth/oauth.routes';
 // Validate .env variables
 validateEnv();
 
 // Instantiate App with all route classes
 const app = new App([
-    // Refactored routes with RBAC
-    new UserRoutes(),
-    new AuthRoutes(),
-    new ClientRoutes(),
-    new VideographerRoutes(),
-    new VideoEditorRoutes(),
-    new FreelancerRoutes(),
-    new CreditsRoutes(),
+  // Refactored routes with RBAC
+  new UserRoutes(),
+  new AuthRoutes(),
+  new ClientRoutes(),
+  new VideographerRoutes(),
+  new VideoEditorRoutes(),
+  new FreelancerRoutes(),
+  new CreditsRoutes(),
 
-    // RBAC routes
-    new roleRoute(),
-    new permissionRoute(),
-    new SubmissionRoute(),
-    new projectstaskRoute(),
-    new AppliedProjectsRoute(),
-    new favoritesRoute(),
-    new SavedprojectRoute(),
-    new blogRoute(),
-    new CmsRoute(),
-    new faqRoute(),
-    new SEORoute(),
-    new PaymentRoute(),
-    new dashboardRoute(),
-    new AnalyticsRoute(),
-    new ReportRoute(),
-    new VisitorLogRoute(),
-    new notificationRoute(),
-    new supportTicketsRoute(),
-    new EmailRoute(),
-    new ContactRoute(),
+  // RBAC routes
+  new roleRoute(),
+  new permissionRoute(),
+  new SubmissionRoute(),
+  new projectstaskRoute(),
+  new AppliedProjectsRoute(),
+  new favoritesRoute(),
+  new SavedprojectRoute(),
+  new blogRoute(),
+  new CmsRoute(),
+  new faqRoute(),
+  new SEORoute(),
+  new PaymentRoute(),
+  new dashboardRoute(),
+  new AnalyticsRoute(),
+  new ReportRoute(),
+  new VisitorLogRoute(),
+  new notificationRoute(),
+  new supportTicketsRoute(),
+  new EmailRoute(),
+  new ContactRoute(),
 
-    // Phase 8: Infrastructure Features
-    new UploadRoute(),
-    new WebhookRoute(),
-    new BrandingRoute(),
+  // Phase 8: Infrastructure Features
+  new UploadRoute(),
+  new WebhookRoute(),
+  new BrandingRoute(),
 
-    // Phase 9: Remaining Features
-    new CategoryRoute(),
-    new TagRoute(),
-    new SkillsRoute(),
-    new ReviewRoute(),
-    new RobotsTxtRoute(),
-    new EMCRoute(),
-    new ReportTemplatesRoute(),
-    new AdminInvitesRoutes()
+  // Phase 9: Remaining Features
+  new CategoryRoute(),
+  new TagRoute(),
+  new SkillsRoute(),
+  new ReviewRoute(),
+  new RobotsTxtRoute(),
+  new EMCRoute(),
+  new ReportTemplatesRoute(),
+  new AdminInvitesRoutes(),
+
+  // OAuth Routes
+  new OAuthRoutes(),
 ]);
 
 // Start server
