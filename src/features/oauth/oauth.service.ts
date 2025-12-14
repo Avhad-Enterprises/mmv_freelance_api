@@ -7,7 +7,14 @@ import HttpException from '../../exceptions/HttpException';
 import {
     getGoogleProvider,
     isGoogleConfigured,
-    OAUTH_PROVIDERS,
+    isGoogleEnabled,
+    getFacebookProvider,
+    isFacebookConfigured,
+    isFacebookEnabled,
+    getAppleProvider,
+    isAppleConfigured,
+    isAppleEnabled,
+    getOAuthProviders,
     generateState,
     generateCodeVerifier,
     getArcticErrors,
@@ -19,6 +26,9 @@ import {
     OAuthUser,
     OAuthProviderConfig,
     GoogleUserInfo,
+    FacebookUserInfo,
+    AppleIdToken,
+    AppleUserData,
 } from './oauth.interface';
 import { logger } from '../../utils/logger';
 
@@ -51,7 +61,7 @@ export class OAuthService {
         // Generate cryptographically secure state and code verifier
         const state = await generateState();
         const codeVerifier = await generateCodeVerifier();
-        const scopes = OAUTH_PROVIDERS.google.scopes;
+        const scopes = getOAuthProviders().google.scopes;
 
         // Create authorization URL with PKCE
         const url = google.createAuthorizationURL(state, codeVerifier, scopes);
@@ -172,6 +182,200 @@ export class OAuthService {
     }
 
     // ===========================================
+    // FACEBOOK OAUTH - AUTHORIZATION URL
+    // ===========================================
+
+    /**
+     * Generate Facebook OAuth authorization URL
+     * Facebook doesn't require PKCE
+     */
+    public async generateFacebookAuthUrl(customRedirectUrl?: string): Promise<{
+        url: string;
+        state: string;
+    }> {
+        if (!isFacebookEnabled()) {
+            throw new HttpException(503, 'Facebook OAuth is not enabled on this server');
+        }
+
+        const facebook = await getFacebookProvider();
+
+        // Generate cryptographically secure state
+        const state = await generateState();
+        const scopes = getOAuthProviders().facebook.scopes;
+
+        // Create authorization URL
+        const url = facebook.createAuthorizationURL(state, scopes);
+
+        // Add custom redirect URL as state parameter (encoded)
+        if (customRedirectUrl) {
+            url.searchParams.set('state', `${state}|${Buffer.from(customRedirectUrl).toString('base64')}`);
+        }
+
+        return {
+            url: url.toString(),
+            state,
+        };
+    }
+
+    /**
+     * Handle Facebook OAuth callback
+     * Validates code, exchanges for tokens, and creates/updates user
+     */
+    public async handleFacebookCallback(code: string): Promise<OAuthCallbackResult> {
+        if (!isFacebookEnabled()) {
+            throw new HttpException(503, 'Facebook OAuth is not enabled');
+        }
+
+        const facebook = await getFacebookProvider();
+        const { OAuth2RequestError, ArcticFetchError } = await getArcticErrors();
+        let tokens: any;
+
+        try {
+            // Exchange authorization code for tokens
+            tokens = await facebook.validateAuthorizationCode(code);
+        } catch (error: any) {
+            if (error instanceof OAuth2RequestError) {
+                logger.error(`Facebook OAuth2RequestError: ${error.code} - ${error.message}`);
+                throw new HttpException(400, `Facebook authentication failed: ${error.message}`);
+            }
+            if (error instanceof ArcticFetchError) {
+                logger.error('Facebook OAuth fetch error:', error);
+                throw new HttpException(503, 'Unable to reach Facebook servers');
+            }
+            throw error;
+        }
+
+        // Get access token
+        const accessToken = tokens.accessToken();
+
+        // Fetch user data from Facebook Graph API
+        const userData = await this.getFacebookUserData(accessToken);
+
+        // Validate email
+        if (!userData.email) {
+            throw new HttpException(400, 'Facebook account does not have an email address. Please add an email to your Facebook account.');
+        }
+
+        // Find or create user
+        const result = await this.findOrCreateOAuthUser('facebook', userData, {
+            accessToken,
+            refreshToken: null, // Facebook doesn't use refresh tokens the same way
+            expiresAt: tokens.accessTokenExpiresAt() || null,
+        });
+
+        return result;
+    }
+
+    // ===========================================
+    // APPLE OAUTH - AUTHORIZATION URL
+    // ===========================================
+
+    /**
+     * Generate Apple OAuth authorization URL
+     */
+    public async generateAppleAuthUrl(customRedirectUrl?: string): Promise<{
+        url: string;
+        state: string;
+    }> {
+        if (!isAppleEnabled()) {
+            throw new HttpException(503, 'Apple OAuth is not enabled on this server');
+        }
+
+        const apple = await getAppleProvider();
+
+        // Generate cryptographically secure state
+        const state = await generateState();
+        const scopes = getOAuthProviders().apple.scopes;
+
+        // Create authorization URL
+        const url = apple.createAuthorizationURL(state, scopes);
+
+        // Apple specific: request name and email
+        url.searchParams.set('response_mode', 'form_post'); // Apple sends POST
+
+        // Add custom redirect URL as state parameter (encoded)
+        if (customRedirectUrl) {
+            url.searchParams.set('state', `${state}|${Buffer.from(customRedirectUrl).toString('base64')}`);
+        }
+
+        return {
+            url: url.toString(),
+            state,
+        };
+    }
+
+    /**
+     * Handle Apple OAuth callback
+     * Note: Apple uses POST for callback and only provides user data on first login
+     */
+    public async handleAppleCallback(
+        code: string,
+        idToken: string,
+        appleUserData: AppleUserData | null
+    ): Promise<OAuthCallbackResult> {
+        if (!isAppleEnabled()) {
+            throw new HttpException(503, 'Apple OAuth is not enabled');
+        }
+
+        const apple = await getAppleProvider();
+        const { OAuth2RequestError, ArcticFetchError } = await getArcticErrors();
+        let tokens: any;
+
+        try {
+            // Exchange authorization code for tokens
+            tokens = await apple.validateAuthorizationCode(code);
+        } catch (error: any) {
+            if (error instanceof OAuth2RequestError) {
+                logger.error(`Apple OAuth2RequestError: ${error.code} - ${error.message}`);
+                throw new HttpException(400, `Apple authentication failed: ${error.message}`);
+            }
+            if (error instanceof ArcticFetchError) {
+                logger.error('Apple OAuth fetch error:', error);
+                throw new HttpException(503, 'Unable to reach Apple servers');
+            }
+            throw error;
+        }
+
+        // Decode the ID token to get user info
+        // Apple's ID token is a JWT containing user info
+        const decodedIdToken = jwt.decode(tokens.idToken()) as AppleIdToken;
+
+        if (!decodedIdToken || !decodedIdToken.sub) {
+            throw new HttpException(400, 'Invalid ID token from Apple');
+        }
+
+        // Build user data
+        // IMPORTANT: Apple only sends name/email on FIRST authorization
+        const userData: OAuthUserData = {
+            providerId: decodedIdToken.sub,
+            email: appleUserData?.email || decodedIdToken.email || '',
+            emailVerified: decodedIdToken.email_verified === 'true',
+            firstName: appleUserData?.name?.firstName || '',
+            lastName: appleUserData?.name?.lastName || '',
+            profilePicture: null, // Apple doesn't provide profile pictures
+            rawData: {
+                idToken: decodedIdToken,
+                userData: appleUserData,
+                isPrivateEmail: decodedIdToken.is_private_email === 'true',
+            },
+        };
+
+        // Validate email
+        if (!userData.email) {
+            throw new HttpException(400, 'Apple account does not have an email address');
+        }
+
+        // Find or create user
+        const result = await this.findOrCreateOAuthUser('apple', userData, {
+            accessToken: tokens.accessToken(),
+            refreshToken: tokens.hasRefreshToken() ? tokens.refreshToken() : null,
+            expiresAt: tokens.accessTokenExpiresAt() || null,
+        });
+
+        return result;
+    }
+
+    // ===========================================
     // USER DATA FETCHING
     // ===========================================
 
@@ -220,6 +424,61 @@ export class OAuthService {
 
             if (error.name === 'AbortError') {
                 throw new HttpException(504, 'Google API request timed out');
+            }
+
+            throw error;
+        }
+    }
+
+    /**
+     * Fetch user data from Facebook Graph API
+     */
+    private async getFacebookUserData(accessToken: string): Promise<OAuthUserData> {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        try {
+            // Request specific fields from Facebook Graph API
+            const fields = 'id,name,email,first_name,last_name,picture.type(large)';
+            const response = await fetch(
+                `https://graph.facebook.com/me?fields=${fields}&access_token=${accessToken}`,
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    signal: controller.signal,
+                }
+            );
+
+            clearTimeout(timeout);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                logger.error(`Facebook Graph API error: ${response.status} - ${errorText}`);
+                throw new HttpException(400, 'Failed to fetch user data from Facebook');
+            }
+
+            const data = await response.json() as FacebookUserInfo;
+
+            // Validate required fields
+            if (!data.id) {
+                throw new HttpException(400, 'Invalid response from Facebook');
+            }
+
+            return {
+                providerId: data.id,
+                email: data.email || '',
+                emailVerified: true, // Facebook emails are considered verified
+                firstName: data.first_name || data.name?.split(' ')[0] || '',
+                lastName: data.last_name || data.name?.split(' ').slice(1).join(' ') || '',
+                profilePicture: data.picture?.data?.url || null,
+                rawData: data,
+            };
+        } catch (error: any) {
+            clearTimeout(timeout);
+
+            if (error.name === 'AbortError') {
+                throw new HttpException(504, 'Facebook API request timed out');
             }
 
             throw error;
@@ -581,7 +840,8 @@ export class OAuthService {
      * Get available OAuth providers
      */
     public getAvailableProviders(): OAuthProviderConfig[] {
-        return Object.values(OAUTH_PROVIDERS).filter(p => p.enabled);
+        const providers = getOAuthProviders();
+        return Object.values(providers).filter(p => p.enabled);
     }
 
     // ===========================================

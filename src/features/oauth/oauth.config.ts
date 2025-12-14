@@ -1,7 +1,8 @@
 // OAuth Provider Configuration
-// Centralized configuration for all OAuth providers
+// Centralized configuration for all OAuth providers with feature flags
 
 import { OAuthProviderConfig, OAuthProvider } from './oauth.interface';
+import jwt from 'jsonwebtoken';
 
 // ===========================================
 // ENVIRONMENT VARIABLE VALIDATION
@@ -20,47 +21,96 @@ export function validateOAuthConfig(): void {
     if (missing.length > 0) {
         console.warn(`⚠️ Missing required OAuth environment variables: ${missing.join(', ')}`);
     }
+
+    // Log OAuth provider status
+    console.log('📋 OAuth Provider Status:');
+    console.log(`   Google:   ${isGoogleEnabled() ? '✅ Enabled' : '❌ Disabled'}`);
+    console.log(`   Facebook: ${isFacebookEnabled() ? '✅ Enabled' : '❌ Disabled'}`);
+    console.log(`   Apple:    ${isAppleEnabled() ? '✅ Enabled' : '❌ Disabled'}`);
 }
 
 // ===========================================
-// PROVIDER CONFIGURATIONS
+// FEATURE FLAGS
 // ===========================================
 
 /**
- * OAuth provider configurations
- * Add new providers (Facebook, Apple) here in the future
+ * Check if a provider is enabled via environment variable
+ * Format: OAUTH_{PROVIDER}_ENABLED=true/false
  */
-export const OAUTH_PROVIDERS: Record<OAuthProvider, OAuthProviderConfig> = {
-    google: {
-        name: 'google',
-        displayName: 'Google',
-        enabled: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
-        scopes: ['openid', 'profile', 'email'],
-        icon: 'google',
-    },
-    facebook: {
-        name: 'facebook',
-        displayName: 'Facebook',
-        enabled: false, // Will be implemented later
-        scopes: ['email', 'public_profile'],
-        icon: 'facebook',
-    },
-    apple: {
-        name: 'apple',
-        displayName: 'Apple',
-        enabled: false, // Will be implemented later
-        scopes: ['name', 'email'],
-        icon: 'apple',
-    },
-};
+function isProviderEnabled(provider: string): boolean {
+    const envVar = `OAUTH_${provider.toUpperCase()}_ENABLED`;
+    const value = process.env[envVar];
+
+    // Default to true if env var not set but credentials exist
+    if (value === undefined) {
+        return false; // Explicit opt-in required
+    }
+
+    return value.toLowerCase() === 'true';
+}
+
+export function isGoogleEnabled(): boolean {
+    return isProviderEnabled('GOOGLE') && isGoogleConfigured();
+}
+
+export function isFacebookEnabled(): boolean {
+    return isProviderEnabled('FACEBOOK') && isFacebookConfigured();
+}
+
+export function isAppleEnabled(): boolean {
+    return isProviderEnabled('APPLE') && isAppleConfigured();
+}
 
 // ===========================================
-// GOOGLE PROVIDER INITIALIZATION (LAZY LOADED)
+// PROVIDER CONFIGURATIONS (Dynamic based on feature flags)
 // ===========================================
 
-// Cache for the arctic module and provider instance
+/**
+ * Get OAuth provider configurations
+ * Dynamically returns enabled status based on env vars
+ */
+export function getOAuthProviders(): Record<OAuthProvider, OAuthProviderConfig> {
+    return {
+        google: {
+            name: 'google',
+            displayName: 'Google',
+            enabled: isGoogleEnabled(),
+            scopes: ['openid', 'profile', 'email'],
+            icon: 'google',
+        },
+        facebook: {
+            name: 'facebook',
+            displayName: 'Facebook',
+            enabled: isFacebookEnabled(),
+            scopes: ['email', 'public_profile'],
+            icon: 'facebook',
+        },
+        apple: {
+            name: 'apple',
+            displayName: 'Apple',
+            enabled: isAppleEnabled(),
+            scopes: ['name', 'email'],
+            icon: 'apple',
+        },
+    };
+}
+
+// Keep OAUTH_PROVIDERS for backward compatibility (but make it a getter)
+export const OAUTH_PROVIDERS = new Proxy({} as Record<OAuthProvider, OAuthProviderConfig>, {
+    get: (_, prop: string) => {
+        const providers = getOAuthProviders();
+        return providers[prop as OAuthProvider];
+    },
+    ownKeys: () => ['google', 'facebook', 'apple'],
+    getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }),
+});
+
+// ===========================================
+// ARCTIC MODULE (ESM IMPORT)
+// ===========================================
+
+// Cache for the arctic module
 let arcticModule: typeof import('arctic') | null = null;
-let googleProviderInstance: any = null;
 
 /**
  * Dynamically import Arctic (ESM module)
@@ -76,9 +126,21 @@ async function getArctic(): Promise<typeof import('arctic')> {
     return arcticModule;
 }
 
+// ===========================================
+// GOOGLE PROVIDER
+// ===========================================
+
+let googleProviderInstance: any = null;
+
+/**
+ * Check if Google OAuth credentials are configured
+ */
+export function isGoogleConfigured(): boolean {
+    return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+}
+
 /**
  * Initialize Google OAuth provider (singleton pattern)
- * Uses dynamic import for ESM compatibility
  */
 export async function getGoogleProvider(): Promise<any> {
     if (googleProviderInstance) {
@@ -88,7 +150,7 @@ export async function getGoogleProvider(): Promise<any> {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const redirectUri = process.env.GOOGLE_REDIRECT_URI ||
-        `${process.env.FRONTEND_URL || 'http://localhost:8000'}/api/v1/oauth/google/callback`;
+        `${process.env.API_BASE_URL || 'http://localhost:8000'}/api/v1/oauth/google/callback`;
 
     if (!clientId || !clientSecret) {
         throw new Error(
@@ -101,12 +163,114 @@ export async function getGoogleProvider(): Promise<any> {
     return googleProviderInstance;
 }
 
+// ===========================================
+// FACEBOOK PROVIDER
+// ===========================================
+
+let facebookProviderInstance: any = null;
+
 /**
- * Check if Google OAuth is configured
+ * Check if Facebook OAuth credentials are configured
  */
-export function isGoogleConfigured(): boolean {
-    return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+export function isFacebookConfigured(): boolean {
+    return !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET);
 }
+
+/**
+ * Initialize Facebook OAuth provider (singleton pattern)
+ */
+export async function getFacebookProvider(): Promise<any> {
+    if (facebookProviderInstance) {
+        return facebookProviderInstance;
+    }
+
+    const appId = process.env.FACEBOOK_APP_ID;
+    const appSecret = process.env.FACEBOOK_APP_SECRET;
+    const redirectUri = process.env.FACEBOOK_REDIRECT_URI ||
+        `${process.env.API_BASE_URL || 'http://localhost:8000'}/api/v1/oauth/facebook/callback`;
+
+    if (!appId || !appSecret) {
+        throw new Error(
+            'Facebook OAuth is not configured. Please set FACEBOOK_APP_ID and FACEBOOK_APP_SECRET environment variables.'
+        );
+    }
+
+    const arctic = await getArctic();
+    facebookProviderInstance = new arctic.Facebook(appId, appSecret, redirectUri);
+    return facebookProviderInstance;
+}
+
+// ===========================================
+// APPLE PROVIDER
+// ===========================================
+
+let appleProviderInstance: any = null;
+
+/**
+ * Check if Apple OAuth credentials are configured
+ */
+export function isAppleConfigured(): boolean {
+    return !!(
+        process.env.APPLE_CLIENT_ID &&
+        process.env.APPLE_TEAM_ID &&
+        process.env.APPLE_KEY_ID &&
+        process.env.APPLE_PRIVATE_KEY
+    );
+}
+
+/**
+ * Generate Apple client secret (JWT)
+ * Apple requires a JWT signed with your private key instead of a static client secret
+ */
+export function generateAppleClientSecret(): string {
+    const privateKey = process.env.APPLE_PRIVATE_KEY!.replace(/\\n/g, '\n');
+
+    const token = jwt.sign({}, privateKey, {
+        algorithm: 'ES256',
+        expiresIn: '180d', // Apple recommends max 6 months
+        audience: 'https://appleid.apple.com',
+        issuer: process.env.APPLE_TEAM_ID!,
+        subject: process.env.APPLE_CLIENT_ID!,
+        keyid: process.env.APPLE_KEY_ID!,
+    });
+
+    return token;
+}
+
+/**
+ * Initialize Apple OAuth provider (singleton pattern)
+ */
+export async function getAppleProvider(): Promise<any> {
+    if (appleProviderInstance) {
+        return appleProviderInstance;
+    }
+
+    const clientId = process.env.APPLE_CLIENT_ID;
+    const teamId = process.env.APPLE_TEAM_ID;
+    const keyId = process.env.APPLE_KEY_ID;
+    const privateKeyString = process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const redirectUri = process.env.APPLE_REDIRECT_URI ||
+        `${process.env.API_BASE_URL || 'http://localhost:8000'}/api/v1/oauth/apple/callback`;
+
+    if (!clientId || !teamId || !keyId || !privateKeyString) {
+        throw new Error(
+            'Apple OAuth is not configured. Please set APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID, and APPLE_PRIVATE_KEY environment variables.'
+        );
+    }
+
+    const arctic = await getArctic();
+
+    // Convert private key string to Uint8Array (required by Arctic)
+    const privateKeyBuffer = new TextEncoder().encode(privateKeyString);
+
+    // Arctic's Apple provider takes credentials and generates the client secret internally
+    appleProviderInstance = new arctic.Apple(clientId, teamId, keyId, privateKeyBuffer, redirectUri);
+    return appleProviderInstance;
+}
+
+// ===========================================
+// COMMON UTILITIES
+// ===========================================
 
 /**
  * Generate state for CSRF protection

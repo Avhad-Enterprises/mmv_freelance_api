@@ -104,6 +104,52 @@ export interface GoogleUserInfo {
 }
 
 /**
+ * Facebook user info response (from Graph API)
+ */
+export interface FacebookUserInfo {
+    id: string;
+    name: string;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    picture?: {
+        data: {
+            url: string;
+            width: number;
+            height: number;
+            is_silhouette: boolean;
+        };
+    };
+}
+
+/**
+ * Apple ID token payload (decoded JWT)
+ */
+export interface AppleIdToken {
+    iss: string;            // "https://appleid.apple.com"
+    aud: string;            // Your client_id (Service ID)
+    exp: number;            // Expiration time
+    iat: number;            // Issued at
+    sub: string;            // User ID (unique, stable)
+    email?: string;         // User email (may be private relay)
+    email_verified?: string; // "true" or "false"
+    is_private_email?: string; // "true" if using private relay
+    auth_time: number;      // When the user authenticated
+    nonce_supported: boolean;
+}
+
+/**
+ * Apple user data (only sent on first authorization)
+ */
+export interface AppleUserData {
+    name?: {
+        firstName?: string;
+        lastName?: string;
+    };
+    email?: string;
+}
+
+/**
  * OAuth error types
  */
 export type OAuthErrorCode =
@@ -128,3 +174,4 @@ export interface OAuthError {
     provider?: string;
     details?: string;
 }
+

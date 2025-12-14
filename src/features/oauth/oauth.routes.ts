@@ -114,17 +114,57 @@ export class OAuthRoutes implements Route {
         );
 
         // ===========================================
-        // PLACEHOLDER ROUTES FOR FUTURE PROVIDERS
+        // FACEBOOK OAUTH ROUTES
         // ===========================================
 
-        // Facebook OAuth (to be implemented)
-        // this.router.get(`${this.path}/facebook`, this.controller.facebookLogin);
-        // this.router.get(`${this.path}/facebook/callback`, this.controller.facebookCallback);
+        /**
+         * GET /oauth/facebook
+         * Initiate Facebook OAuth flow
+         * Redirects user to Facebook consent screen
+         * Optional query param: ?redirect=<custom_redirect_url>
+         */
+        this.router.get(
+            `${this.path}/facebook`,
+            this.controller.facebookLogin
+        );
 
-        // Apple OAuth (to be implemented)
-        // this.router.get(`${this.path}/apple`, this.controller.appleLogin);
-        // this.router.post(`${this.path}/apple/callback`, this.controller.appleCallback); // Apple uses POST
+        /**
+         * GET /oauth/facebook/callback
+         * Handle Facebook OAuth callback
+         * Called by Facebook after user grants/denies permission
+         */
+        this.router.get(
+            `${this.path}/facebook/callback`,
+            this.controller.facebookCallback
+        );
+
+        // ===========================================
+        // APPLE OAUTH ROUTES
+        // ===========================================
+
+        /**
+         * GET /oauth/apple
+         * Initiate Apple OAuth flow
+         * Redirects user to Apple consent screen
+         * Optional query param: ?redirect=<custom_redirect_url>
+         */
+        this.router.get(
+            `${this.path}/apple`,
+            this.controller.appleLogin
+        );
+
+        /**
+         * POST /oauth/apple/callback
+         * Handle Apple OAuth callback
+         * NOTE: Apple uses POST for callback, not GET!
+         * Apple sends data in request body
+         */
+        this.router.post(
+            `${this.path}/apple/callback`,
+            this.controller.appleCallback
+        );
     }
 }
 
 export default OAuthRoutes;
+

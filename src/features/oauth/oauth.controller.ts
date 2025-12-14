@@ -9,8 +9,13 @@ import {
     getOAuthUrls,
     isAllowedRedirectUrl,
     isGoogleConfigured,
+    isGoogleEnabled,
+    isFacebookConfigured,
+    isFacebookEnabled,
+    isAppleConfigured,
+    isAppleEnabled,
 } from './oauth.config';
-import { OAuthErrorCode } from './oauth.interface';
+import { OAuthErrorCode, AppleUserData } from './oauth.interface';
 import HttpException from '../../exceptions/HttpException';
 import { logger } from '../../utils/logger';
 
@@ -131,6 +136,236 @@ export class OAuthController {
 
         } catch (error: any) {
             logger.error('Google OAuth callback error:', error);
+
+            // Don't expose internal errors to frontend
+            const message = error instanceof HttpException ? error.message : 'Authentication failed';
+            this.handleOAuthError(res, 'server_error', message);
+        }
+    };
+
+    // ===========================================
+    // FACEBOOK OAUTH ENDPOINTS
+    // ===========================================
+
+    /**
+     * GET /oauth/facebook
+     * Initiates Facebook OAuth flow - redirects user to Facebook login
+     */
+    public facebookLogin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            // Check if Facebook OAuth is enabled
+            if (!isFacebookEnabled()) {
+                throw new HttpException(503, 'Facebook login is not available at this time');
+            }
+
+            // Optional: Get custom redirect URL from query params
+            const customRedirect = req.query.redirect as string | undefined;
+
+            // Validate redirect URL if provided
+            if (customRedirect && !isAllowedRedirectUrl(customRedirect)) {
+                throw new HttpException(400, 'Invalid redirect URL');
+            }
+
+            // Generate authorization URL with state
+            const { url, state } = await this.oauthService.generateFacebookAuthUrl(customRedirect);
+
+            // Store state in secure HTTP-only cookie
+            res.cookie(OAUTH_COOKIES.STATE, state, OAUTH_COOKIE_OPTIONS);
+
+            // Store custom redirect URL if provided
+            if (customRedirect) {
+                res.cookie(OAUTH_COOKIES.REDIRECT_URL, customRedirect, OAUTH_COOKIE_OPTIONS);
+            }
+
+            // Redirect user to Facebook login
+            res.redirect(url);
+
+        } catch (error) {
+            logger.error('Facebook OAuth initiation failed:', error);
+            next(error);
+        }
+    };
+
+    /**
+     * GET /oauth/facebook/callback
+     * Handles Facebook OAuth callback after user grants permission
+     */
+    public facebookCallback = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const { code, state, error, error_description } = req.query;
+
+            // Handle errors from Facebook (user denied access, etc.)
+            if (error) {
+                logger.warn(`Facebook OAuth error: ${error} - ${error_description}`);
+                return this.handleOAuthError(res, error as string, error_description as string);
+            }
+
+            // Get stored values from cookies
+            const storedState = req.cookies[OAUTH_COOKIES.STATE];
+            const customRedirect = req.cookies[OAUTH_COOKIES.REDIRECT_URL];
+
+            // Clear OAuth cookies immediately (they're single-use)
+            res.clearCookie(OAUTH_COOKIES.STATE);
+            res.clearCookie(OAUTH_COOKIES.REDIRECT_URL);
+
+            // Validate required parameters
+            if (!code) {
+                logger.warn('Facebook OAuth callback missing authorization code');
+                return this.handleOAuthError(res, 'invalid_request', 'Missing authorization code');
+            }
+
+            if (!state) {
+                logger.warn('Facebook OAuth callback missing state parameter');
+                return this.handleOAuthError(res, 'invalid_request', 'Missing state parameter');
+            }
+
+            // CSRF Protection: Validate state parameter
+            let actualState = state as string;
+            if (actualState.includes('|')) {
+                actualState = actualState.split('|')[0];
+            }
+
+            if (!storedState) {
+                logger.warn('Facebook OAuth callback missing stored state cookie');
+                return this.handleOAuthError(res, 'invalid_state', 'Session expired. Please try again.');
+            }
+
+            if (actualState !== storedState) {
+                logger.warn(`Facebook OAuth state mismatch: expected ${storedState}, got ${actualState}`);
+                return this.handleOAuthError(res, 'invalid_state', 'State validation failed');
+            }
+
+            // Exchange code for tokens and get/create user
+            const result = await this.oauthService.handleFacebookCallback(code as string);
+
+            // Redirect to frontend with token
+            this.handleOAuthSuccess(res, result, customRedirect);
+
+        } catch (error: any) {
+            logger.error('Facebook OAuth callback error:', error);
+
+            // Don't expose internal errors to frontend
+            const message = error instanceof HttpException ? error.message : 'Authentication failed';
+            this.handleOAuthError(res, 'server_error', message);
+        }
+    };
+
+    // ===========================================
+    // APPLE OAUTH ENDPOINTS
+    // ===========================================
+
+    /**
+     * GET /oauth/apple
+     * Initiates Apple OAuth flow - redirects user to Apple login
+     */
+    public appleLogin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            // Check if Apple OAuth is enabled
+            if (!isAppleEnabled()) {
+                throw new HttpException(503, 'Apple login is not available at this time');
+            }
+
+            // Optional: Get custom redirect URL from query params
+            const customRedirect = req.query.redirect as string | undefined;
+
+            // Validate redirect URL if provided
+            if (customRedirect && !isAllowedRedirectUrl(customRedirect)) {
+                throw new HttpException(400, 'Invalid redirect URL');
+            }
+
+            // Generate authorization URL with state
+            const { url, state } = await this.oauthService.generateAppleAuthUrl(customRedirect);
+
+            // Store state in secure HTTP-only cookie
+            res.cookie(OAUTH_COOKIES.STATE, state, OAUTH_COOKIE_OPTIONS);
+
+            // Store custom redirect URL if provided
+            if (customRedirect) {
+                res.cookie(OAUTH_COOKIES.REDIRECT_URL, customRedirect, OAUTH_COOKIE_OPTIONS);
+            }
+
+            // Redirect user to Apple login
+            res.redirect(url);
+
+        } catch (error) {
+            logger.error('Apple OAuth initiation failed:', error);
+            next(error);
+        }
+    };
+
+    /**
+     * POST /oauth/apple/callback
+     * Handles Apple OAuth callback - NOTE: Apple uses POST!
+     * Apple sends data in request body, not query params
+     */
+    public appleCallback = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            // Apple sends callback data in POST body
+            const { code, state, id_token, user, error: appleError } = req.body;
+
+            // Handle errors from Apple
+            if (appleError) {
+                logger.warn(`Apple OAuth error: ${appleError}`);
+                return this.handleOAuthError(res, appleError as string, 'Apple authentication failed');
+            }
+
+            // Get stored values from cookies
+            const storedState = req.cookies[OAUTH_COOKIES.STATE];
+            const customRedirect = req.cookies[OAUTH_COOKIES.REDIRECT_URL];
+
+            // Clear OAuth cookies immediately
+            res.clearCookie(OAUTH_COOKIES.STATE);
+            res.clearCookie(OAUTH_COOKIES.REDIRECT_URL);
+
+            // Validate required parameters
+            if (!code) {
+                logger.warn('Apple OAuth callback missing authorization code');
+                return this.handleOAuthError(res, 'invalid_request', 'Missing authorization code');
+            }
+
+            if (!state) {
+                logger.warn('Apple OAuth callback missing state parameter');
+                return this.handleOAuthError(res, 'invalid_request', 'Missing state parameter');
+            }
+
+            // CSRF Protection: Validate state parameter
+            let actualState = state as string;
+            if (actualState.includes('|')) {
+                actualState = actualState.split('|')[0];
+            }
+
+            if (!storedState) {
+                logger.warn('Apple OAuth callback missing stored state cookie');
+                return this.handleOAuthError(res, 'invalid_state', 'Session expired. Please try again.');
+            }
+
+            if (actualState !== storedState) {
+                logger.warn(`Apple OAuth state mismatch: expected ${storedState}, got ${actualState}`);
+                return this.handleOAuthError(res, 'invalid_state', 'State validation failed');
+            }
+
+            // Parse user data (only provided on first authorization)
+            let userData: AppleUserData | null = null;
+            if (user) {
+                try {
+                    userData = typeof user === 'string' ? JSON.parse(user) : user;
+                } catch (e) {
+                    logger.warn('Apple OAuth: Failed to parse user data', e);
+                }
+            }
+
+            // Exchange code for tokens and get/create user
+            const result = await this.oauthService.handleAppleCallback(
+                code as string,
+                id_token as string,
+                userData
+            );
+
+            // Redirect to frontend with token
+            this.handleOAuthSuccess(res, result, customRedirect);
+
+        } catch (error: any) {
+            logger.error('Apple OAuth callback error:', error);
 
             // Don't expose internal errors to frontend
             const message = error instanceof HttpException ? error.message : 'Authentication failed';

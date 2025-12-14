@@ -73,6 +73,12 @@ const TEST_FILES = [
 
   // Contact tests
   'contact/test-contact-submit.js',
+
+  // OAuth tests (comprehensive)
+  'oauth/test-oauth-flow.js',
+  'oauth/test-role-selection.js',
+  'oauth/test-account-linking.js',
+  'oauth/test-oauth-security.js',
 ];
 
 // Test results
