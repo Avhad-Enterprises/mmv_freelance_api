@@ -929,7 +929,16 @@ export class OAuthService {
     private async ensureClientProfile(trx: any, userId: number): Promise<void> {
         const existingProfile = await trx('client_profiles').where({ user_id: userId }).first();
         if (!existingProfile) {
-            await trx('client_profiles').insert({ user_id: userId });
+            // Get user info to create a default company name
+            const user = await trx(USERS_TABLE).where({ user_id: userId }).first();
+            const defaultCompanyName = user 
+                ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email?.split('@')[0] || 'My Company'
+                : 'My Company';
+
+            await trx('client_profiles').insert({ 
+                user_id: userId,
+                company_name: defaultCompanyName,
+            });
             logger.info(`Created client profile for user ${userId}`);
         }
     }
