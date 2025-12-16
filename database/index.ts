@@ -65,6 +65,7 @@ import { VIDEOEDITOR_PROFILES } from './videoeditor_profiles.schema';
 import { CLIENT_PROFILES } from './client_profiles.schema';
 import { ADMIN_PROFILES } from './admin_profiles.schema';
 import { CONTACT_SUBMISSIONS } from './contact.schema';
+import { OAUTH_ACCOUNTS_TABLE } from './oauth_accounts.schema';
 
 
 export const T = {
@@ -107,6 +108,7 @@ export const T = {
   CLIENT_PROFILES,
   ADMIN_PROFILES,
   CONTACT_SUBMISSIONS,
+  OAUTH_ACCOUNTS_TABLE,
 };
 
 // Creates the procedure that is then added as a trigger to every table
