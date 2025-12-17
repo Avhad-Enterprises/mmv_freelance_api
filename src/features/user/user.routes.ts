@@ -1,7 +1,7 @@
 // User Routes (Refactored) - Common user endpoints with RBAC
 import { Router } from 'express';
 import { UserController } from './user.controller';
-import { requireRole } from '../../middlewares/role.middleware';
+import { requireRole, requireSelfOrRole } from '../../middlewares/role.middleware';
 // import { requirePermission } from '../../middlewares/permission.middleware'; // DISABLED: Using only role-based access
 import validationMiddleware from '../../middlewares/validation.middleware';
 import { 
@@ -156,11 +156,11 @@ export class UserRoutes implements Route {
 
     /**
      * Get user with profile by ID
-     * Requires: ADMIN or SUPER_ADMIN role
+     * Requires: Authentication (own profile) OR ADMIN/SUPER_ADMIN role
      */
     this.router.get(
       `${this.path}/:id/profile`,
-      requireRole('ADMIN', 'SUPER_ADMIN'),
+      requireSelfOrRole('ADMIN', 'SUPER_ADMIN'),
       // requirePermission('users.view'), // DISABLED: Using only role-based access
       this.userController.getUserWithProfileById
     );

@@ -10,6 +10,8 @@ import { LoginDto } from './login.dto';
 // import { registrationRateLimit, authRateLimit } from '../../middlewares/rate-limit.middleware';
 import { SecurityMiddleware } from '../../middlewares/security.middleware';
 import { registrationUpload } from '../../middlewares/upload.middleware';
+import authMiddleware from '../../middlewares/auth.middleware';
+import firebaseAuthMiddleware from '../../middlewares/firebase-auth.middleware';
 
 export class AuthRoutes implements Route {
   public path = '/auth';
@@ -58,6 +60,19 @@ export class AuthRoutes implements Route {
       SecurityMiddleware.essential,
       validationMiddleware(LoginDto, 'body', false, []),
       this.authController.login
+    );
+
+    // Firebase custom token generation (requires authentication)
+    this.router.get(
+      `${this.path}/firebase-token`,
+      authMiddleware,
+      this.authController.getFirebaseToken
+    );
+
+    // Firebase ID token verification
+    this.router.post(
+      `${this.path}/verify-firebase-token`,
+      this.authController.verifyFirebaseToken
     );
   }
 }
