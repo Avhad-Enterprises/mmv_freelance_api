@@ -46,6 +46,7 @@ import RobotsTxtRoute from './features/robots-txt/robots-txt.routes';
 import EMCRoute from './features/emc/emc.routes';
 import ReportTemplatesRoute from './features/report-templates/report-templates.routes';
 import AdminInvitesRoutes from './features/admin-invites/admin-invites.routes';
+import AdminRBACRoute from './features/admin-rbac/admin-rbac.routes';
 
 import validateEnv from './utils/validation/validateEnv';
 import { FreelancerRoutes } from './features/freelancers/freelancer.routes';
@@ -68,6 +69,7 @@ const app = new App([
   // RBAC routes
   new roleRoute(),
   new permissionRoute(),
+  new AdminRBACRoute(),
   new SubmissionRoute(),
   new projectstaskRoute(),
   new AppliedProjectsRoute(),

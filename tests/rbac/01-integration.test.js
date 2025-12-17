@@ -71,25 +71,54 @@ async function loginAsAdmin() {
 }
 
 /**
- * Login and get client token
+ * Ensure Client user exists and get token
  */
-async function loginAsClient() {
+/**
+ * Ensure Client user exists and get token
+ */
+async function ensureClientUser() {
+  const timestamp = Date.now();
+  const email = `login-test-${timestamp}@example.com`;
+  const password = 'Password123!';
+
+  // 1. Register new user
   try {
-    const response = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
-      email: 'login-test@example.com',
-      password: 'Password123!'
+    console.log(`  Registering new client user: ${email}...`);
+    const regResponse = await makeRequest('POST', `${CONFIG.apiVersion}/auth/register/client`, {
+      email,
+      password,
+      first_name: 'Test',
+      last_name: 'Client',
+      phone_number: '1234567890',
+      company_name: 'Test Corp',
+      industry: 'film',
+      company_size: '1-10',
+      country: 'India',
+      terms_accepted: true,
+      privacy_policy_accepted: true
     });
 
-    if (response.statusCode === 200 && response.body?.data?.token) {
-      storeToken('client', response.body.data.token);
-      printTestResult('Client login', true, 'SUCCESS', null);
-      return true;
-    } else {
-      printTestResult('Client login', false, `Expected success, got ${response.statusCode}`, response.body);
-      return false;
+    if (regResponse.statusCode === 201) {
+      printTestResult('Client Registration', true, 'Created dummy user', null);
+
+      // 2. Login immediately
+      const loginRes = await makeRequest('POST', `${CONFIG.apiVersion}/auth/login`, {
+        email,
+        password
+      });
+
+      if (loginRes.statusCode === 200 && loginRes.body?.data?.token) {
+        storeToken('client', loginRes.body.data.token);
+        printTestResult('Client login', true, 'SUCCESS', null);
+        return true;
+      }
     }
+
+    printTestResult('Client setup failed', false, `Registration status: ${regResponse.statusCode}`, regResponse.body);
+    return false;
+
   } catch (error) {
-    printTestResult('Client login', false, `Request failed: ${error.message}`, null);
+    printTestResult('Client setup failed', false, error.message, null);
     return false;
   }
 }
@@ -281,7 +310,7 @@ async function runAllTests() {
     // Login as different users
     await loginAsSuperAdmin();
     await loginAsAdmin();
-    await loginAsClient();
+    await ensureClientUser();
 
     // Run all test suites
     await testPublicEndpoints();
@@ -289,11 +318,12 @@ async function runAllTests() {
     await testUnauthenticatedAccess();
 
     // Print final summary
-    printSummary('RBAC Tests', passedTests, failedTests);
+    console.log('RBAC Tests Summary:');
+    printSummary(passedTests, failedTests);
 
   } catch (error) {
     console.error('❌ Test suite failed:', error.message);
-    printSummary('RBAC Tests', passedTests, failedTests);
+    printSummary(passedTests, failedTests);
   }
 }
 

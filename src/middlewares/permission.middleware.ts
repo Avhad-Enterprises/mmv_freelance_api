@@ -21,18 +21,15 @@ export const requirePermission = (...permissions: string[]) => {
         throw new HttpException(401, 'Authentication required');
       }
 
-      // Get user's permissions through their roles
-      const userPermissions = await DB(USER_ROLES)
-        .join(ROLE, `${ROLE}.role_id`, `${USER_ROLES}.role_id`)
-        .join(ROLE_PERMISSION, `${ROLE_PERMISSION}.role_id`, `${ROLE}.role_id`)
-        .join(PERMISSION, `${PERMISSION}.permission_id`, `${ROLE_PERMISSION}.permission_id`)
-        .where(`${USER_ROLES}.user_id`, req.user.user_id)
-        .select(`${PERMISSION}.name`);
+      // 1. Super Admin Bypass (God Mode)
+      if (req.user.roles && req.user.roles.includes('SUPER_ADMIN')) {
+        return next();
+      }
 
-      const userPermissionNames = userPermissions.map((p: any) => p.name);
-
-      // Check if user has any of the required permissions
-      const hasPermission = permissions.some(perm => userPermissionNames.includes(perm));
+      // 2. JWT Permission Check (Zero-Latency)
+      // Permissions are now embedded in the token by AuthService
+      const userPermissions = req.user.permissions || [];
+      const hasPermission = permissions.some(perm => userPermissions.includes(perm));
 
       if (!hasPermission) {
         throw new HttpException(403, `Access denied. Required permission: ${permissions.join(' or ')}`);
@@ -56,17 +53,14 @@ export const requireAllPermissions = (...permissions: string[]) => {
         throw new HttpException(401, 'Authentication required');
       }
 
-      const userPermissions = await DB(USER_ROLES)
-        .join(ROLE, `${ROLE}.role_id`, `${USER_ROLES}.role_id`)
-        .join(ROLE_PERMISSION, `${ROLE_PERMISSION}.role_id`, `${ROLE}.role_id`)
-        .join(PERMISSION, `${PERMISSION}.permission_id`, `${ROLE_PERMISSION}.permission_id`)
-        .where(`${USER_ROLES}.user_id`, req.user.user_id)
-        .select(`${PERMISSION}.name`);
+      // 1. Super Admin Bypass
+      if (req.user.roles && req.user.roles.includes('SUPER_ADMIN')) {
+        return next();
+      }
 
-      const userPermissionNames = userPermissions.map((p: any) => p.name);
-
-      // Check if user has ALL required permissions
-      const hasAllPermissions = permissions.every(perm => userPermissionNames.includes(perm));
+      // 2. JWT Permission Check
+      const userPermissions = req.user.permissions || [];
+      const hasAllPermissions = permissions.every(perm => userPermissions.includes(perm));
 
       if (!hasAllPermissions) {
         throw new HttpException(403, `Access denied. Required permissions: ${permissions.join(' and ')}`);
