@@ -62,3 +62,36 @@ export const requireAllRoles = (...roles: string[]) => {
     }
   };
 };
+
+/**
+ * Middleware to check if user is accessing their own resource OR has admin role
+ * @param roles - Array of admin role names (e.g., ['ADMIN', 'SUPER_ADMIN'])
+ */
+export const requireSelfOrRole = (...roles: string[]) => {
+  return async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.user_id) {
+        throw new HttpException(401, 'Authentication required');
+      }
+
+      const requestedUserId = parseInt(req.params.id);
+      const currentUserId = req.user.user_id;
+      const userRoleNames = req.user.roles || [];
+
+      // Allow if user is accessing their own resource
+      if (requestedUserId === currentUserId) {
+        return next();
+      }
+
+      // Or if user has one of the required admin roles
+      const hasRole = roles.some(role => userRoleNames.includes(role));
+      if (hasRole) {
+        return next();
+      }
+
+      throw new HttpException(403, `Access denied. You can only access your own profile or need role: ${roles.join(' or ')}`);
+    } catch (error) {
+      next(error);
+    }
+  };
+};

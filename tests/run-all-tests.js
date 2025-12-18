@@ -41,7 +41,9 @@ const TEST_FILES = [
   'projectstask/test-delete-project-task.js',
 
   // RBAC tests
-  'rbac/test-rbac-complete.js',
+  'rbac/01-integration.test.js',
+  'rbac/02-middleware-check.test.js',
+  'rbac/03-admin-matrix.test.js',
 
   // Client tests
   'clients/test-client-routes.js',

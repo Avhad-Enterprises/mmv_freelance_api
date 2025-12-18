@@ -100,8 +100,22 @@ const predefinedPermissions: PermissionData[] = [
     description: 'Full project management access',
     is_critical: false,
   },
+  {
+    name: 'projects.withdraw',
+    label: 'Withdraw Application',
+    module: 'projects',
+    description: 'Withdraw applied project application',
+    is_critical: false,
+  },
 
   // ========== Payment Management ==========
+  {
+    name: 'applications.view',
+    label: 'View Applications',
+    module: 'applications',
+    description: 'View project applications',
+    is_critical: false,
+  },
   {
     name: 'payments.view',
     label: 'View Payments',
@@ -346,7 +360,7 @@ async function seedPermissions() {
     const insertedPermissions = await DB(PERMISSION).insert(permissionsToInsert).returning('*');
 
     console.log('\n✅ Successfully seeded permissions by module:');
-    
+
     // Group by module for better display
     const permissionsByModule = insertedPermissions.reduce((acc: any, perm: any) => {
       if (!acc[perm.module]) {
@@ -371,7 +385,7 @@ async function seedPermissions() {
     console.log(`   Total permissions: ${allPermissions.length}`);
     console.log(`   Critical permissions: ${criticalCount}`);
     console.log(`   Regular permissions: ${allPermissions.length - criticalCount}`);
-    
+
     console.log('\n🎉 Permission seeding completed successfully!');
 
     await DB.destroy();

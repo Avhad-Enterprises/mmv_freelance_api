@@ -1,7 +1,7 @@
 // Refactored User Controller - Common user operations
 import { Request, Response, NextFunction } from 'express';
 import UserService from './user.service';
-import { UserUpdateDto, ChangePasswordDto, PasswordResetRequestDto, PasswordResetDto } from './user.update.dto';
+import { UserUpdateDto, ChangePasswordDto, PasswordResetRequestDto, PasswordResetDto, SetPasswordDto } from './user.update.dto';
 import { RequestWithUser } from '../../interfaces/auth.interface';
 import HttpException from '../../exceptions/HttpException';
 import { Users } from './user.interface';
@@ -26,10 +26,19 @@ export class UserController {
   ): Promise<void> => {
     try {
       const profile = await this.userService.getUserWithProfile(req.user.user_id);
-      
+
+      // Determine if user has a password set
+      const has_password = !!profile.user.password && profile.user.password.length > 0;
+
+      // Remove sensitive data
+      delete profile.user.password;
+
       res.status(200).json({
         success: true,
-        data: profile
+        data: {
+          ...profile,
+          has_password
+        }
       });
     } catch (error) {
       next(error);
@@ -48,7 +57,7 @@ export class UserController {
     try {
       const userId = parseInt(req.params.id);
       const user = await this.userService.getById(userId);
-      
+
       res.status(200).json({
         success: true,
         data: user
@@ -70,10 +79,33 @@ export class UserController {
     try {
       const userId = parseInt(req.params.id);
       const profile = await this.userService.getUserWithProfile(userId);
-      
+
       res.status(200).json({
         success: true,
         data: profile
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Get public basic user info by ID (for chat/messaging purposes)
+   * GET /api/v1/users/:id/public-info
+   * Returns only non-sensitive info: name, profile picture, user_id
+   */
+  public getUserPublicInfo = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      const publicInfo = await this.userService.getUserPublicInfo(userId);
+
+      res.status(200).json({
+        success: true,
+        data: publicInfo
       });
     } catch (error) {
       next(error);
@@ -92,7 +124,7 @@ export class UserController {
     try {
       const updateData: UserUpdateDto = req.body;
       const updatedUser = await this.userService.updateBasicInfo(req.user.user_id, updateData);
-      
+
       res.status(200).json({
         success: true,
         message: 'User info updated successfully',
@@ -114,13 +146,13 @@ export class UserController {
   ): Promise<void> => {
     try {
       const { old_password, new_password }: ChangePasswordDto = req.body;
-      
+
       await this.userService.changePassword(
         req.user.user_id,
         old_password,
         new_password
       );
-      
+
       res.status(200).json({
         success: true,
         message: 'Password changed successfully'
@@ -147,7 +179,7 @@ export class UserController {
       // Always return success for security reasons (prevent email enumeration)
       // Only generate token if user exists
       let debugInfo = {};
-      
+
       if (user) {
         // Generate reset token (expires in 1 hour)
         const resetToken = crypto.randomBytes(32).toString('hex');
@@ -157,7 +189,7 @@ export class UserController {
 
         // Send password reset email
         const resetLink = `${process.env.FRONTEND_URL || 'https://makemyvid.io'}/reset-password?token=${resetToken}`;
-        
+
         await sendPasswordResetEmail({
           to: email,
           name: user.first_name || 'User',
@@ -197,12 +229,12 @@ export class UserController {
   ): Promise<void> => {
     try {
       const { token, newPassword, confirmPassword }: PasswordResetDto = req.body;
-          
-          if (newPassword !== confirmPassword) {
-            throw new HttpException(400, "Passwords do not match");
-          }
-          
-          await this.userService.resetPassword(token, newPassword);      res.status(200).json({
+
+      if (newPassword !== confirmPassword) {
+        throw new HttpException(400, "Passwords do not match");
+      }
+
+      await this.userService.resetPassword(token, newPassword); res.status(200).json({
         success: true,
         message: 'Password reset successfully'
       });
@@ -222,7 +254,7 @@ export class UserController {
   ): Promise<void> => {
     try {
       await this.userService.verifyEmail(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         message: 'Email verified successfully'
@@ -243,7 +275,7 @@ export class UserController {
   ): Promise<void> => {
     try {
       await this.userService.verifyPhone(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         message: 'Phone verified successfully'
@@ -264,7 +296,7 @@ export class UserController {
   ): Promise<void> => {
     try {
       const roles = await this.userService.getUserRoles(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         data: { roles }
@@ -285,7 +317,7 @@ export class UserController {
   ): Promise<void> => {
     try {
       const hasProfile = await this.userService.userHasProfile(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         data: { hasProfile }
@@ -306,7 +338,7 @@ export class UserController {
   ): Promise<void> => {
     try {
       const completion = await this.userService.getProfileCompletion(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         data: completion
@@ -327,7 +359,7 @@ export class UserController {
   ): Promise<void> => {
     try {
       await this.userService.softDelete(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         message: 'Account deleted successfully'
@@ -349,9 +381,9 @@ export class UserController {
     try {
       const userId = parseInt(req.params.id);
       const { reason } = req.body;
-      
+
       await this.userService.banUser(userId, reason);
-      
+
       res.status(200).json({
         success: true,
         message: 'User banned successfully'
@@ -372,9 +404,9 @@ export class UserController {
   ): Promise<void> => {
     try {
       const userId = parseInt(req.params.id);
-      
+
       await this.userService.unbanUser(userId);
-      
+
       res.status(200).json({
         success: true,
         message: 'User unbanned successfully'
@@ -402,7 +434,7 @@ export class UserController {
       const role = req.query.role as string;
 
       const result = await this.userService.getAllUsers({ page, limit, search, role });
-      
+
       res.status(200).json({
         success: true,
         data: result
@@ -424,7 +456,7 @@ export class UserController {
     try {
       const userData = req.body;
       const result = await this.userService.createUser(userData);
-      
+
       res.status(201).json({
         success: true,
         message: 'User created successfully',
@@ -447,9 +479,9 @@ export class UserController {
     try {
       const userId = parseInt(req.params.id);
       const updateData = req.body;
-      
+
       const result = await this.userService.updateUserById(userId, updateData);
-      
+
       res.status(200).json({
         success: true,
         message: 'User updated successfully',
@@ -471,9 +503,9 @@ export class UserController {
   ): Promise<void> => {
     try {
       const userId = parseInt(req.params.id);
-      
+
       await this.userService.deleteUserById(userId);
-      
+
       res.status(200).json({
         success: true,
         message: 'User deleted successfully'
@@ -496,9 +528,9 @@ export class UserController {
   ): Promise<void> => {
     try {
       const userId = parseInt(req.params.id);
-      
+
       const roles = await this.userService.getUserRoles(userId);
-      
+
       res.status(200).json({
         success: true,
         data: roles
@@ -520,13 +552,13 @@ export class UserController {
     try {
       const userId = parseInt(req.params.id);
       const { roleName } = req.body;
-      
+
       if (!roleName) {
         throw new HttpException(400, 'Role name is required');
       }
-      
+
       await this.userService.assignRoleToUser(userId, roleName);
-      
+
       res.status(200).json({
         success: true,
         message: `Role "${roleName}" assigned to user successfully`
@@ -548,9 +580,9 @@ export class UserController {
     try {
       const userId = parseInt(req.params.id);
       const roleId = parseInt(req.params.roleId);
-      
+
       await this.userService.removeRoleFromUser(userId, roleId);
-      
+
       res.status(200).json({
         success: true,
         message: 'Role removed from user successfully'
@@ -571,12 +603,41 @@ export class UserController {
   ): Promise<void> => {
     try {
       const userId = parseInt(req.params.id);
-      
+
       const permissions = await this.userService.getUserPermissions(userId);
-      
+
       res.status(200).json({
         success: true,
         data: permissions
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+  /**
+   * Set password (for users without one)
+   * POST /api/v1/users/set-password
+   */
+  public setPassword = async (
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const { new_password, confirm_password } = req.body;
+
+      if (new_password !== confirm_password) {
+        throw new HttpException(400, "Passwords do not match");
+      }
+
+      await this.userService.setPassword(
+        req.user.user_id,
+        new_password
+      );
+
+      res.status(200).json({
+        success: true,
+        message: 'Password set successfully'
       });
     } catch (error) {
       next(error);

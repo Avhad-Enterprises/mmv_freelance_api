@@ -3,7 +3,7 @@ import DB from '../../../database/index';
 import { USERS_TABLE } from '../../../database/users.schema';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { assignRole } from '../../utils/rbac/role-checker';
+import { assignRole, getUserPermissions } from '../../utils/rbac/role-checker';
 import HttpException from '../../exceptions/HttpException';
 import {
   uploadRegistrationFile,
@@ -126,7 +126,8 @@ export class AuthService {
     });
 
     // Generate token
-    const token = this.generateToken(user.user_id, user.email, ['CLIENT']);
+    const permissions = await getUserPermissions(user.user_id);
+    const token = this.generateToken(user.user_id, user.email, ['CLIENT'], permissions);
 
     return {
       user: {
@@ -240,7 +241,8 @@ export class AuthService {
     });
 
     // Generate token
-    const token = this.generateToken(user.user_id, user.email, ['VIDEOGRAPHER']);
+    const permissions = await getUserPermissions(user.user_id);
+    const token = this.generateToken(user.user_id, user.email, ['VIDEOGRAPHER'], permissions);
 
     return {
       user: {
@@ -353,7 +355,8 @@ export class AuthService {
     });
 
     // Generate token
-    const token = this.generateToken(user.user_id, user.email, ['VIDEO_EDITOR']);
+    const permissions = await getUserPermissions(user.user_id);
+    const token = this.generateToken(user.user_id, user.email, ['VIDEO_EDITOR'], permissions);
 
     return {
       user: {
@@ -404,11 +407,14 @@ export class AuthService {
       .where('user_roles.user_id', user.user_id)
       .select('role.name as role_name');
 
+    const permissions = await getUserPermissions(user.user_id);
+
     // Generate JWT token
     const token = this.generateToken(
       user.user_id,
       user.email,
-      roles.map(r => r.role_name)
+      roles.map(r => r.role_name),
+      permissions
     );
 
     return {
@@ -454,22 +460,14 @@ export class AuthService {
   /**
    * Generate JWT token
    */
-  private generateToken(user_id: number, email: string, roles: string[]): string {
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error('FATAL: JWT_SECRET is not defined in production environment!');
-      }
-      console.warn('⚠️ WARNING: Using fallback JWT secret. Set JWT_SECRET in .env file.');
-    }
-
+  private generateToken(user_id: number, email: string, roles: string[], permissions: string[]): string {
     return jwt.sign(
       {
         id: user_id, // Use 'id' to match DataStoredInToken interface
         user_id,
         email,
         roles,
+        permissions,
       },
       secret || 'fallback-secret',
       { expiresIn: '24h' }
