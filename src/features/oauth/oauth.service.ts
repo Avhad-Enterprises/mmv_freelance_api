@@ -607,7 +607,7 @@ export class OAuthService {
             const roles = await this.getUserRoles(user.user_id);
 
             // Generate JWT token
-            const jwtToken = this.generateJWT(user, roles);
+            const jwtToken = await this.generateJWT(user, roles);
 
             // Build response
             const oauthUser: OAuthUser = {
@@ -894,7 +894,7 @@ export class OAuthService {
 
             // Generate new JWT with updated roles
             const updatedRoles = await this.getUserRoles(userId);
-            const newToken = this.generateJWT(user, updatedRoles);
+            const newToken = await this.generateJWT(user, updatedRoles);
 
             return { token: newToken };
         } catch (error) {
@@ -931,11 +931,11 @@ export class OAuthService {
         if (!existingProfile) {
             // Get user info to create a default company name
             const user = await trx(USERS_TABLE).where({ user_id: userId }).first();
-            const defaultCompanyName = user 
+            const defaultCompanyName = user
                 ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email?.split('@')[0] || 'My Company'
                 : 'My Company';
 
-            await trx('client_profiles').insert({ 
+            await trx('client_profiles').insert({
                 user_id: userId,
                 company_name: defaultCompanyName,
             });
@@ -998,9 +998,14 @@ export class OAuthService {
 
     /**
      * Generate JWT token for authenticated user
+     * Now includes permissions for RBAC system
      */
-    private generateJWT(user: any, roles: string[]): string {
+    private async generateJWT(user: any, roles: string[]): Promise<string> {
         const secret = process.env.JWT_SECRET || 'fallback-secret';
+
+        // Fetch permissions for the user based on their roles
+        const { getUserPermissions } = require('../../utils/rbac/role-checker');
+        const permissions = await getUserPermissions(user.user_id);
 
         return jwt.sign(
             {
@@ -1008,6 +1013,7 @@ export class OAuthService {
                 user_id: user.user_id,
                 email: user.email,
                 roles,
+                permissions, // Embed permissions in JWT
             },
             secret,
             { expiresIn: '7d' }
