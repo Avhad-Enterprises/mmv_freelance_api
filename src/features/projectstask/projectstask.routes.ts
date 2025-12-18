@@ -3,7 +3,7 @@ import Route from '../../interfaces/route.interface';
 import validationMiddleware from '../../middlewares/validation.middleware';
 import projectstaskcontroller from './projectstask.controller';
 import { ProjectsTaskDto } from './projectstask.dto';
-import { requireRole } from '../../middlewares/role.middleware';
+import { requirePermission } from '../../middlewares/permission.middleware';
 
 /**
  * Projects Task Routes
@@ -45,30 +45,30 @@ class projectstaskRoute implements Route {
        * Get various project task counts
        * GET /api/v1/projects-tasks/count
        * Query params: ?type=active|all|completed, ?client_id=X, ?freelancer_id=X
-       * Requires: CLIENT, VIDEOGRAPHER, VIDEO_EDITOR, ADMIN, or SUPER_ADMIN role
+       * Requires: Permission 'projects.view'
        */
       this.router.get(`${this.path}/count`,
-         requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'),
+         requirePermission('projects.view'),
          this.projectstaskcontroller.getProjectCounts
       );
 
       /**
        * Get all project tasks for authenticated users
        * GET /api/v1/projects-tasks
-       * Requires: CLIENT, VIDEOGRAPHER, VIDEO_EDITOR, ADMIN, or SUPER_ADMIN role
+       * Requires: Permission 'projects.view'
        */
       this.router.get(`${this.path}`,
-         requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users
+         requirePermission('projects.view'),
          this.projectstaskcontroller.getallprojectstask
       );
 
       /**
        * Get project tasks for a specific client
        * GET /api/v1/projects-tasks/client/:clientId
-       * Requires: CLIENT, VIDEOGRAPHER, VIDEO_EDITOR, ADMIN, or SUPER_ADMIN role
+       * Requires: Permission 'projects.view'
        */
       this.router.get(`${this.path}/client/:clientId`,
-         requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'),
+         requirePermission('projects.view'),
          this.projectstaskcontroller.getProjectsByClientId
       );
 
@@ -79,20 +79,20 @@ class projectstaskRoute implements Route {
       /**
        * Get active clients count
        * GET /api/v1/projects-tasks/analytics/active-clients
-       * Requires: ADMIN or SUPER_ADMIN role
+       * Requires: Permission 'admin.analytics'
        */
       this.router.get(`${this.path}/analytics/active-clients`,
-         requireRole('ADMIN', 'SUPER_ADMIN'),
+         requirePermission('admin.analytics'),
          this.projectstaskcontroller.getActiveClientsCount
       );
 
       /**
        * Get active editors count
        * GET /api/v1/projects-tasks/analytics/active-editors
-       * Requires: ADMIN or SUPER_ADMIN role
+       * Requires: Permission 'admin.analytics'
        */
       this.router.get(`${this.path}/analytics/active-editors`,
-         requireRole('ADMIN', 'SUPER_ADMIN'),
+         requirePermission('admin.analytics'),
          this.projectstaskcontroller.getActiveEditorsCount
       );
 
@@ -104,10 +104,10 @@ class projectstaskRoute implements Route {
       /**
        * Create a new project task
        * POST /api/v1/projects-tasks
-       * Requires: CLIENT, ADMIN, or SUPER_ADMIN role
+       * Requires: Permission 'projects.create'
        */
       this.router.post(`${this.path}`,
-         requireRole('CLIENT', 'ADMIN', 'SUPER_ADMIN'), // Only clients can create projects
+         requirePermission('projects.create'),
          validationMiddleware(ProjectsTaskDto, 'body', false, []),
          this.projectstaskcontroller.insert
       );
@@ -115,28 +115,30 @@ class projectstaskRoute implements Route {
       /**
        * Get a specific project task by ID
        * GET /api/v1/projects-tasks/:id
-       * Requires: CLIENT, VIDEOGRAPHER, VIDEO_EDITOR, ADMIN, or SUPER_ADMIN role
+       * Requires: Permission 'projects.view'
        */
       this.router.get(`${this.path}/:id`,
-         requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // Multiple roles can view
+         requirePermission('projects.view'),
          this.projectstaskcontroller.getbytaskid
-      );      /**
+      );
+
+      /**
        * Update an existing project task
        * PUT /api/v1/projects-tasks/:id
-       * Requires: CLIENT, ADMIN, or SUPER_ADMIN role
+       * Requires: Permission 'projects.update'
        */
       this.router.put(`${this.path}/:id`,
-         requireRole('CLIENT','ADMIN', 'SUPER_ADMIN'), // Only clients can update their projects
+         requirePermission('projects.update'),
          this.projectstaskcontroller.update
       );
 
       /**
        * Delete a project task
        * DELETE /api/v1/projects-tasks/:id
-       * Requires: CLIENT, ADMIN, or SUPER_ADMIN role
+       * Requires: Permission 'projects.delete'
        */
       this.router.delete(`${this.path}/:id`,
-         requireRole('CLIENT','ADMIN', 'SUPER_ADMIN'), // Only clients can delete their projects
+         requirePermission('projects.delete'),
          this.projectstaskcontroller.delete
       );
 
@@ -147,10 +149,10 @@ class projectstaskRoute implements Route {
       /**
        * Update project task status
        * PATCH /api/v1/projects-tasks/:id/status
-       * Requires: CLIENT, VIDEOGRAPHER, VIDEO_EDITOR, ADMIN, or SUPER_ADMIN role
+       * Requires: Permission 'projects.update'
        */
       this.router.patch(`${this.path}/:id/status`,
-         requireRole('CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // Status updates by project participants and admins
+         requirePermission('projects.update'),
          this.projectstaskcontroller.updateProjectTaskStatus
       );
 

@@ -3,8 +3,7 @@ import validationMiddleware from '../../middlewares/validation.middleware';
 import AppliedProjectsController from './applied_projects.controller'
 import { AppliedProjectsDto } from './applied_projects.dto';
 import Route from '../../interfaces/routes.interface';
-import { RequestHandler } from 'express';
-import { requireRole } from '../../middlewares/role.middleware';
+import { requirePermission } from '../../middlewares/permission.middleware';
 
 class AppliedProjectsRoute implements Route {
 
@@ -20,83 +19,82 @@ class AppliedProjectsRoute implements Route {
 
     // EDITOR APIS
 
-    // Post Editor Apply to a project - DONE
+    // Post Editor Apply to a project
     this.router.post(
       `${this.path}/projects/apply`,
-      requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR'), // Only editors can apply
+      requirePermission('projects.apply'),
       validationMiddleware(AppliedProjectsDto, 'body', false, ['create']),
       this.appliedProjectsController.applyToProject
     );
 
-    // Get Editors all applications - FIXED: Changed to GET, moved user_id to params
+    // Get Editors all applications
     this.router.get(
       `${this.path}/my-applications`,
-      requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR'), // Only editors can view their applications
+      requirePermission('projects.apply'),
       this.appliedProjectsController.getMyApplications
     );
 
-    // Get Editors applications by Project ID - FIXED: Changed to GET, moved params to URL
+    // Get Editors applications by Project ID
     this.router.get(
       `${this.path}/my-applications/project/:project_id`,
-      requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR'), // Only editors can view their applications
+      requirePermission('projects.apply'),
       this.appliedProjectsController.getMyApplicationbyId
     );
 
-    // Editor Withdraw his application - DONE
+    // Editor Withdraw his application
     this.router.delete(
       `${this.path}/withdraw/:application_id`,
-      requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR'), // Only editors can withdraw
+      requirePermission('projects.withdraw'),
       this.appliedProjectsController.withdrawApplication
     );
 
     // CLIENT APIS
 
-    // Get all applications for a specific project - FIXED: Changed to GET, moved project_id to params
+    // Get all applications for a specific project
     this.router.get(
       `${this.path}/projects/:project_id/applications`,
-      requireRole('CLIENT'), // Only clients can view applications for their projects
+      requirePermission('applications.view'),
       this.appliedProjectsController.getProjectApplications
     );
 
-    // Update application status, HIRE THE EDITOR - DONE
+    // Update application status, HIRE THE EDITOR
     this.router.patch(
       `${this.path}/update-status`,
-      requireRole('CLIENT'), // Only clients can update application status
+      requirePermission('projects.hire'),
       this.appliedProjectsController.updateApplicationStatus
     );
 
-    // Get application count for a specific project - FIXED: Changed to GET, moved project_id to params
+    // Get application count for a specific project
     this.router.get(
       `${this.path}/projects/:project_id/application-count`,
-      requireRole('CLIENT','ADMIN', 'SUPER_ADMIN'), // Only clients can view application counts
+      requirePermission('projects.view'),
       this.appliedProjectsController.getApplicationCount
     );
 
     this.router.get(`${this.path}/status/:status`,
-      requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR', 'CLIENT'), // Editors and clients can check status
+      requirePermission('projects.view'),
       this.appliedProjectsController.getAppliedStatus.bind(this.appliedProjectsController)
     );
-    
+
     this.router.get(`${this.path}/count`,
-      requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'), // Editors and admins can view counts
+      requirePermission('projects.view'),
       (req, res, next) => this.appliedProjectsController.appliedcount(req as any, res, next)
     );
-    
+
     this.router.get(`${this.path}/ongoing`,
-      requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR', 'CLIENT', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users
+      requirePermission('projects.view'),
       (req, res, next) => this.appliedProjectsController.getongoing(req as any, res, next)
     );
-    
+
     this.router.get(`${this.path}/filter/:filter`,
-      requireRole('VIDEOGRAPHER', 'VIDEO_EDITOR', 'CLIENT', 'ADMIN', 'SUPER_ADMIN'), // All authenticated users
+      requirePermission('projects.view'),
       (req, res, next) => this.appliedProjectsController.getapplied(req as any, res, next)
     );
 
     this.router.get(`${this.path}/projects/completed-count`,
-      requireRole('ADMIN', 'SUPER_ADMIN'), // Admin analytics
+      requirePermission('admin.analytics'), // Admin analytics
       this.appliedProjectsController.getCompletedProjectsCount
     );
-
 
   }
 }

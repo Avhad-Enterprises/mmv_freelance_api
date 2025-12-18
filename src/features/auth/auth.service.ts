@@ -3,12 +3,12 @@ import DB from '../../../database/index';
 import { USERS_TABLE } from '../../../database/users.schema';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { assignRole } from '../../utils/rbac/role-checker';
+import { assignRole, getUserPermissions } from '../../utils/rbac/role-checker';
 import HttpException from '../../exceptions/HttpException';
-import { 
-  uploadRegistrationFile, 
+import {
+  uploadRegistrationFile,
   uploadMultipleRegistrationFiles,
-  UploadResult 
+  UploadResult
 } from '../../utils/registration-upload';
 import { DocumentType, AccountType, MulterFile } from '../../interfaces/file-upload.interface';
 
@@ -36,7 +36,7 @@ export class AuthService {
         count: fileArray?.length || 0,
         files: fileArray?.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) || []
       })));
-      
+
       try {
         // Upload profile picture
         if (files.profile_picture && files.profile_picture[0]) {
@@ -58,13 +58,13 @@ export class AuthService {
         const businessFiles = files.business_document;
         if (businessFiles && businessFiles.length > 0) {
           console.log(`📄 Processing ${businessFiles.length} business document(s) for client`);
-          
+
           for (const businessFile of businessFiles) {
             if (businessFile.size === 0 || !businessFile.buffer || businessFile.buffer.length === 0) {
               console.warn('⚠️ Skipping empty business document upload');
               continue;
             }
-            
+
             try {
               const businessUpload = await uploadRegistrationFile(
                 businessFile,
@@ -79,7 +79,7 @@ export class AuthService {
               // Continue with other files instead of failing completely
             }
           }
-          
+
           console.log(`📄 Successfully uploaded ${businessDocumentUrls.length} business document(s)`);
         }
       } catch (error: any) {
@@ -126,7 +126,8 @@ export class AuthService {
     });
 
     // Generate token
-    const token = this.generateToken(user.user_id, user.email, ['CLIENT']);
+    const permissions = await getUserPermissions(user.user_id);
+    const token = this.generateToken(user.user_id, user.email, ['CLIENT'], permissions);
 
     return {
       user: {
@@ -240,7 +241,8 @@ export class AuthService {
     });
 
     // Generate token
-    const token = this.generateToken(user.user_id, user.email, ['VIDEOGRAPHER']);
+    const permissions = await getUserPermissions(user.user_id);
+    const token = this.generateToken(user.user_id, user.email, ['VIDEOGRAPHER'], permissions);
 
     return {
       user: {
@@ -353,7 +355,8 @@ export class AuthService {
     });
 
     // Generate token
-    const token = this.generateToken(user.user_id, user.email, ['VIDEO_EDITOR']);
+    const permissions = await getUserPermissions(user.user_id);
+    const token = this.generateToken(user.user_id, user.email, ['VIDEO_EDITOR'], permissions);
 
     return {
       user: {
@@ -404,11 +407,14 @@ export class AuthService {
       .where('user_roles.user_id', user.user_id)
       .select('role.name as role_name');
 
+    const permissions = await getUserPermissions(user.user_id);
+
     // Generate JWT token
     const token = this.generateToken(
-      user.user_id, 
-      user.email, 
-      roles.map(r => r.role_name)
+      user.user_id,
+      user.email,
+      roles.map(r => r.role_name),
+      permissions
     );
 
     return {
@@ -454,13 +460,14 @@ export class AuthService {
   /**
    * Generate JWT token
    */
-  private generateToken(user_id: number, email: string, roles: string[]): string {
+  private generateToken(user_id: number, email: string, roles: string[], permissions: string[]): string {
     return jwt.sign(
       {
         id: user_id, // Use 'id' to match DataStoredInToken interface
         user_id,
         email,
         roles,
+        permissions,
       },
       process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '24h' }

@@ -4,11 +4,12 @@ import { UserController } from './user.controller';
 import { requireRole } from '../../middlewares/role.middleware';
 // import { requirePermission } from '../../middlewares/permission.middleware'; // DISABLED: Using only role-based access
 import validationMiddleware from '../../middlewares/validation.middleware';
-import { 
-  UserUpdateDto, 
-  ChangePasswordDto, 
-  PasswordResetRequestDto, 
-  PasswordResetDto 
+import {
+  UserUpdateDto,
+  ChangePasswordDto,
+  PasswordResetRequestDto,
+  PasswordResetDto,
+  SetPasswordDto
 } from './user.update.dto';
 import { CreateUserDto, AssignRoleDto, UpdateUserDto } from './user.admin.dto';
 import Route from '../../interfaces/route.interface';
@@ -119,6 +120,16 @@ export class UserRoutes implements Route {
       `${this.path}/change-password`,
       validationMiddleware(ChangePasswordDto, 'body', false, []),
       this.userController.changePassword
+    );
+
+    /**
+     * Set password (for OAuth users)
+     * Requires: Authentication
+     */
+    this.router.post(
+      `${this.path}/set-password`,
+      validationMiddleware(SetPasswordDto, 'body', false, []),
+      this.userController.setPassword
     );
 
     // Verification

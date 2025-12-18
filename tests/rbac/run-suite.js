@@ -5,9 +5,10 @@
  * Runs all RBAC-related tests
  *
  * Usage:
- *   node tests/rbac/run-rbac-tests.js           # Run all tests
- *   node tests/rbac/run-rbac-tests.js complete  # Run only complete RBAC test
- *   node tests/rbac/run-rbac-tests.js role-based # Run only role-based access test
+ *   node tests/rbac/run-suite.js           # Run all tests
+ *   node tests/rbac/run-suite.js 01        # Run only 01-integration.test.js
+ *   node tests/rbac/run-suite.js 02        # Run only 02-middleware-check.test.js
+ *   node tests/rbac/run-suite.js 03        # Run only 03-admin-matrix.test.js
  */
 
 const { printSection, printSummary, getTestCounters, resetTestCounters } = require('../test-utils');
@@ -16,8 +17,9 @@ let totalPassed = 0;
 let totalFailed = 0;
 
 const SCRIPTS = {
-  'complete': 'test-rbac-complete.js',
-  'role-based': 'test-role-based-access.js'
+  '01': '01-integration.test.js',
+  '02': '02-middleware-check.test.js',
+  '03': '03-admin-matrix.test.js'
 };
 
 /**
@@ -32,7 +34,7 @@ async function runTestModule(name, testModule) {
 
     // Override process.exit to prevent individual tests from terminating the suite
     const originalProcessExit = process.exit;
-    process.exit = function(code) {
+    process.exit = function (code) {
       // Don't actually exit, just return the code
       return code;
     };
@@ -63,17 +65,19 @@ async function runTestModule(name, testModule) {
 
 async function runAllTests() {
   console.log('🚀 Starting RBAC (Role-Based Access Control) API Tests...\n');
-  console.log('Available tests:', Object.keys(SCRIPTS).join(', '));
+  console.log('Available tests:', Object.values(SCRIPTS).join(', '));
   console.log('');
 
   try {
     // Import test modules
-    const completeTests = require('./test-rbac-complete');
-    const roleBasedTests = require('./test-role-based-access');
+    const integrationTests = require('./01-integration.test');
+    const middlewareTests = require('./02-middleware-check.test');
+    const matrixTests = require('./03-admin-matrix.test');
 
     // Run all test suites
-    await runTestModule('Complete RBAC Tests', completeTests);
-    await runTestModule('Role-Based Access Tests', roleBasedTests);
+    await runTestModule('01 Integration Tests', integrationTests);
+    await runTestModule('02 Middleware Check', middlewareTests);
+    await runTestModule('03 Admin Matrix Tests', matrixTests);
 
     // Final summary
     console.log('\n' + '='.repeat(60));
@@ -96,16 +100,16 @@ async function runAllTests() {
   }
 }
 
-async function runSpecificTest(testName) {
-  if (!SCRIPTS[testName]) {
-    console.error(`❌ Unknown test: ${testName}`);
-    console.log('Available tests:', Object.keys(SCRIPTS).join(', '));
+async function runSpecificTest(testKey) {
+  if (!SCRIPTS[testKey]) {
+    console.error(`❌ Unknown test key: ${testKey}`);
+    console.log('Use: 01, 02, or 03');
     process.exit(1);
   }
 
   try {
-    const testModule = require(`./${SCRIPTS[testName].replace('.js', '')}`);
-    const result = await runTestModule(`${testName} Test`, testModule);
+    const testModule = require(`./${SCRIPTS[testKey].replace('.js', '')}`);
+    const result = await runTestModule(`${SCRIPTS[testKey]}`, testModule);
     process.exit(result.failed > 0 ? 1 : 0);
   } catch (error) {
     console.error('💥 Test runner failed:', error);

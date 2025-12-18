@@ -25,25 +25,51 @@ async function loginAsSuperAdmin() {
 }
 
 /**
- * Login as client
+ * Ensure Client user exists and get token
  */
-async function loginAsClient() {
+/**
+ * Ensure Client user exists and get token
+ */
+async function ensureClientUser() {
+  const timestamp = Date.now();
+  const email = `login-test-${timestamp}@example.com`;
+  const password = 'Password123!';
+  const { CONFIG } = require('../test-utils');
+
+  // 1. Register new user
   try {
-    const response = await makeRequest('POST', '/api/v1/auth/login', {
-      email: 'login-test@example.com',
-      password: 'Password123!'
+    console.log(`  Registering new client user: ${email}...`);
+    const regResponse = await makeRequest('POST', '/api/v1/auth/register/client', {
+      email,
+      password,
+      first_name: 'Test',
+      last_name: 'Client',
+      phone_number: '1234567890',
+      company_name: 'Test Corp',
+      industry: 'film',
+      company_size: '1-10',
+      country: 'India',
+      terms_accepted: true,
+      privacy_policy_accepted: true
     });
 
-    if (response.statusCode === 200 && response.body?.data?.token) {
-      storeToken('client', response.body.data.token);
-      printTestResult('Client login', true, 'SUCCESS', null);
-      return true;
-    } else {
-      printTestResult('Client login', false, `Expected success, got ${response.statusCode}`, response.body);
-      return false;
+    if (regResponse.statusCode === 201) {
+      // 2. Login immediately
+      const loginRes = await makeRequest('POST', '/api/v1/auth/login', {
+        email,
+        password
+      });
+
+      if (loginRes.statusCode === 200 && loginRes.body?.data?.token) {
+        storeToken('client', loginRes.body.data.token);
+        printTestResult('Client login', true, 'SUCCESS', null);
+        return true;
+      }
     }
+    printTestResult('Client setup failed', false, `Status: ${regResponse.statusCode}`, regResponse.body);
+    return false;
   } catch (error) {
-    printTestResult('Client login', false, `Request failed: ${error.message}`, null);
+    printTestResult('Client setup failed', false, error.message, null);
     return false;
   }
 }
@@ -170,7 +196,8 @@ async function testProjectTaskEndpoints() {
   const clientMultiResult = await testRoleBasedEndpoint('/api/v1/projects-tasks', 'client', 'CLIENT', 'success');
   if (clientMultiResult) passedTests++; else failedTests++;
 
-  printSummary('Project Task Endpoints', passedTests, failedTests);
+  console.log('Project Task Endpoints Results:');
+  printSummary(passedTests, failedTests);
 }
 
 /**
@@ -185,7 +212,7 @@ async function runAllTests() {
   try {
     // Step 1: Login users
     const superAdminLogin = await loginAsSuperAdmin();
-    const clientLogin = await loginAsClient();
+    const clientLogin = await ensureClientUser();
 
     if (!superAdminLogin) {
       printTestResult('Cannot proceed without super admin token', false, 'CRITICAL FAILURE', null);
@@ -223,11 +250,12 @@ async function runAllTests() {
     }
 
     // Print final summary
-    printSummary('Role-Based Access Control Tests', passedTests, failedTests);
+    console.log('Role-Based Access Control Tests Results:');
+    printSummary(passedTests, failedTests);
 
   } catch (error) {
     console.error('❌ Test suite failed:', error.message);
-    printSummary('Role-Based Access Control Tests', passedTests, failedTests);
+    printSummary(passedTests, failedTests);
   }
 }
 

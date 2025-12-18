@@ -173,6 +173,10 @@ class UserService {
     return this.authService.changePassword(user_id, oldPassword, newPassword);
   }
 
+  public async setPassword(user_id: number, newPassword: string) {
+    return this.authService.setPassword(user_id, newPassword);
+  }
+
   public async saveResetToken(user_id: number, token: string, expires: Date) {
     return this.authService.saveResetToken(user_id, token, expires);
   }
@@ -276,7 +280,7 @@ class UserService {
   }> {
     const userProfile = await this.getUserWithProfile(userId);
     const roles = await this.roleService.getUserRoles(userId);
-    
+
     // Extract role names from roles array
     const roleNames = roles.map((role: any) => role.name);
 
@@ -304,7 +308,7 @@ class UserService {
 
     // Define completion criteria for each user type
     const completionCriteria = this.getCompletionCriteria(userType);
-    
+
     // Calculate completion
     const { completed, total, completedFields, missingFields } = this.calculateCompletion(
       userProfile,
@@ -322,9 +326,9 @@ class UserService {
     };
   }
 
-    /**
-   * Get completion criteria for different user types
-   */
+  /**
+ * Get completion criteria for different user types
+ */
   private getCompletionCriteria(userType: string): { [key: string]: string[] } {
     const criteria = {
       CLIENT: {
@@ -394,9 +398,9 @@ class UserService {
       criteria.freelancer_profile.forEach(field => {
         total++;
         const value = userProfile.profile[field];
-        if (value && value !== '' && 
-            (Array.isArray(value) ? value.length > 0 : true) && 
-            (typeof value === 'number' ? value > 0 : true)) {
+        if (value && value !== '' &&
+          (Array.isArray(value) ? value.length > 0 : true) &&
+          (typeof value === 'number' ? value > 0 : true)) {
           completed++;
           completedFields.push(`freelancer_profile.${field}`);
         } else {
