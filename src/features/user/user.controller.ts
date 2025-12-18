@@ -90,6 +90,29 @@ export class UserController {
   };
 
   /**
+   * Get public basic user info by ID (for chat/messaging purposes)
+   * GET /api/v1/users/:id/public-info
+   * Returns only non-sensitive info: name, profile picture, user_id
+   */
+  public getUserPublicInfo = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      const publicInfo = await this.userService.getUserPublicInfo(userId);
+
+      res.status(200).json({
+        success: true,
+        data: publicInfo
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
    * Update basic user info (users table fields only)
    * PATCH /api/v1/users/me
    */
