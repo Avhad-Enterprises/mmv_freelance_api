@@ -3,9 +3,11 @@ import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 import { CreditsService } from "../credits/credits.service";
+import NotificationService from "../notification/notification.service";
 
 class AppliedProjectsService {
     private creditsService = new CreditsService();
+    private notificationService = new NotificationService();
 
     public async apply(data: AppliedProjectsDto): Promise<any> {
         // Validate required fields
@@ -41,9 +43,18 @@ class AppliedProjectsService {
         }
 
         // Check if project has bidding enabled and validate bid_amount
+        // Check if project has bidding enabled and validate bid_amount
         const project = await DB(T.PROJECTS_TASK)
-            .where({ projects_task_id: data.projects_task_id, is_deleted: false })
-            .select('bidding_enabled')
+            .join(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, '=', `${T.CLIENT_PROFILES}.client_id`)
+            .where({
+                [`${T.PROJECTS_TASK}.projects_task_id`]: data.projects_task_id,
+                [`${T.PROJECTS_TASK}.is_deleted`]: false
+            })
+            .select(
+                `${T.PROJECTS_TASK}.bidding_enabled`,
+                `${T.CLIENT_PROFILES}.user_id`,
+                `${T.PROJECTS_TASK}.project_title`
+            )
             .first();
 
         if (!project) {
@@ -79,6 +90,19 @@ class AppliedProjectsService {
             .insert(applicationData)
             .returning("*");
 
+        // Send Notification to Project Owner (Client)
+        if (project.user_id) {
+            await this.notificationService.createNotification({
+                user_id: project.user_id, // The Client
+                title: "New Proposal Received",
+                message: `A freelancer has applied to your project: ${project.project_title || 'Untitled Project'}`,
+                type: "proposal",
+                related_id: appliedProject[0].applied_projects_id,
+                related_type: "applied_projects",
+                is_read: false
+            });
+        }
+
         return {
             alreadyApplied: false,
             message: "Applied to project successfully",
@@ -105,7 +129,7 @@ class AppliedProjectsService {
                 'users.profile_picture',
                 'users.email',
                 'users.bio'
-               
+
             );
         return projects;
     }
@@ -188,6 +212,29 @@ class AppliedProjectsService {
                         updated_at: new Date()
                     });
             }
+        }
+
+        // NOTIFICATION LOGIC
+        if (status === 1) { // Accepted/Hired
+            await this.notificationService.createNotification({
+                user_id: application.user_id, // The Freelancer
+                title: "Proposal Accepted!",
+                message: `Congratulations! You have been hired for the project.`,
+                type: "hired",
+                related_id: application.projects_task_id,
+                related_type: "projects_task",
+                is_read: false
+            });
+        } else if (status === 3) { // Rejected
+            await this.notificationService.createNotification({
+                user_id: application.user_id, // The Freelancer
+                title: "Proposal Update",
+                message: `Your proposal for the project was not selected.`,
+                type: "rejected",
+                related_id: application.projects_task_id,
+                related_type: "projects_task",
+                is_read: false
+            });
         }
 
         return updated[0];

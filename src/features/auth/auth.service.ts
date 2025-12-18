@@ -5,10 +5,10 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { assignRole } from '../../utils/rbac/role-checker';
 import HttpException from '../../exceptions/HttpException';
-import { 
-  uploadRegistrationFile, 
+import {
+  uploadRegistrationFile,
   uploadMultipleRegistrationFiles,
-  UploadResult 
+  UploadResult
 } from '../../utils/registration-upload';
 import { DocumentType, AccountType, MulterFile } from '../../interfaces/file-upload.interface';
 
@@ -36,7 +36,7 @@ export class AuthService {
         count: fileArray?.length || 0,
         files: fileArray?.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) || []
       })));
-      
+
       try {
         // Upload profile picture
         if (files.profile_picture && files.profile_picture[0]) {
@@ -58,13 +58,13 @@ export class AuthService {
         const businessFiles = files.business_document;
         if (businessFiles && businessFiles.length > 0) {
           console.log(`📄 Processing ${businessFiles.length} business document(s) for client`);
-          
+
           for (const businessFile of businessFiles) {
             if (businessFile.size === 0 || !businessFile.buffer || businessFile.buffer.length === 0) {
               console.warn('⚠️ Skipping empty business document upload');
               continue;
             }
-            
+
             try {
               const businessUpload = await uploadRegistrationFile(
                 businessFile,
@@ -79,7 +79,7 @@ export class AuthService {
               // Continue with other files instead of failing completely
             }
           }
-          
+
           console.log(`📄 Successfully uploaded ${businessDocumentUrls.length} business document(s)`);
         }
       } catch (error: any) {
@@ -406,8 +406,8 @@ export class AuthService {
 
     // Generate JWT token
     const token = this.generateToken(
-      user.user_id, 
-      user.email, 
+      user.user_id,
+      user.email,
       roles.map(r => r.role_name)
     );
 
@@ -455,6 +455,15 @@ export class AuthService {
    * Generate JWT token
    */
   private generateToken(user_id: number, email: string, roles: string[]): string {
+    const secret = process.env.JWT_SECRET;
+
+    if (!secret) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('FATAL: JWT_SECRET is not defined in production environment!');
+      }
+      console.warn('⚠️ WARNING: Using fallback JWT secret. Set JWT_SECRET in .env file.');
+    }
+
     return jwt.sign(
       {
         id: user_id, // Use 'id' to match DataStoredInToken interface
@@ -462,7 +471,7 @@ export class AuthService {
         email,
         roles,
       },
-      process.env.JWT_SECRET || 'fallback-secret',
+      secret || 'fallback-secret',
       { expiresIn: '24h' }
     );
   }
