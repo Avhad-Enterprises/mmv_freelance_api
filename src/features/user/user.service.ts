@@ -55,6 +55,32 @@ class UserService {
   }
 
   /**
+   * Get public basic info for a user (for chat/messaging)
+   * Returns only non-sensitive information
+   */
+  public async getUserPublicInfo(user_id: number): Promise<any> {
+    const user = await DB(T.USERS_TABLE)
+      .select('user_id', 'first_name', 'last_name', 'username', 'profile_picture', 'company_name')
+      .where({ user_id, is_active: true, is_deleted: false })
+      .first();
+
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
+
+    // Return only public information
+    return {
+      user_id: user.user_id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      username: user.username,
+      company_name: user.company_name,
+      profile_picture: user.profile_picture,
+      display_name: user.first_name || user.company_name || user.username || `User ${user.user_id}`
+    };
+  }
+
+  /**
    * Update user basic info (fields in users table only)
    */
   public async updateBasicInfo(user_id: number, data: Partial<Users>): Promise<Users> {

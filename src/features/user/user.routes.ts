@@ -177,6 +177,16 @@ export class UserRoutes implements Route {
     );
 
     /**
+     * Get public basic user info by ID (for chat/messaging)
+     * Requires: Authentication (any authenticated user)
+     * Returns only non-sensitive info: name, profile picture, user_id
+     */
+    this.router.get(
+      `${this.path}/:id/public-info`,
+      this.userController.getUserPublicInfo
+    );
+
+    /**
      * Ban user
      * Requires: ADMIN or SUPER_ADMIN role
      */
