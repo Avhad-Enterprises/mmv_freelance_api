@@ -87,10 +87,10 @@ class NotificationController {
     public notificationcount = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
         try {
             const user_id = req.user.user_id;
-     
+
             const notification = await this.NotificationService.getUnreadCount(user_id)
 
-            if (!notification) {
+            if (notification === undefined || notification === null) {
                 throw new HttpException(404, "Notification not found");
             }
             res.status(200).json({

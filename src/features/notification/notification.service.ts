@@ -60,7 +60,7 @@ class NotificationService {
         if (!user_id) {
             throw new HttpException(400, "User ID is required");
         }
-    
+
         const unreadCount = await DB(T.NOTIFICATION)
             .count('* as count')
             .where('user_id', user_id)
@@ -71,7 +71,7 @@ class NotificationService {
         }
         return count;
     }
-    
+
     public async createNotification(dto: NotificationDto): Promise<any> {
         if (isEmpty(dto)) {
             throw new HttpException(400, 'Data Invalid');
@@ -89,8 +89,6 @@ class NotificationService {
                 meta: dto.meta || null,
                 is_read: dto.is_read ?? false,
                 read_at: dto.read_at ? new Date(dto.read_at) : null,
-                created_at: new Date(),
-                updated_at: new Date(),
             })
             .returning('*');
 
