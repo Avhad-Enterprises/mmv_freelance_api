@@ -469,7 +469,7 @@ export class AuthService {
         roles,
         permissions,
       },
-      secret || 'fallback-secret',
+      process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '24h' }
     );
   }
