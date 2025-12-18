@@ -98,6 +98,9 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
               // Attach roles to user object
               req.user.roles = userRoles.map(r => r.name);
 
+              // Attach permissions from token (Zero-Latency)
+              req.user.permissions = verificationResponse.permissions || [];
+
               await DB.raw("SET search_path TO public");
               next();
             } else {

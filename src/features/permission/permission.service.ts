@@ -5,35 +5,34 @@ import { isEmpty } from "../../utils/common";
 import { PERMISSION } from "../../../database/permission.schema";
 
 class PermissionService {
-    public getallpermissionby = async (): Promise<PermissionDto[]> => {
-        try {
-            const result = await DB(T.PERMISSION)
-                .where({ is_critical: false })
-                .select("*");
-            return result;
-        } catch (error) {
-            throw new Error('Error fetching Permission');
-        }
+    public getPermissions = async (): Promise<PermissionDto[]> => {
+        // Admins should see all permissions, including critical ones
+        return await DB(T.PERMISSION).select("*").orderBy('permission_id', 'asc');
     }
-    public async createnewpermission(data: PermissionDto): Promise<any> {
-        if (isEmpty(data)) {
-            throw new HttpException(400, "Permission data is empty");
-        }
-        const insertedPermission = await DB(T.PERMISSION).insert(data).returning("*");
-        return insertedPermission[0];
-    }
-    public async updatepermissionbyids(data: Partial<PermissionDto>): Promise<any> {
 
+    public async createPermission(data: PermissionDto): Promise<any> {
+        if (isEmpty(data)) throw new HttpException(400, "Permission data is empty");
+        const [permission] = await DB(T.PERMISSION).insert(data).returning("*");
+        return permission;
+    }
+
+    public async updatePermission(data: Partial<PermissionDto>): Promise<any> {
         if (isEmpty(data)) throw new HttpException(400, "Update data is empty");
+        const [updated] = await DB(T.PERMISSION).where({ permission_id: data.permission_id }).update(data).returning("*");
+        if (!updated) throw new HttpException(404, "Permission not found");
+        return updated;
+    }
 
-        const updated = await DB(T.PERMISSION)
-            .where({ permission_id: data.permission_id })
-            .update(data)
-            .returning("*");
+    public async deletePermission(permissionId: number): Promise<void> {
+        const permission = await DB(T.PERMISSION).where({ permission_id: permissionId }).first();
+        if (!permission) throw new HttpException(404, "Permission not found");
 
-        if (!updated.length) throw new HttpException(404, "Permission not found or not updated");
+        const assignments = await DB('role_permission').where({ permission_id: permissionId }).count('permission_id as count').first();
+        if (Number(assignments?.count) > 0) {
+            throw new HttpException(400, "Cannot delete permission currently assigned to roles");
+        }
 
-        return updated[0];
+        await DB(T.PERMISSION).where({ permission_id: permissionId }).delete();
     }
 }
 export default PermissionService;

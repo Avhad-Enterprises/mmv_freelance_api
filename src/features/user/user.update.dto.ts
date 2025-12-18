@@ -1,9 +1,9 @@
 // Base User Update DTO - For updating common user fields
-import { 
-  IsString, 
-  IsOptional, 
-  IsEmail, 
-  IsUrl, 
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsUrl,
   IsBoolean,
   MinLength,
   IsNotEmpty,
@@ -122,4 +122,17 @@ export class PasswordResetDto {
   @IsString()
   @MinLength(6)
   confirmPassword: string;
+}
+
+/**
+ * DTO for setting password (first time for OAuth users)
+ */
+export class SetPasswordDto {
+  @IsString()
+  @MinLength(6)
+  new_password: string;
+
+  @IsString()
+  @MinLength(6)
+  confirm_password: string;
 }
