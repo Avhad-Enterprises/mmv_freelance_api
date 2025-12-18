@@ -14,7 +14,7 @@ const rolePermissionMappings = {
     // Profile management
     'profile.view',
     'profile.update',
-    
+
     // Project management
     'projects.view',
     'projects.create',
@@ -22,111 +22,122 @@ const rolePermissionMappings = {
     'projects.delete', // Own projects only
     'projects.hire',
     'projects.manage', // Own projects only
-    
+
+    // Applications
+    'applications.view', // View applications for their projects
+
     // Reviews
     'reviews.view',
     'reviews.create',
-    
+
     // Payments
     'payments.view', // Own payments only
-    
+
     // Support
     'support.view',
     'support.create',
   ],
-  
+
   VIDEOGRAPHER: [
     // Profile management
     'profile.view',
     'profile.update',
-    
+
     // Project management
     'projects.view',
     'projects.apply',
     'projects.update', // Applied projects only
-    
+    'projects.withdraw', // Withdraw application
+
+    // Applications
+    'applications.view', // View their own applications
+
     // Reviews
     'reviews.view',
     'reviews.create',
-    
+
     // Payments
     'payments.view', // Own payments only
-    
+
     // Support
     'support.view',
     'support.create',
   ],
-  
+
   VIDEO_EDITOR: [
     // Profile management
     'profile.view',
     'profile.update',
-    
+
     // Project management
     'projects.view',
     'projects.apply',
     'projects.update', // Applied projects only
-    
+    'projects.withdraw',
+
+    // Applications
+    'applications.view',
+
     // Reviews
     'reviews.view',
     'reviews.create',
-    
+
     // Payments
     'payments.view', // Own payments only
-    
+
     // Support
     'support.view',
     'support.create',
   ],
-  
+
   ADMIN: [
     // All basic permissions
     'profile.view',
     'profile.update',
     'profile.verify',
-    
+
     // User management
     'users.view',
     'users.update',
     'users.ban',
-    
+
     // Project management
     'projects.view',
     'projects.update',
     'projects.delete',
     'projects.manage',
-    
+
     // Content management
     'content.view',
     'content.create',
     'content.update',
     'content.delete',
     'content.publish',
-    
+
     // Reviews
     'reviews.view',
     'reviews.moderate',
     'reviews.delete',
-    
+
     // Payments
     'payments.view',
-    
+
     // Reports
     'reports.view',
     'reports.create',
     'reports.export',
-    
+
     // Support
     'support.view',
     'support.create',
     'support.respond',
     'support.resolve',
-    
+
     // Admin functions
     'admin.dashboard',
     'admin.analytics',
   ],
-  
+
   SUPER_ADMIN: [
     // All permissions - will be assigned programmatically
     '*',
@@ -165,7 +176,7 @@ async function seedRolePermissions() {
         permissionsToAssign = permissions;
         console.log(`   🌟 Assigning ALL ${permissions.length} permissions (SUPER_ADMIN)`);
       } else {
-        permissionsToAssign = permissions.filter(p => 
+        permissionsToAssign = permissions.filter(p =>
           rolePermissionNames.includes(p.name)
         );
         console.log(`   📝 Assigning ${permissionsToAssign.length} permissions`);
