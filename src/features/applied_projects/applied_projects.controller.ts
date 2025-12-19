@@ -103,20 +103,32 @@ class AppliedProjectsController {
     }
   };
 
+  /**
+   * Withdraw application with automatic refund
+   * DELETE /api/v1/applications/:application_id
+   */
   public withdrawApplication = async (
-    req: Request,
+    req: RequestWithUser,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
       const { application_id } = req.params;
+      const user_id = req.user.user_id;
+
       if (!application_id) {
         throw new HttpException(400, "application_id is required");
       }
-      await this.AppliedProjectsService.withdrawApplication(parseInt(application_id));
+
+      const result = await this.AppliedProjectsService.withdrawApplication(
+        parseInt(application_id),
+        user_id
+      );
+
       res.status(200).json({
         success: true,
-        message: "Application withdrawn successfully"
+        message: result.message,
+        refund: result.refund
       });
     } catch (error) {
       next(error);

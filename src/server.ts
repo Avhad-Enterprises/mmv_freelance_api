@@ -50,7 +50,7 @@ import AdminRBACRoute from './features/admin-rbac/admin-rbac.routes';
 
 import validateEnv from './utils/validation/validateEnv';
 import { FreelancerRoutes } from './features/freelancers/freelancer.routes';
-import { CreditsRoutes } from './features/credits/credits.routes';
+import { CreditsRoutes, AdminCreditsRoutes } from './features/credits/routes';
 import { OAuthRoutes } from './features/oauth/oauth.routes';
 // Validate .env variables
 validateEnv();
@@ -65,6 +65,7 @@ const app = new App([
   new VideoEditorRoutes(),
   new FreelancerRoutes(),
   new CreditsRoutes(),
+  new AdminCreditsRoutes(),
 
   // RBAC routes
   new roleRoute(),
