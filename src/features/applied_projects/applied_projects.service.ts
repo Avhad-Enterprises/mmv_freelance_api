@@ -5,6 +5,27 @@ import { isEmpty } from "../../utils/common";
 import { CreditsService } from "../credits/credits.service";
 import NotificationService from "../notification/notification.service";
 
+/**
+ * Applied Projects Service
+ * 
+ * Handles job applications from freelancers to client projects.
+ * 
+ * WORKFLOW:
+ * 1. Freelancer applies → Application Status = 0 (Pending)
+ * 2. Client approves → Application Status = 1 (Approved)
+ *                    → Project Task Status = 1 (Assigned/In Progress)
+ *                    → project.freelancer_id is set
+ * 3. Freelancer submits work → Submission created
+ * 4. Client approves submission → Application Status = 2 (Completed)
+ *                               → Project Task Status = 2 (Completed)
+ * 
+ * STATUS CODES:
+ * - 0: Pending (waiting for client review)
+ * - 1: Approved (freelancer hired, project in progress)
+ * - 2: Completed (project finished)
+ * - 3: Rejected (client rejected application)
+ */
+
 class AppliedProjectsService {
     private creditsService = new CreditsService();
     private notificationService = new NotificationService();
