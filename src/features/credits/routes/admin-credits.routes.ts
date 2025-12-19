@@ -30,6 +30,22 @@ export class AdminCreditsRoutes implements Route {
             this.controller.getAllTransactions
         );
 
+        // GET /api/v1/admin/credits/settings
+        // Permission: credits.admin.view_all
+        this.router.get(
+            `${this.path}/settings`,
+            requirePermission('credits.admin.view_all'),
+            this.controller.getSettings
+        );
+
+        // PUT /api/v1/admin/credits/settings
+        // Permission: credits.admin.adjust
+        this.router.put(
+            `${this.path}/settings`,
+            requirePermission('credits.admin.adjust'),
+            this.controller.updateSettings
+        );
+
         // POST /api/v1/admin/credits/adjust
         // Permission: credits.admin.adjust - Add/deduct credits from users
         this.router.post(

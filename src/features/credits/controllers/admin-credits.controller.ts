@@ -7,12 +7,13 @@ import { Response, NextFunction } from 'express';
 import DB, { T } from "../../../../database/index";
 import { RequestWithUser } from '../../../interfaces/auth.interface';
 import HttpException from '../../../exceptions/HttpException';
-import { CreditLoggerService, CreditRefundService, RefundReason } from '../services';
+import { CreditLoggerService, CreditRefundService, CreditSettingsService, RefundReason } from '../services';
 import { CREDIT_CONFIG } from '../constants';
 
 export class AdminCreditsController {
     private logger = new CreditLoggerService();
     private refundService = new CreditRefundService();
+    private settingsService = new CreditSettingsService();
 
     /**
      * Get all credit transactions
@@ -207,7 +208,7 @@ export class AdminCreditsController {
                     overview: {
                         credits_in_circulation: Number(totalCirculation?.total) || 0,
                         total_revenue_inr: Number(totalRevenue?.total) || 0,
-                        price_per_credit: CREDIT_CONFIG.PRICE_PER_CREDIT
+                        price_per_credit: await this.settingsService.getPricePerCredit()
                     },
                     transactions_by_type: transactionsByType,
                     daily_stats: dailyStats,
@@ -322,6 +323,61 @@ export class AdminCreditsController {
             res.setHeader('Content-Type', 'text/csv');
             res.setHeader('Content-Disposition', `attachment; filename=credit_transactions_${Date.now()}.csv`);
             res.send(csv);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * Get credit settings
+     * GET /api/v1/admin/credits/settings
+     */
+    public getSettings = async (
+        req: RequestWithUser,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const price = await this.settingsService.getPricePerCredit();
+            res.status(200).json({
+                success: true,
+                data: {
+                    price_per_credit: price,
+                    currency: CREDIT_CONFIG.CURRENCY
+                },
+                message: "Settings retrieved successfully"
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * Update credit settings
+     * PUT /api/v1/admin/credits/settings
+     */
+    public updateSettings = async (
+        req: RequestWithUser,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const { price_per_credit } = req.body;
+            const adminUserId = req.user.user_id;
+
+            if (price_per_credit === undefined) {
+                throw new HttpException(400, "price_per_credit is required");
+            }
+
+            await this.settingsService.updatePricePerCredit(Number(price_per_credit), adminUserId);
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    price_per_credit: Number(price_per_credit)
+                },
+                message: "Credit settings updated successfully"
+            });
         } catch (error) {
             next(error);
         }

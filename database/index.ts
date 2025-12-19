@@ -111,6 +111,7 @@ export const T = {
   CONTACT_SUBMISSIONS,
   OAUTH_ACCOUNTS_TABLE,
   CREDIT_TRANSACTIONS_TABLE,
+  CREDIT_SETTINGS_TABLE: 'credit_settings',
 };
 
 // Creates the procedure that is then added as a trigger to every table

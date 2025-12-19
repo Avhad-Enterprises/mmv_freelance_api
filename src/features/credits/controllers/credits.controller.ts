@@ -3,7 +3,7 @@
  * Handles freelancer credits management endpoints
  */
 
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { CreditsService } from '../services';
 import { RequestWithUser } from '../../../interfaces/auth.interface';
 import HttpException from '../../../exceptions/HttpException';
@@ -45,16 +45,16 @@ export class CreditsController {
      * GET /api/v1/credits/packages
      */
     public getPackages = async (
-        req: RequestWithUser,
+        req: Request,
         res: Response,
         next: NextFunction
     ): Promise<void> => {
         try {
-            const packagesData = this.creditsService.getPackages();
+            const result = await this.creditsService.getPackages();
 
             res.status(200).json({
                 success: true,
-                data: packagesData,
+                data: result,
                 message: "Credit packages retrieved successfully"
             });
         } catch (error) {
@@ -63,8 +63,8 @@ export class CreditsController {
     };
 
     /**
-     * Initiate credit purchase - creates Razorpay order
-     * POST /api/v1/credits/initiate-purchase
+     * Initiate credit purchase (Razorpay)
+     * POST /api/v1/credits/purchase
      */
     public initiatePurchase = async (
         req: RequestWithUser,
@@ -85,12 +85,14 @@ export class CreditsController {
                     throw new HttpException(400, "Invalid package ID");
                 }
                 credits = pkg.credits;
-                amount = Math.round(pkg.price * 100); // Razorpay uses paise (integer), prevent float errors
+                // Use dynamic pricing service instead of static pkg.price
+                const priceInfo = await this.creditsService.calculatePrice(credits);
+                amount = Math.round(priceInfo.price * 100);
                 packageName = pkg.name;
             } else {
                 credits = credits_amount;
                 // Use centralized price calculation
-                const priceInfo = this.creditsService.calculatePrice(credits);
+                const priceInfo = await this.creditsService.calculatePrice(credits);
                 amount = Math.round(priceInfo.price * 100);
             }
 

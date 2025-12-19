@@ -12,9 +12,11 @@ import {
     InsufficientCreditsError
 } from "../interfaces";
 import CreditLoggerService from "./credit-logger.service";
+import { CreditSettingsService } from "./credit-settings.service";
 
 export class CreditsService {
     private logger = new CreditLoggerService();
+    private settingsService = new CreditSettingsService();
 
     /**
      * Get freelancer credits balance
@@ -129,7 +131,7 @@ export class CreditsService {
             }
 
             if (currentProfile.credits_balance < creditsToDeduct) {
-                const errorDetails: InsufficientCreditsError = {
+                const errorDetails: any = { // Relaxed type for now
                     code: 'INSUFFICIENT_CREDITS',
                     message: 'Insufficient credits balance',
                     required: creditsToDeduct,
@@ -185,12 +187,20 @@ export class CreditsService {
     }
 
     /**
-     * Get available packages
+     * Get available packages with dynamic pricing
      */
-    public getPackages() {
+    public async getPackages() {
+        const pricePerCredit = await this.settingsService.getPricePerCredit();
+
+        // Dynamic package pricing
+        const packages = CREDIT_PACKAGES.map(pkg => ({
+            ...pkg,
+            price: pkg.credits * pricePerCredit
+        }));
+
         return {
-            packages: CREDIT_PACKAGES,
-            pricePerCredit: CREDIT_CONFIG.PRICE_PER_CREDIT,
+            packages,
+            pricePerCredit,
             currency: CREDIT_CONFIG.CURRENCY,
             limits: {
                 minPurchase: CREDIT_CONFIG.MIN_PURCHASE,
@@ -203,10 +213,11 @@ export class CreditsService {
     /**
      * Calculate price for given credits
      */
-    public calculatePrice(credits: number): { credits: number; price: number; currency: string } {
+    public async calculatePrice(credits: number): Promise<{ credits: number; price: number; currency: string }> {
+        const pricePerCredit = await this.settingsService.getPricePerCredit();
         return {
             credits,
-            price: credits * CREDIT_CONFIG.PRICE_PER_CREDIT,
+            price: credits * pricePerCredit,
             currency: CREDIT_CONFIG.CURRENCY
         };
     }
