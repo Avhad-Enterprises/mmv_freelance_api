@@ -63,7 +63,9 @@ export class CreditsService {
             const newBalance = currentProfile.credits_balance + creditsToAdd;
             const newTotalPurchased = currentProfile.total_credits_purchased + creditsToAdd;
 
-            if (newBalance > CREDIT_CONFIG.MAX_BALANCE) {
+            // Soft limit: Allow exceeding max balance if it's a paid transaction (prevent money loss)
+            // Only enforce hard limit for manual/system additions without payment reference
+            if (newBalance > CREDIT_CONFIG.MAX_BALANCE && !paymentReference) {
                 throw new HttpException(400, {
                     code: 'MAX_BALANCE_EXCEEDED',
                     message: `Cannot exceed maximum balance of ${CREDIT_CONFIG.MAX_BALANCE} credits`,
@@ -71,6 +73,9 @@ export class CreditsService {
                     attemptedAdd: creditsToAdd,
                     maxAllowed: CREDIT_CONFIG.MAX_BALANCE - currentProfile.credits_balance
                 });
+            } else if (newBalance > CREDIT_CONFIG.MAX_BALANCE && paymentReference) {
+                // Log warning for overflow
+                console.warn(`[CREDIT_OVERFLOW] User ${user_id} exceeded max balance via paid transaction ${paymentReference}. New Balance: ${newBalance}`);
             }
 
             await trx(T.FREELANCER_PROFILES)

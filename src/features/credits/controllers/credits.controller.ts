@@ -85,11 +85,13 @@ export class CreditsController {
                     throw new HttpException(400, "Invalid package ID");
                 }
                 credits = pkg.credits;
-                amount = pkg.price * 100; // Razorpay uses paise
+                amount = Math.round(pkg.price * 100); // Razorpay uses paise (integer), prevent float errors
                 packageName = pkg.name;
             } else {
                 credits = credits_amount;
-                amount = credits * CREDIT_CONFIG.PRICE_PER_CREDIT * 100;
+                // Use centralized price calculation
+                const priceInfo = this.creditsService.calculatePrice(credits);
+                amount = Math.round(priceInfo.price * 100);
             }
 
             // Validate purchase

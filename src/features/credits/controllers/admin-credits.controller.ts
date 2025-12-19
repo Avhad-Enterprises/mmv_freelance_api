@@ -53,10 +53,12 @@ export class AdminCreditsController {
             const result = await countQuery.count('* as count').first();
             const count = result ? result.count : 0;
 
+            const effectiveLimit = Math.min(Number(limit), 100);
+
             const transactions = await query
                 .orderBy(`credit_transactions.${sort_by}`, sort_order as string)
-                .limit(Number(limit))
-                .offset((Number(page) - 1) * Number(limit));
+                .limit(effectiveLimit)
+                .offset((Number(page) - 1) * effectiveLimit);
 
             res.status(200).json({
                 success: true,
@@ -65,8 +67,8 @@ export class AdminCreditsController {
                     pagination: {
                         total: Number(count),
                         page: Number(page),
-                        limit: Number(limit),
-                        totalPages: Math.ceil(Number(count) / Number(limit))
+                        limit: effectiveLimit,
+                        totalPages: Math.ceil(Number(count) / effectiveLimit)
                     }
                 },
                 message: "Transactions retrieved successfully"
