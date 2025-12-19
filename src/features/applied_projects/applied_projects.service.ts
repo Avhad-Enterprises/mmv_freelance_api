@@ -3,10 +3,12 @@ import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
 import { CreditsService } from "../credits/services";
+import { CreditLoggerService } from "../credits/services/credit-logger.service";
 import NotificationService from "../notification/notification.service";
 
 class AppliedProjectsService {
     private creditsService = new CreditsService();
+    private creditLogger = new CreditLoggerService();
     private notificationService = new NotificationService();
 
     /**
@@ -109,6 +111,18 @@ class AppliedProjectsService {
             const [appliedProject] = await trx(T.APPLIED_PROJECTS)
                 .insert(applicationData)
                 .returning("*");
+
+            // Step 4: Log the credit transaction for history tracking
+            await this.creditLogger.log({
+                user_id: data.user_id,
+                transaction_type: 'deduction',
+                amount: -CREDITS_PER_APPLICATION,
+                balance_before: profile.credits_balance,
+                balance_after: profile.credits_balance - CREDITS_PER_APPLICATION,
+                reference_type: 'application',
+                reference_id: appliedProject.applied_projects_id,
+                description: `Applied to project: ${project.project_title || `#${data.projects_task_id}`}`
+            }, trx);
 
             return {
                 application: appliedProject,

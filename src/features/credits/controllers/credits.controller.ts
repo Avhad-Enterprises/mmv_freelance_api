@@ -179,18 +179,27 @@ export class CreditsController {
                 throw new HttpException(403, 'Payment does not belong to this user');
             }
 
-            const balance = await this.creditsService.getCreditsBalance(user_id);
+            const creditsToAdd = Number(notes.credits);
 
+            // Add credits to user's account
+            const result = await this.creditsService.addCredits(
+                user_id,
+                creditsToAdd,
+                razorpay_payment_id
+            );
+
+            // Response matches frontend VerifyPaymentResponse interface
             res.status(200).json({
                 success: true,
                 data: {
+                    credits_added: creditsToAdd,
+                    credits_balance: result.credits_balance,
+                    transaction_id: razorpay_payment_id,
+                    // Additional info for debugging/display
                     payment_verified: true,
-                    payment_id: razorpay_payment_id,
-                    credits_purchased: Number(notes.credits),
-                    current_balance: balance.credits_balance,
-                    total_purchased: balance.total_credits_purchased
+                    payment_id: razorpay_payment_id
                 },
-                message: `Payment verified. ${notes.credits} credits added to your account.`
+                message: `Payment verified. ${creditsToAdd} credits added to your account.`
             });
         } catch (error) {
             next(error);
