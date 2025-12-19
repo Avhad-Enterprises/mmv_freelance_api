@@ -67,6 +67,16 @@ import { ADMIN_PROFILES } from './admin_profiles.schema';
 import { CONTACT_SUBMISSIONS } from './contact.schema';
 import { OAUTH_ACCOUNTS_TABLE } from './oauth_accounts.schema';
 
+// CMS Landing Page Tables (Consolidated Schema)
+import {
+  CMS_HERO,
+  CMS_TRUSTED_COMPANIES,
+  CMS_WHY_CHOOSE_US,
+  CMS_FEATURED_CREATORS,
+  CMS_SUCCESS_STORIES,
+  CMS_LANDING_FAQS
+} from './cms_landing.schema';
+
 
 export const T = {
   USERS_TABLE,
@@ -109,6 +119,13 @@ export const T = {
   ADMIN_PROFILES,
   CONTACT_SUBMISSIONS,
   OAUTH_ACCOUNTS_TABLE,
+  // CMS Landing Page Tables
+  CMS_HERO,
+  CMS_TRUSTED_COMPANIES,
+  CMS_WHY_CHOOSE_US,
+  CMS_FEATURED_CREATORS,
+  CMS_SUCCESS_STORIES,
+  CMS_LANDING_FAQS,
 };
 
 // Creates the procedure that is then added as a trigger to every table

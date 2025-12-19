@@ -52,6 +52,8 @@ import validateEnv from './utils/validation/validateEnv';
 import { FreelancerRoutes } from './features/freelancers/freelancer.routes';
 import { CreditsRoutes } from './features/credits/credits.routes';
 import { OAuthRoutes } from './features/oauth/oauth.routes';
+import CmsLandingRoute from './features/cms-landing/cms-landing.routes';
+
 // Validate .env variables
 validateEnv();
 
@@ -106,6 +108,9 @@ const app = new App([
 
   // OAuth Routes
   new OAuthRoutes(),
+
+  // CMS Landing Page Routes
+  new CmsLandingRoute(),
 ]);
 
 // Start server

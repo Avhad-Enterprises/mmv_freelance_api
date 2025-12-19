@@ -80,7 +80,8 @@ class App {
       "https://makemyvid.io",
       "https://www.makemyvid.io",
       "http://localhost:3000",
-      "http://localhost:3001"
+      "http://localhost:3001",
+      "http://localhost:5173"  // Admin panel
     ];
 
     this.app.use(

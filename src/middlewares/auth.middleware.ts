@@ -42,6 +42,8 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/oauth/facebook/callback',
       '/oauth/apple',
       '/oauth/apple/callback',
+      // CMS Landing Page public routes
+      '/cms-landing/public',
     ];
 
     // Check if the current path matches any public route
