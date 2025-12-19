@@ -1,8 +1,12 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
-import { Client } from 'pg'; // Use pg client directly for LISTEN/NOTIFY
+import { Client } from 'pg';
 import { verify } from 'jsonwebtoken';
 import { logger } from '../utils/logger';
+
+// ============================================
+// Type Definitions
+// ============================================
 
 interface NotificationPayload {
     id: number;
@@ -13,22 +17,77 @@ interface NotificationPayload {
     created_at: string;
 }
 
+interface DecodedToken {
+    id?: number;
+    user_id?: number;
+    email?: string;
+    role?: string;
+}
+
+interface AuthenticatedSocket extends Socket {
+    user?: DecodedToken;
+}
+
+// ============================================
+// Configuration
+// ============================================
+
+const SOCKET_CONFIG = {
+    // CORS - same origins as Express app in app.ts
+    allowedOrigins: [
+        "https://makemyvid.io",
+        "https://www.makemyvid.io",
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://192.168.1.20:3000",
+        "http://192.168.1.20:3001"
+    ],
+    // Connection limits
+    maxSocketsPerUser: 5,
+    // Heartbeat settings (in ms)
+    pingInterval: 25000,
+    pingTimeout: 20000,
+    // PostgreSQL reconnection settings
+    maxReconnectAttempts: 10,
+    initialReconnectDelay: 1000,
+    maxReconnectDelay: 30000,
+};
+
+// ============================================
+// Socket Service Class
+// ============================================
+
 class SocketService {
-    private io: SocketIOServer;
-    private pgClient: Client;
-    private userSockets: Map<number, string[]> = new Map(); // Map user_id to array of socket_ids
+    private io!: SocketIOServer;
+    private pgClient!: Client;
+    private userSockets: Map<number, string[]> = new Map();
+
+    // Reconnection state
+    private reconnectAttempts = 0;
+    private reconnectTimeout: NodeJS.Timeout | null = null;
+    private isShuttingDown = false;
 
     constructor() {
         this.userSockets = new Map();
     }
 
-    public init(httpServer: HttpServer) {
+    /**
+     * Initialize Socket.IO server with the HTTP server
+     */
+    public init(httpServer: HttpServer): void {
         this.io = new SocketIOServer(httpServer, {
             cors: {
-                origin: "*", // Configure as needed for production
-                methods: ["GET", "POST"]
+                origin: SOCKET_CONFIG.allowedOrigins,
+                methods: ["GET", "POST"],
+                credentials: true
             },
-            path: '/socket.io'
+            path: '/socket.io',
+            // Heartbeat configuration
+            pingInterval: SOCKET_CONFIG.pingInterval,
+            pingTimeout: SOCKET_CONFIG.pingTimeout,
+            // Connection settings
+            transports: ['websocket', 'polling'],
+            allowUpgrades: true,
         });
 
         this.setupMiddleware();
@@ -38,13 +97,17 @@ class SocketService {
         logger.info('✅ Socket Server Initialized');
     }
 
-    private setupMiddleware() {
-        this.io.use((socket: Socket, next) => {
+    /**
+     * Authentication middleware for socket connections
+     */
+    private setupMiddleware(): void {
+        this.io.use((socket: AuthenticatedSocket, next) => {
             try {
                 const token = socket.handshake.auth.token || socket.handshake.headers.authorization;
 
                 if (!token) {
-                    return next(new Error('Authentication error'));
+                    logger.warn(`🔌 Socket Auth Failed: No token provided from ${socket.handshake.address}`);
+                    return next(new Error('Authentication error: No token provided'));
                 }
 
                 // Remove Bearer prefix if present
@@ -54,94 +117,226 @@ class SocketService {
 
                 if (!secretKey) {
                     if (process.env.NODE_ENV === 'production') {
-                        throw new Error('FATAL: JWT_SECRET is not defined in production environment!');
+                        logger.error('FATAL: JWT_SECRET is not defined in production environment!');
+                        return next(new Error('Server configuration error'));
                     }
-                    console.warn('⚠️ WARNING: Using fallback JWT secret for Socket. Set JWT_SECRET in .env file.');
+                    logger.warn('⚠️ WARNING: Using fallback JWT secret for Socket. Set JWT_SECRET in .env file.');
                     secretKey = 'fallback-secret';
                 }
 
-                console.log(`🔌 Socket Auth Attempt: Token Length ${tokenString.length}`);
-
                 try {
-                    const decoded: any = verify(tokenString, secretKey);
-                    console.log(`✅ Socket Auth Success: User ${decoded.id || decoded.user_id}`);
-                    (socket as any).user = decoded; // Attach user to socket
+                    const decoded = verify(tokenString, secretKey) as DecodedToken;
+                    const userId = decoded.id || decoded.user_id;
+
+                    if (!userId) {
+                        logger.warn('🔌 Socket Auth Failed: Token has no user ID');
+                        return next(new Error('Authentication error: Invalid token'));
+                    }
+
+                    logger.debug(`🔌 Socket Auth Success: User ${userId}`);
+                    socket.user = decoded;
                     next();
-                } catch (err) {
-                    console.error(`❌ Socket Auth Verification Failed: ${err.message}`);
-                    next(new Error('Authentication error'));
+                } catch (err: any) {
+                    logger.warn(`🔌 Socket Auth Verification Failed: ${err.message}`);
+                    next(new Error('Authentication error: Invalid token'));
                 }
-            } catch (error) {
-                console.error('❌ Socket Auth Unexpected Error:', error);
+            } catch (error: any) {
+                logger.error('🔌 Socket Auth Unexpected Error:', error);
                 next(new Error('Authentication error'));
             }
         });
     }
 
-    private setupConnectionHandler() {
-        this.io.on('connection', (socket: Socket) => {
-            const userId = (socket as any).user?.user_id || (socket as any).user?.id;
+    /**
+     * Handle socket connection events
+     */
+    private setupConnectionHandler(): void {
+        this.io.on('connection', (socket: AuthenticatedSocket) => {
+            const userId = socket.user?.user_id || socket.user?.id;
 
-            if (userId) {
-                this.addUserSocket(userId, socket.id);
-                socket.join(`user_${userId}`); // Join a room for easier broadcasting
+            if (!userId) {
+                logger.warn('🔌 Socket connected but no user ID found, disconnecting');
+                socket.disconnect(true);
+                return;
+            }
 
-                logger.info(`🔌 User connected: ${userId} (Socket ID: ${socket.id})`);
+            // Enforce connection limit per user
+            this.enforceConnectionLimit(userId);
 
-                socket.on('disconnect', () => {
-                    this.removeUserSocket(userId, socket.id);
-                    logger.info(`🔌 User disconnected: ${userId}`);
-                });
+            // Register socket
+            this.addUserSocket(userId, socket.id);
+            socket.join(`user_${userId}`);
+
+            logger.info(`🔌 User connected: ${userId} (Socket ID: ${socket.id})`);
+
+            // Custom health check event for debugging
+            socket.on('ping_check', (callback) => {
+                if (typeof callback === 'function') {
+                    callback({ status: 'ok', timestamp: Date.now() });
+                }
+            });
+
+            // Handle disconnect
+            socket.on('disconnect', (reason) => {
+                this.removeUserSocket(userId, socket.id);
+                logger.info(`🔌 User disconnected: ${userId} (Reason: ${reason})`);
+            });
+
+            // Handle errors
+            socket.on('error', (error) => {
+                logger.error(`🔌 Socket error for user ${userId}:`, error);
+            });
+        });
+
+        // Server-level error handling
+        this.io.on('connect_error', (error) => {
+            logger.error('🔌 Socket.IO connection error:', error);
+        });
+    }
+
+    /**
+     * Enforce maximum sockets per user
+     */
+    private enforceConnectionLimit(userId: number): void {
+        const existingSockets = this.userSockets.get(userId) || [];
+
+        while (existingSockets.length >= SOCKET_CONFIG.maxSocketsPerUser) {
+            const oldestSocketId = existingSockets.shift();
+            if (oldestSocketId) {
+                const oldSocket = this.io.sockets.sockets.get(oldestSocketId);
+                if (oldSocket) {
+                    logger.info(`🔌 Disconnecting old socket for user ${userId} (limit reached)`);
+                    oldSocket.disconnect(true);
+                }
+            }
+        }
+    }
+
+    /**
+     * Setup PostgreSQL LISTEN/NOTIFY with auto-reconnection
+     */
+    private async setupDatabaseListener(): Promise<void> {
+        try {
+            await this.connectDatabaseListener();
+        } catch (error) {
+            logger.error('❌ Initial Database Listener connection failed:', error);
+            this.scheduleReconnect();
+        }
+    }
+
+    /**
+     * Connect to PostgreSQL for LISTEN
+     */
+    private async connectDatabaseListener(): Promise<void> {
+        // Clean up existing client if any
+        if (this.pgClient) {
+            try {
+                await this.pgClient.end();
+            } catch (e) {
+                // Ignore cleanup errors
+            }
+        }
+
+        this.pgClient = new Client({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_DATABASE,
+            port: Number(process.env.DB_PORT) || 5432,
+            ssl: this.shouldUseSSL() ? { rejectUnauthorized: false } : false
+        });
+
+        await this.pgClient.connect();
+        await this.pgClient.query('LISTEN notification_created');
+
+        // Reset reconnect attempts on successful connection
+        this.reconnectAttempts = 0;
+        logger.info('✅ PostgreSQL Listener Connected');
+
+        // Handle notifications
+        this.pgClient.on('notification', (msg) => {
+            if (msg.channel === 'notification_created' && msg.payload) {
+                try {
+                    const payload: NotificationPayload = JSON.parse(msg.payload);
+                    this.sendToUser(payload.user_id, 'new_notification', payload);
+                    logger.debug(`📢 Notification sent to user ${payload.user_id}`);
+                } catch (error) {
+                    logger.error('❌ Error parsing notification payload:', error);
+                }
+            }
+        });
+
+        // Handle connection errors - trigger reconnect
+        this.pgClient.on('error', (err) => {
+            logger.error('❌ Database Listener Error:', err);
+            if (!this.isShuttingDown) {
+                this.scheduleReconnect();
+            }
+        });
+
+        // Handle connection end
+        this.pgClient.on('end', () => {
+            logger.warn('⚠️ Database Listener connection ended');
+            if (!this.isShuttingDown) {
+                this.scheduleReconnect();
             }
         });
     }
 
-    private async setupDatabaseListener() {
-        try {
-            // Create a dedicated client for LISTEN
-            this.pgClient = new Client({
-                host: process.env.DB_HOST,
-                user: process.env.DB_USER,
-                password: process.env.DB_PASSWORD,
-                database: process.env.DB_DATABASE,
-                port: Number(process.env.DB_PORT) || 5432,
-                ssl: process.env.DB_HOST === 'localhost' ? false : { rejectUnauthorized: false }
-            });
-
-            await this.pgClient.connect();
-            await this.pgClient.query('LISTEN notification_created');
-
-            logger.info('✅ PostgreSQL Listener Connected');
-
-            this.pgClient.on('notification', (msg) => {
-                if (msg.channel === 'notification_created' && msg.payload) {
-                    try {
-                        const payload: NotificationPayload = JSON.parse(msg.payload);
-                        this.sendToUser(payload.user_id, 'new_notification', payload);
-                    } catch (error) {
-                        logger.error('❌ Error parsing notification payload:', error);
-                    }
-                }
-            });
-
-            this.pgClient.on('error', (err) => {
-                logger.error('❌ Database Listener Error:', err);
-                // Reconnection logic could go here
-            });
-
-        } catch (error) {
-            logger.error('❌ Failed to connect Database Listener:', error);
-        }
+    /**
+     * Determine if SSL should be used for PostgreSQL
+     */
+    private shouldUseSSL(): boolean {
+        const host = process.env.DB_HOST || '';
+        return host !== 'localhost' && host !== '127.0.0.1';
     }
 
-    private addUserSocket(userId: number, socketId: string) {
+    /**
+     * Schedule database reconnection with exponential backoff
+     */
+    private scheduleReconnect(): void {
+        if (this.reconnectTimeout || this.isShuttingDown) {
+            return;
+        }
+
+        if (this.reconnectAttempts >= SOCKET_CONFIG.maxReconnectAttempts) {
+            logger.error(`❌ Max reconnection attempts (${SOCKET_CONFIG.maxReconnectAttempts}) reached. Giving up.`);
+            return;
+        }
+
+        this.reconnectAttempts++;
+        const delay = Math.min(
+            SOCKET_CONFIG.initialReconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
+            SOCKET_CONFIG.maxReconnectDelay
+        );
+
+        logger.info(`🔄 Scheduling DB reconnection attempt ${this.reconnectAttempts}/${SOCKET_CONFIG.maxReconnectAttempts} in ${delay}ms`);
+
+        this.reconnectTimeout = setTimeout(async () => {
+            this.reconnectTimeout = null;
+            try {
+                await this.connectDatabaseListener();
+            } catch (error) {
+                logger.error(`❌ Reconnection attempt ${this.reconnectAttempts} failed:`, error);
+                this.scheduleReconnect();
+            }
+        }, delay);
+    }
+
+    /**
+     * Add a socket ID to a user's socket list
+     */
+    private addUserSocket(userId: number, socketId: string): void {
         if (!this.userSockets.has(userId)) {
             this.userSockets.set(userId, []);
         }
-        this.userSockets.get(userId)?.push(socketId);
+        this.userSockets.get(userId)!.push(socketId);
     }
 
-    private removeUserSocket(userId: number, socketId: string) {
+    /**
+     * Remove a socket ID from a user's socket list
+     */
+    private removeUserSocket(userId: number, socketId: string): void {
         const sockets = this.userSockets.get(userId);
         if (sockets) {
             const index = sockets.indexOf(socketId);
@@ -154,9 +349,22 @@ class SocketService {
         }
     }
 
-    public async close() {
+    /**
+     * Gracefully close all socket connections and database listener
+     */
+    public async close(): Promise<void> {
+        this.isShuttingDown = true;
+
+        // Clear any pending reconnect
+        if (this.reconnectTimeout) {
+            clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
+        }
+
         try {
             if (this.io) {
+                // Notify all clients before closing
+                this.io.emit('server_shutdown', { message: 'Server is shutting down' });
                 this.io.close();
             }
             if (this.pgClient) {
@@ -168,10 +376,39 @@ class SocketService {
         }
     }
 
-    public sendToUser(userId: number, event: string, data: any) {
-        // Broadcast to the user's room
+    /**
+     * Send an event to a specific user's room
+     */
+    public sendToUser(userId: number, event: string, data: any): void {
         this.io.to(`user_${userId}`).emit(event, data);
-        // logger.info(`📢 Notification sent to user ${userId}`);
+    }
+
+    /**
+     * Broadcast an event to all connected clients
+     */
+    public broadcast(event: string, data: any): void {
+        this.io.emit(event, data);
+    }
+
+    /**
+     * Get the count of connected sockets for a user
+     */
+    public getUserSocketCount(userId: number): number {
+        return this.userSockets.get(userId)?.length || 0;
+    }
+
+    /**
+     * Get total connected sockets count
+     */
+    public getTotalConnections(): number {
+        return this.io?.sockets?.sockets?.size || 0;
+    }
+
+    /**
+     * Check if a user is currently connected
+     */
+    public isUserConnected(userId: number): boolean {
+        return (this.userSockets.get(userId)?.length || 0) > 0;
     }
 }
 

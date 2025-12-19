@@ -38,14 +38,19 @@ class App {
       await DB.raw('SELECT 1 as test');
       console.log('✅ Database connection successful');
 
-      const server = this.app.listen(this.port, () => {
+      const server = this.app.listen(Number(this.port), '0.0.0.0', () => {
         logger.info(
-          `🚀 App listening on the port ${this.port}. Current Env ${this.env}.`
+          `🚀 App listening on the port ${this.port}. Current Env ${this.env}. Accessible on network.`
         );
       });
 
-      // Initialize Socket.IO
-      SocketService.init(server);
+      // Initialize Socket.IO with error handling
+      try {
+        SocketService.init(server);
+      } catch (error: any) {
+        logger.error(`❌ Socket service initialization failed: ${error.message}`);
+        // Server continues without socket support - notifications will still be saved to DB
+      }
 
       server.on('error', (error: any) => {
         if (error.code === 'EADDRINUSE') {
@@ -80,7 +85,8 @@ class App {
       "https://makemyvid.io",
       "https://www.makemyvid.io",
       "http://localhost:3000",
-      "http://localhost:3001"
+      "http://localhost:3001",
+      "http://192.168.1.20:3000",
     ];
 
     this.app.use(
