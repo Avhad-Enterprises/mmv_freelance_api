@@ -49,8 +49,9 @@ export class AdminCreditsController {
             if (from) query = query.where('credit_transactions.created_at', '>=', new Date(from as string));
             if (to) query = query.where('credit_transactions.created_at', '<=', new Date(to as string));
 
-            const countQuery = query.clone();
-            const [{ count }] = await countQuery.count();
+            const countQuery = query.clone().clearSelect();
+            const result = await countQuery.count('* as count').first();
+            const count = result ? result.count : 0;
 
             const transactions = await query
                 .orderBy(`credit_transactions.${sort_by}`, sort_order as string)

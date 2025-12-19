@@ -15,8 +15,8 @@ export const CREDIT_CONFIG = {
     CREDITS_PER_APPLICATION: 1,
 
     // Rate limits
-    MAX_OPERATIONS_PER_MINUTE: 10,
-    MAX_PURCHASES_PER_HOUR: 5,
+    MAX_OPERATIONS_PER_MINUTE: 100,
+    MAX_PURCHASES_PER_HOUR: 100,
 
     // Refund policy
     FULL_REFUND_MINUTES: 30,      // 100% refund within 30 min

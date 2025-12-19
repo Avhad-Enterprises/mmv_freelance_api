@@ -5,6 +5,7 @@
 
 import rateLimit from 'express-rate-limit';
 import { CREDIT_CONFIG } from '../constants';
+import { RequestWithUser } from '../../../interfaces/auth.interface';
 
 /**
  * Rate limiter for general credit operations
@@ -20,8 +21,18 @@ export const creditOperationsLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Use user_id from JWT if available, otherwise skip IP-based rate limiting
     keyGenerator: (req) => {
-        return (req as any).user?.user_id?.toString() || req.ip || 'unknown';
+        const userId = (req as RequestWithUser).user?.user_id;
+        if (userId) {
+            return `user_${userId}`;
+        }
+        // Fallback: use a generic key (not IP-based to avoid the error)
+        return 'anonymous';
+    },
+    skip: (req) => {
+        // Skip rate limiting for unauthenticated requests (they'll fail auth anyway)
+        return !(req as RequestWithUser).user?.user_id;
     }
 });
 
@@ -39,7 +50,16 @@ export const purchaseLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Use user_id from JWT for purchase limiting
     keyGenerator: (req) => {
-        return (req as any).user?.user_id?.toString() || req.ip || 'unknown';
+        const userId = (req as RequestWithUser).user?.user_id;
+        if (userId) {
+            return `purchase_${userId}`;
+        }
+        return 'anonymous';
+    },
+    skip: (req) => {
+        // Skip rate limiting for unauthenticated requests
+        return !(req as RequestWithUser).user?.user_id;
     }
 });

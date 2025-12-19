@@ -83,6 +83,10 @@ async function setupTestUsers() {
     if (adminLogin.body?.data?.token) {
         storeToken('admin', adminLogin.body.data.token);
         return { hasAdmin: true, hasVideographer: !!viLogin.body?.data?.token };
+    } else {
+        const debugLog = `Admin Login Failed: ${adminLogin.statusCode} ${JSON.stringify(adminLogin.body)}`;
+        fs.writeFileSync('admin-debug.log', debugLog);
+        console.log(debugLog);
     }
 
     return { hasAdmin: false, hasVideographer: !!viLogin.body?.data?.token };
@@ -128,6 +132,11 @@ async function test_with_admin_role(hasAdmin) {
 
     const response = await makeRequest('GET', `${CONFIG.apiVersion}/admin/credits/transactions`, null, authHeader('admin'));
     const passed = response.statusCode === 200 && response.body?.success === true;
+
+    if (!passed) {
+        const debugLog = `Admin Tx Test Failed: ${response.statusCode} ${JSON.stringify(response.body)}`;
+        fs.writeFileSync('admin-test-debug.log', debugLog);
+    }
 
     printTestResult(testName, passed, `Status: ${response.statusCode}`);
     passed ? passedTests++ : failedTests++;

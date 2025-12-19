@@ -249,9 +249,11 @@ export class CreditsController {
 
             const actualOffset = offset ? Number(offset) : (Number(page) - 1) * Number(limit);
 
+            const effectiveLimit = Math.min(Number(limit), 50);
+
             const [history, totalCount] = await Promise.all([
                 this.creditsService.getHistory(user_id, {
-                    limit: Math.min(Number(limit), 50),
+                    limit: effectiveLimit,
                     offset: actualOffset,
                     type: type as string
                 }),
@@ -265,7 +267,7 @@ export class CreditsController {
                     pagination: {
                         total: totalCount,
                         page: Number(page),
-                        limit: Number(limit),
+                        limit: effectiveLimit,
                         totalPages: Math.ceil(totalCount / Number(limit))
                     }
                 },

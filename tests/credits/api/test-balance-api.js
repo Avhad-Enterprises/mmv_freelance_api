@@ -119,6 +119,8 @@ async function setupClient() {
         email: testClientEmail,
         password: 'Test@123456',
         company_name: 'Test Corp',
+        company_size: '1-10',
+        industry: 'corporate',
         phone_number: '+91-9876543211',
         country: 'India',
         city: 'Delhi',

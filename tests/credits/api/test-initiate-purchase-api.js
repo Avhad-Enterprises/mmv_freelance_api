@@ -135,6 +135,14 @@ async function test_order_amount() {
     const expectedAmount = 10 * 50 * 100;
     const passed = response.body?.data?.amount === expectedAmount;
 
+    if (!passed) {
+        fs.writeFileSync('purchase-fail-amount.log', JSON.stringify({
+            actual: response.body?.data?.amount,
+            expected: expectedAmount,
+            body: response.body
+        }, null, 2));
+    }
+
     printTestResult(testName, passed,
         `Amount: ${response.body?.data?.amount}, Expected: ${expectedAmount}`
     );
@@ -155,6 +163,13 @@ async function test_with_package_id() {
     const passed = response.statusCode === 200 &&
         response.body?.data?.credits === 10 &&
         response.body?.data?.package_name === 'Basic';
+
+    if (!passed) {
+        fs.writeFileSync('purchase-fail-package.log', JSON.stringify({
+            statusCode: response.statusCode,
+            body: response.body
+        }, null, 2));
+    }
 
     printTestResult(testName, passed,
         `Credits: ${response.body?.data?.credits}, Package: ${response.body?.data?.package_name}`
@@ -190,6 +205,11 @@ async function test_exceed_max_purchase() {
     );
 
     const passed = response.statusCode === 400;
+
+    if (!passed) {
+        fs.writeFileSync('purchase-fail-max.log', `Status: ${response.statusCode} Body: ${JSON.stringify(response.body)}`);
+    }
+
     printTestResult(testName, passed,
         `Status: ${response.statusCode}, Message: ${response.body?.message?.substring(0, 50) || 'N/A'}`
     );
@@ -208,6 +228,9 @@ async function test_below_min_purchase() {
     );
 
     const passed = response.statusCode === 400;
+    if (!passed) {
+        fs.writeFileSync('purchase-fail-min.log', `Status: ${response.statusCode} Body: ${JSON.stringify(response.body)}`);
+    }
     printTestResult(testName, passed, `Status: ${response.statusCode}`);
     passed ? passedTests++ : failedTests++;
 }
@@ -227,6 +250,14 @@ async function test_includes_razorpay_key() {
         typeof response.body?.data?.key_id === 'string' &&
         response.body?.data?.key_id.length > 0;
 
+    if (!passed) {
+        fs.writeFileSync('purchase-fail-key.log', JSON.stringify({
+            status: response.statusCode,
+            key: response.body?.data?.key_id,
+            body: response.body
+        }, null, 2));
+    }
+
     printTestResult(testName, passed, `Has key_id: ${!!response.body?.data?.key_id}`);
     passed ? passedTests++ : failedTests++;
 }
@@ -245,6 +276,14 @@ async function test_includes_user_info() {
     const passed = response.statusCode === 200 &&
         response.body?.data?.user?.name &&
         response.body?.data?.user?.email;
+
+    if (!passed) {
+        fs.writeFileSync('purchase-fail-user.log', JSON.stringify({
+            status: response.statusCode,
+            user: response.body?.data?.user,
+            body: response.body
+        }, null, 2));
+    }
 
     printTestResult(testName, passed,
         `User: ${response.body?.data?.user?.name}, Email: ${response.body?.data?.user?.email}`
