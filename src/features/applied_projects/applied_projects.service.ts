@@ -161,6 +161,8 @@ class AppliedProjectsService {
         }
         const applications = await DB(T.APPLIED_PROJECTS)
             .join('projects_task', 'applied_projects.projects_task_id', '=', 'projects_task.projects_task_id')
+            .leftJoin(`${T.USERS_TABLE} as client`, 'projects_task.client_id', 'client.user_id')
+            .leftJoin(T.CLIENT_PROFILES, 'projects_task.client_id', `${T.CLIENT_PROFILES}.user_id`)
             .where({
                 'applied_projects.user_id': user_id,
                 'applied_projects.is_deleted': false
@@ -168,7 +170,14 @@ class AppliedProjectsService {
             .orderBy('applied_projects.created_at', 'desc')
             .select(
                 'applied_projects.*',
-                'projects_task.*'
+                'projects_task.*',
+                // Client information
+                'client.user_id as client_user_id',
+                'client.first_name as client_first_name',
+                'client.last_name as client_last_name',
+                'client.profile_picture as client_profile_picture',
+                `${T.CLIENT_PROFILES}.company_name as client_company_name`,
+                `${T.CLIENT_PROFILES}.industry as client_industry`
             );
         return applications;
     }

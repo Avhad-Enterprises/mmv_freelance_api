@@ -40,6 +40,7 @@ export const migrate = async (dropFirst = false) => {
                 table.integer("status").notNullable().defaultTo(0);   // 0: pending, 1: assigned, 2: completed
                 table.text('project_description').notNullable();
                 table.decimal('budget', 12, 2).notNullable();
+                table.string('currency', 3).defaultTo('USD');
                 table.jsonb('tags').nullable();
                 table.jsonb('skills_required').notNullable();
                 table.jsonb('reference_links').notNullable();
