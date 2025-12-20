@@ -68,6 +68,7 @@ export class CreditLoggerService {
                 'reference_id',
                 'description',
                 'package_name',
+                'payment_amount',
                 'created_at'
             )
             .orderBy('created_at', 'desc');
