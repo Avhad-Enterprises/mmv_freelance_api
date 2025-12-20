@@ -28,8 +28,24 @@ A reference list of all available permissions in the system, grouped by module.
 | :--- | :--- | :--- |
 | `payments.view` | View transactions | No |
 | `payments.process` | Process payouts | **Yes** |
-| `credits.view_own` | View own balance | No |
-| `credits.purchase` | Buy credits | No |
+
+### Credits - Freelancer Permissions
+| Permission | Description | Roles |
+| :--- | :--- | :--- |
+| `credits.view_own` | View own balance | VIDEOGRAPHER, VIDEO_EDITOR |
+| `credits.purchase` | Buy credits | VIDEOGRAPHER, VIDEO_EDITOR |
+| `credits.view_packages` | View available packages | VIDEOGRAPHER, VIDEO_EDITOR |
+| `credits.view_history` | View transaction history | VIDEOGRAPHER, VIDEO_EDITOR |
+| `credits.request_refund` | Check refund eligibility | VIDEOGRAPHER, VIDEO_EDITOR |
+
+### Credits - Admin Permissions
+| Permission | Description | Critical? |
+| :--- | :--- | :--- |
+| `credits.admin.view_all` | View all transactions | No |
+| `credits.admin.adjust` | Add/deduct credits | **Yes** |
+| `credits.admin.analytics` | View credit analytics | No |
+| `credits.admin.refund` | Process project refunds | **Yes** |
+| `credits.admin.export` | Export transactions | No |
 
 ## 📝 Content Management (`content.*`)
 | Permission | Description |

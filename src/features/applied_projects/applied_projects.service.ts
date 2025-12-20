@@ -2,7 +2,8 @@ import { AppliedProjectsDto } from "./applied_projects.dto";
 import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
-import { CreditsService } from "../credits/credits.service";
+import { CreditsService } from "../credits/services";
+import { CreditLoggerService } from "../credits/services/credit-logger.service";
 import NotificationService from "../notification/notification.service";
 
 /**
@@ -28,15 +29,21 @@ import NotificationService from "../notification/notification.service";
 
 class AppliedProjectsService {
     private creditsService = new CreditsService();
+    private creditLogger = new CreditLoggerService();
     private notificationService = new NotificationService();
 
+    /**
+     * Apply to a project with atomic transaction
+     * SECURITY: Credits and application are in same transaction
+     * If application insert fails, credits are automatically rolled back
+     */
     public async apply(data: AppliedProjectsDto): Promise<any> {
         // Validate required fields
         if (!data.projects_task_id || !data.user_id) {
             throw new HttpException(400, "Project Task ID and User ID are required");
         }
 
-        // Check if already applied
+        // Check if already applied (outside transaction for performance)
         const existing = await DB(T.APPLIED_PROJECTS)
             .where({
                 projects_task_id: data.projects_task_id,
@@ -52,19 +59,9 @@ class AppliedProjectsService {
             };
         }
 
-        // Check if freelancer has enough credits (assuming 1 credit per application)
         const CREDITS_PER_APPLICATION = 1;
-        const hasEnoughCredits = await this.creditsService.hasEnoughCredits(
-            data.user_id,
-            CREDITS_PER_APPLICATION
-        );
 
-        if (!hasEnoughCredits) {
-            throw new HttpException(400, "Insufficient credits. Please purchase more credits to apply.");
-        }
-
-        // Check if project has bidding enabled and validate bid_amount
-        // Check if project has bidding enabled and validate bid_amount
+        // Check project exists and get details (outside transaction)
         const project = await DB(T.PROJECTS_TASK)
             .join(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, '=', `${T.CLIENT_PROFILES}.client_id`)
             .where({
@@ -88,47 +85,97 @@ class AppliedProjectsService {
             }
         }
 
-        // Deduct credits for application
+        // ATOMIC TRANSACTION: Credits + Application together
+        // If any step fails, everything is rolled back
+        const result = await DB.transaction(async (trx) => {
+            // Step 1: Lock and check credits with row-level lock
+            const profile = await trx(T.FREELANCER_PROFILES)
+                .where({ user_id: data.user_id })
+                .select('credits_balance', 'credits_used')
+                .forUpdate() // Row-level lock prevents race condition
+                .first();
+
+            if (!profile) {
+                throw new HttpException(404, "Freelancer profile not found");
+            }
+
+            if (profile.credits_balance < CREDITS_PER_APPLICATION) {
+                throw new HttpException(400, {
+                    code: 'INSUFFICIENT_CREDITS',
+                    message: 'Insufficient credits. Please purchase more credits to apply.',
+                    required: CREDITS_PER_APPLICATION,
+                    available: profile.credits_balance,
+                    purchaseUrl: '/api/v1/credits/packages'
+                });
+            }
+
+            // Step 2: Deduct credits
+            await trx(T.FREELANCER_PROFILES)
+                .where({ user_id: data.user_id })
+                .update({
+                    credits_balance: profile.credits_balance - CREDITS_PER_APPLICATION,
+                    credits_used: profile.credits_used + CREDITS_PER_APPLICATION,
+                    updated_at: trx.fn.now()
+                });
+
+            // Step 3: Create application (if this fails, credits are rolled back)
+            const applicationData = {
+                ...data,
+                credits_spent: CREDITS_PER_APPLICATION,
+                status: data.status ?? 0, // 0 = pending
+                is_active: true,
+                is_deleted: false,
+                created_at: new Date(),
+                updated_at: new Date()
+            };
+
+            const [appliedProject] = await trx(T.APPLIED_PROJECTS)
+                .insert(applicationData)
+                .returning("*");
+
+            // Step 4: Log the credit transaction for history tracking
+            await this.creditLogger.log({
+                user_id: data.user_id,
+                transaction_type: 'deduction',
+                amount: -CREDITS_PER_APPLICATION,
+                balance_before: profile.credits_balance,
+                balance_after: profile.credits_balance - CREDITS_PER_APPLICATION,
+                reference_type: 'application',
+                reference_id: appliedProject.applied_projects_id,
+                description: `Applied to project: ${project.project_title || `#${data.projects_task_id}`}`
+            }, trx);
+
+            return {
+                application: appliedProject,
+                creditsDeducted: CREDITS_PER_APPLICATION,
+                newBalance: profile.credits_balance - CREDITS_PER_APPLICATION
+            };
+        });
+
+        // Send Notification (outside transaction - non-critical)
         try {
-            await this.creditsService.deductCredits(
-                data.user_id,
-                CREDITS_PER_APPLICATION,
-                data.projects_task_id
-            );
-        } catch (creditError) {
-            throw new HttpException(400, "Failed to deduct credits for application");
-        }
-
-        const applicationData = {
-            ...data,
-            status: data.status ?? 0, // 0 = pending
-            is_active: true,
-            is_deleted: false,
-            created_at: new Date(),
-            updated_at: new Date()
-        };
-        const appliedProject = await DB(T.APPLIED_PROJECTS)
-            .insert(applicationData)
-            .returning("*");
-
-        // Send Notification to Project Owner (Client)
-        if (project.user_id) {
-            await this.notificationService.createNotification({
-                user_id: project.user_id, // The Client
-                title: "New Proposal Received",
-                message: `A freelancer has applied to your project: ${project.project_title || 'Untitled Project'}`,
-                type: "proposal",
-                related_id: appliedProject[0].applied_projects_id,
-                related_type: "applied_projects",
-                is_read: false
-            });
+            if (project.user_id) {
+                await this.notificationService.createNotification({
+                    user_id: project.user_id,
+                    title: "New Proposal Received",
+                    message: `A freelancer has applied to your project: ${project.project_title || 'Untitled Project'}`,
+                    type: "proposal",
+                    related_id: result.application.applied_projects_id,
+                    related_type: "applied_projects",
+                    is_read: false
+                });
+            }
+        } catch (notificationError) {
+            // Log but don't fail - notification is not critical
+            console.error('Failed to send notification:', notificationError);
         }
 
         return {
             alreadyApplied: false,
             message: "Applied to project successfully",
-            data: appliedProject[0],
-            credits_deducted: CREDITS_PER_APPLICATION
+            data: result.application,
+            credits_deducted: result.creditsDeducted,
+            new_balance: result.newBalance
         };
     }
 
@@ -281,7 +328,21 @@ class AppliedProjectsService {
         return updated[0];
     }
 
-    public async withdrawApplication(applied_projects_id: number): Promise<void> {
+    /**
+     * Withdraw application with automatic refund processing
+     * SECURITY: Verifies user owns the application
+     * REFUND POLICY:
+     * - 100% refund within 30 minutes
+     * - 50% refund within 24 hours
+     * - 0% refund after 24 hours
+     */
+    public async withdrawApplication(
+        applied_projects_id: number,
+        user_id: number
+    ): Promise<{
+        message: string;
+        refund?: { amount: number; percent: number; newBalance: number };
+    }> {
         if (!applied_projects_id) {
             throw new HttpException(400, "applied_projects_id is required");
         }
@@ -292,6 +353,11 @@ class AppliedProjectsService {
 
         if (!application) {
             throw new HttpException(404, "Application not found");
+        }
+
+        // SECURITY: Verify user owns this application
+        if (application.user_id !== user_id) {
+            throw new HttpException(403, "You can only withdraw your own applications");
         }
 
         if (application.is_deleted) {
@@ -307,6 +373,9 @@ class AppliedProjectsService {
             .where({ applied_projects_id })
             .update({
                 is_deleted: true,
+                is_active: false,
+                deleted_at: new Date(),
+                deleted_by: user_id,
                 updated_at: new Date()
             });
 

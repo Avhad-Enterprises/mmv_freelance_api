@@ -169,6 +169,62 @@ const predefinedPermissions: PermissionData[] = [
     description: 'Purchase new credits',
     is_critical: false,
   },
+  {
+    name: 'credits.view_packages',
+    label: 'View Credit Packages',
+    module: 'credits',
+    description: 'View available credit packages',
+    is_critical: false,
+  },
+  {
+    name: 'credits.view_history',
+    label: 'View Credit History',
+    module: 'credits',
+    description: 'View own credit transaction history',
+    is_critical: false,
+  },
+  {
+    name: 'credits.request_refund',
+    label: 'Request Credit Refund',
+    module: 'credits',
+    description: 'Check refund eligibility and request refunds',
+    is_critical: false,
+  },
+  {
+    name: 'credits.admin.view_all',
+    label: 'View All Transactions',
+    module: 'credits',
+    description: 'Admin: View all credit transactions',
+    is_critical: false,
+  },
+  {
+    name: 'credits.admin.adjust',
+    label: 'Adjust Credits',
+    module: 'credits',
+    description: 'Admin: Add or deduct credits from users',
+    is_critical: true,
+  },
+  {
+    name: 'credits.admin.analytics',
+    label: 'View Credit Analytics',
+    module: 'credits',
+    description: 'Admin: View credit system analytics',
+    is_critical: false,
+  },
+  {
+    name: 'credits.admin.refund',
+    label: 'Process Refunds',
+    module: 'credits',
+    description: 'Admin: Process project cancellation refunds',
+    is_critical: true,
+  },
+  {
+    name: 'credits.admin.export',
+    label: 'Export Transactions',
+    module: 'credits',
+    description: 'Admin: Export credit transactions',
+    is_critical: false,
+  },
 
 
   // ========== Content Management ==========
