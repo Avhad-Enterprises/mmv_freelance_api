@@ -7,6 +7,7 @@ export interface IProjectTask {
     deadline: Date;
     project_description: string;
     budget: number;
+    currency?: string;
     skills_required: any[];
     reference_links: string[];
     additional_notes: string;

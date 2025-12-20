@@ -5,6 +5,27 @@ import { isEmpty } from "../../utils/common";
 import { CreditsService } from "../credits/credits.service";
 import NotificationService from "../notification/notification.service";
 
+/**
+ * Applied Projects Service
+ * 
+ * Handles job applications from freelancers to client projects.
+ * 
+ * WORKFLOW:
+ * 1. Freelancer applies → Application Status = 0 (Pending)
+ * 2. Client approves → Application Status = 1 (Approved)
+ *                    → Project Task Status = 1 (Assigned/In Progress)
+ *                    → project.freelancer_id is set
+ * 3. Freelancer submits work → Submission created
+ * 4. Client approves submission → Application Status = 2 (Completed)
+ *                               → Project Task Status = 2 (Completed)
+ * 
+ * STATUS CODES:
+ * - 0: Pending (waiting for client review)
+ * - 1: Approved (freelancer hired, project in progress)
+ * - 2: Completed (project finished)
+ * - 3: Rejected (client rejected application)
+ */
+
 class AppliedProjectsService {
     private creditsService = new CreditsService();
     private notificationService = new NotificationService();
@@ -140,6 +161,8 @@ class AppliedProjectsService {
         }
         const applications = await DB(T.APPLIED_PROJECTS)
             .join('projects_task', 'applied_projects.projects_task_id', '=', 'projects_task.projects_task_id')
+            .leftJoin(`${T.USERS_TABLE} as client`, 'projects_task.client_id', 'client.user_id')
+            .leftJoin(T.CLIENT_PROFILES, 'projects_task.client_id', `${T.CLIENT_PROFILES}.user_id`)
             .where({
                 'applied_projects.user_id': user_id,
                 'applied_projects.is_deleted': false
@@ -147,7 +170,14 @@ class AppliedProjectsService {
             .orderBy('applied_projects.created_at', 'desc')
             .select(
                 'applied_projects.*',
-                'projects_task.*'
+                'projects_task.*',
+                // Client information
+                'client.user_id as client_user_id',
+                'client.first_name as client_first_name',
+                'client.last_name as client_last_name',
+                'client.profile_picture as client_profile_picture',
+                `${T.CLIENT_PROFILES}.company_name as client_company_name`,
+                `${T.CLIENT_PROFILES}.industry as client_industry`
             );
         return applications;
     }

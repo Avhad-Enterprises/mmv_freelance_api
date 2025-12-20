@@ -3,6 +3,34 @@ import HttpException from "../../exceptions/HttpException";
 import { SubmitProjectDto } from "./submit-project.dto";
 import { SUBMITTED_PROJECTS } from "../../../database/submitted_projects.schema";
 
+/**
+ * Submission Service
+ * 
+ * PROJECT WORKFLOW AND STATUS MANAGEMENT:
+ * 
+ * 1. Client posts job → Project Task Status = 0 (Pending/Awaiting Assignment)
+ * 
+ * 2. Freelancer applies → Application Status = 0 (Pending)
+ *                      → Project Task Status = still 0 (Awaiting Assignment)
+ * 
+ * 3. Client approves application → Application Status = 1 (Approved)
+ *                                → Project Task Status = 1 (Assigned/In Progress)
+ *                                → project.freelancer_id is set
+ * 
+ * 4. Freelancer submits work → Submission Status = 0 (Pending Review)
+ *                            → Application Status = still 1 (Approved)
+ *                            → Project Task Status = still 1 (In Progress)
+ * 
+ * 5. Client approves submission → Submission Status = 1 (Approved)
+ *                               → Application Status = 2 (Completed)
+ *                               → Project Task Status = 2 (Completed)
+ * 
+ * STATUS CODES:
+ * - Project Task Status: 0 = Pending, 1 = Assigned/In Progress, 2 = Completed
+ * - Application Status: 0 = Pending, 1 = Approved, 2 = Completed, 3 = Rejected
+ * - Submission Status: 0 = Pending Review, 1 = Approved, 2 = Rejected
+ */
+
 class SubmissionService {
   /**
    * Submit a project
@@ -67,24 +95,28 @@ class SubmissionService {
       })
       .returning('*');
 
-    // If approving the submission (status = 1), assign the freelancer to the project
+    // If approving the submission (status = 1), mark project and application as completed
     if (status === 1) {
-      // Get the freelancer profile for this user
-      const freelancerProfile = await DB(T.FREELANCER_PROFILES)
-        .where({ user_id: existingSubmission.user_id })
-        .first();
+      // Update project status to completed (2)
+      await DB(T.PROJECTS_TASK)
+        .where({ projects_task_id: existingSubmission.projects_task_id })
+        .update({
+          status: 2, // Completed
+          completed_at: DB.fn.now(),
+          updated_at: DB.fn.now()
+        });
 
-      if (freelancerProfile) {
-        // Update project status to assigned (1) and set freelancer_id
-        await DB(T.PROJECTS_TASK)
-          .where({ projects_task_id: existingSubmission.projects_task_id })
-          .update({
-            status: 1, // assigned
-            freelancer_id: freelancerProfile.freelancer_id,
-            assigned_at: DB.fn.now(),
-            updated_at: DB.fn.now()
-          });
-      }
+      // Update the application status to completed (2)
+      await DB(T.APPLIED_PROJECTS)
+        .where({
+          projects_task_id: existingSubmission.projects_task_id,
+          user_id: existingSubmission.user_id,
+          status: 1 // Only update if it's approved
+        })
+        .update({
+          status: 2, // Completed
+          updated_at: DB.fn.now()
+        });
     }
 
     return updatedSubmission;
