@@ -31,6 +31,10 @@ export class ProjectsTaskDto {
   budget: number;
 
   @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @IsOptional()
   @IsJSON()
   tags?: any;
 
