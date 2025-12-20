@@ -163,6 +163,11 @@ class AppliedProjectsService {
             .join('projects_task', 'applied_projects.projects_task_id', '=', 'projects_task.projects_task_id')
             .leftJoin(`${T.USERS_TABLE} as client`, 'projects_task.client_id', 'client.user_id')
             .leftJoin(T.CLIENT_PROFILES, 'projects_task.client_id', `${T.CLIENT_PROFILES}.user_id`)
+            .leftJoin(T.SUBMITTED_PROJECTS, function () {
+                this.on('projects_task.projects_task_id', '=', `${T.SUBMITTED_PROJECTS}.projects_task_id`)
+                    .andOn('applied_projects.user_id', '=', `${T.SUBMITTED_PROJECTS}.user_id`)
+                    .andOn(`${T.SUBMITTED_PROJECTS}.is_deleted`, '=', DB.raw('false'));
+            })
             .where({
                 'applied_projects.user_id': user_id,
                 'applied_projects.is_deleted': false
@@ -177,7 +182,13 @@ class AppliedProjectsService {
                 'client.last_name as client_last_name',
                 'client.profile_picture as client_profile_picture',
                 `${T.CLIENT_PROFILES}.company_name as client_company_name`,
-                `${T.CLIENT_PROFILES}.industry as client_industry`
+                `${T.CLIENT_PROFILES}.industry as client_industry`,
+                // Submission information
+                `${T.SUBMITTED_PROJECTS}.submission_id`,
+                `${T.SUBMITTED_PROJECTS}.status as submission_status`,
+                `${T.SUBMITTED_PROJECTS}.submitted_files`,
+                `${T.SUBMITTED_PROJECTS}.additional_notes as submission_notes`,
+                `${T.SUBMITTED_PROJECTS}.created_at as submitted_at`
             );
         return applications;
     }
@@ -287,12 +298,40 @@ class AppliedProjectsService {
             throw new HttpException(400, "Application has already been withdrawn.");
         }
 
+        // Check if application is already approved (status = 1)
+        if (application.status === 1) {
+            throw new HttpException(400, "Cannot withdraw from an approved project. Please contact support if you have concerns.");
+        }
+
         await DB(T.APPLIED_PROJECTS)
             .where({ applied_projects_id })
             .update({
                 is_deleted: true,
                 updated_at: new Date()
             });
+
+        // Fetch project details to get client_id and project_title
+        const project = await DB(T.PROJECTS_TASK)
+            .where({ projects_task_id: application.projects_task_id })
+            .first();
+
+        // Fetch freelancer details to get name
+        const freelancer = await DB(T.USERS_TABLE)
+            .where({ user_id: application.user_id })
+            .first();
+
+        // Send notification to Client that application was withdrawn
+        if (project && project.client_id && freelancer) {
+            await this.notificationService.createNotification({
+                user_id: project.client_id, // Client
+                title: "Application Withdrawn",
+                message: `${freelancer.first_name} ${freelancer.last_name} has withdrawn their application for "${project.project_title || 'your project'}".`,
+                type: "application_withdrawn",
+                related_id: application.projects_task_id,
+                related_type: "projects_task",
+                is_read: false
+            });
+        }
     }
 
     public async getApplicationCountByProject(projects_task_id: number): Promise<number> {
