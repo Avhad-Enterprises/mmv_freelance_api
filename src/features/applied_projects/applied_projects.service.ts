@@ -293,6 +293,29 @@ class AppliedProjectsService {
                 is_deleted: true,
                 updated_at: new Date()
             });
+
+        // Fetch project details to get client_id and project_title
+        const project = await DB(T.PROJECTS_TASK)
+            .where({ projects_task_id: application.projects_task_id })
+            .first();
+
+        // Fetch freelancer details to get name
+        const freelancer = await DB(T.USERS_TABLE)
+            .where({ user_id: application.user_id })
+            .first();
+
+        // Send notification to Client that application was withdrawn
+        if (project && project.client_id && freelancer) {
+            await this.notificationService.createNotification({
+                user_id: project.client_id, // Client
+                title: "Application Withdrawn",
+                message: `${freelancer.first_name} ${freelancer.last_name} has withdrawn their application for "${project.project_title || 'your project'}".`,
+                type: "application_withdrawn",
+                related_id: application.projects_task_id,
+                related_type: "projects_task",
+                is_read: false
+            });
+        }
     }
 
     public async getApplicationCountByProject(projects_task_id: number): Promise<number> {
