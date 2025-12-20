@@ -43,16 +43,43 @@ class SubmissionService {
       throw new HttpException(400, "Project Task ID and User ID are required");
     }
 
-    const existing = await DB(SUBMITTED_PROJECTS)
+    // Check for pending or approved submissions (block these)
+    const activeSubmission = await DB(SUBMITTED_PROJECTS)
       .where({
         projects_task_id: data.projects_task_id,
         user_id: data.user_id,
         is_deleted: false
       })
+      .whereIn('status', [0, 1])  // 0 = pending, 1 = approved
       .first();
 
-    if (existing) {
-      throw new HttpException(409, "Already Submitted");
+    if (activeSubmission) {
+      if (activeSubmission.status === 0) {
+        throw new HttpException(409, "Submission already pending review. Please wait for client feedback.");
+      }
+      if (activeSubmission.status === 1) {
+        throw new HttpException(409, "Submission already approved. No further submission needed.");
+      }
+    }
+
+    // If there's a rejected submission, mark it as superseded/deleted
+    const rejectedSubmission = await DB(SUBMITTED_PROJECTS)
+      .where({
+        projects_task_id: data.projects_task_id,
+        user_id: data.user_id,
+        status: 2,  // Rejected
+        is_deleted: false
+      })
+      .first();
+
+    if (rejectedSubmission) {
+      // Mark old rejected submission as deleted/superseded
+      await DB(SUBMITTED_PROJECTS)
+        .where({ submission_id: rejectedSubmission.submission_id })
+        .update({
+          is_deleted: true,
+          updated_at: new Date()
+        });
     }
 
     const submitData = {
