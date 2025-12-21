@@ -329,20 +329,14 @@ class AppliedProjectsService {
     }
 
     /**
-     * Withdraw application with automatic refund processing
+     * Withdraw application
      * SECURITY: Verifies user owns the application
-     * REFUND POLICY:
-     * - 100% refund within 30 minutes
-     * - 50% refund within 24 hours
-     * - 0% refund after 24 hours
+     * NOTE: Credits are not refunded when withdrawing applications
      */
     public async withdrawApplication(
         applied_projects_id: number,
         user_id: number
-    ): Promise<{
-        message: string;
-        refund?: { amount: number; percent: number; newBalance: number };
-    }> {
+    ): Promise<{ message: string }> {
         if (!applied_projects_id) {
             throw new HttpException(400, "applied_projects_id is required");
         }
@@ -401,6 +395,8 @@ class AppliedProjectsService {
                 is_read: false
             });
         }
+
+        return { message: "Application withdrawn successfully" };
     }
 
     public async getApplicationCountByProject(projects_task_id: number): Promise<number> {
