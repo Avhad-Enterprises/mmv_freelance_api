@@ -59,7 +59,19 @@ class AppliedProjectsService {
             };
         }
 
-        const CREDITS_PER_APPLICATION = 1;
+        // Check if user is videographer - videographers apply freely (no keys required)
+        // This can be re-enabled by setting VIDEOGRAPHER_KEYS_ENABLED = true
+        const VIDEOGRAPHER_KEYS_ENABLED = false;
+
+        // Check user's role from roles table
+        const userRole = await DB(T.USER_ROLES)
+            .join(T.ROLE, `${T.USER_ROLES}.role_id`, '=', `${T.ROLE}.role_id`)
+            .where({ [`${T.USER_ROLES}.user_id`]: data.user_id })
+            .select(`${T.ROLE}.name as role_name`)
+            .first();
+
+        const isVideographer = userRole?.role_name === 'VIDEOGRAPHER';
+        const CREDITS_PER_APPLICATION = (isVideographer && !VIDEOGRAPHER_KEYS_ENABLED) ? 0 : 1;
 
         // Check project exists and get details (outside transaction)
         const project = await DB(T.PROJECTS_TASK)
@@ -88,7 +100,7 @@ class AppliedProjectsService {
         // ATOMIC TRANSACTION: Credits + Application together
         // If any step fails, everything is rolled back
         const result = await DB.transaction(async (trx) => {
-            // Step 1: Lock and check credits with row-level lock
+            // Step 1: Lock and get freelancer profile
             const profile = await trx(T.FREELANCER_PROFILES)
                 .where({ user_id: data.user_id })
                 .select('credits_balance', 'credits_used')
@@ -99,24 +111,27 @@ class AppliedProjectsService {
                 throw new HttpException(404, "Freelancer profile not found");
             }
 
-            if (profile.credits_balance < CREDITS_PER_APPLICATION) {
-                throw new HttpException(400, {
-                    code: 'INSUFFICIENT_CREDITS',
-                    message: 'Insufficient credits. Please purchase more credits to apply.',
-                    required: CREDITS_PER_APPLICATION,
-                    available: profile.credits_balance,
-                    purchaseUrl: '/api/v1/credits/packages'
-                });
-            }
+            // Only check and deduct credits for video editors (not videographers)
+            if (CREDITS_PER_APPLICATION > 0) {
+                if (profile.credits_balance < CREDITS_PER_APPLICATION) {
+                    throw new HttpException(400, {
+                        code: 'INSUFFICIENT_CREDITS',
+                        message: 'Insufficient keys. Please purchase more keys to apply.',
+                        required: CREDITS_PER_APPLICATION,
+                        available: profile.credits_balance,
+                        purchaseUrl: '/api/v1/credits/packages'
+                    });
+                }
 
-            // Step 2: Deduct credits
-            await trx(T.FREELANCER_PROFILES)
-                .where({ user_id: data.user_id })
-                .update({
-                    credits_balance: profile.credits_balance - CREDITS_PER_APPLICATION,
-                    credits_used: profile.credits_used + CREDITS_PER_APPLICATION,
-                    updated_at: trx.fn.now()
-                });
+                // Step 2: Deduct credits (only for video editors)
+                await trx(T.FREELANCER_PROFILES)
+                    .where({ user_id: data.user_id })
+                    .update({
+                        credits_balance: profile.credits_balance - CREDITS_PER_APPLICATION,
+                        credits_used: profile.credits_used + CREDITS_PER_APPLICATION,
+                        updated_at: trx.fn.now()
+                    });
+            }
 
             // Step 3: Create application (if this fails, credits are rolled back)
             const applicationData = {
@@ -133,22 +148,24 @@ class AppliedProjectsService {
                 .insert(applicationData)
                 .returning("*");
 
-            // Step 4: Log the credit transaction for history tracking
-            await this.creditLogger.log({
-                user_id: data.user_id,
-                transaction_type: 'deduction',
-                amount: -CREDITS_PER_APPLICATION,
-                balance_before: profile.credits_balance,
-                balance_after: profile.credits_balance - CREDITS_PER_APPLICATION,
-                reference_type: 'application',
-                reference_id: appliedProject.applied_projects_id,
-                description: `Applied to project: ${project.project_title || `#${data.projects_task_id}`}`
-            }, trx);
+            // Step 4: Log the credit transaction for history tracking (only if credits were spent)
+            if (CREDITS_PER_APPLICATION > 0) {
+                await this.creditLogger.log({
+                    user_id: data.user_id,
+                    transaction_type: 'deduction',
+                    amount: -CREDITS_PER_APPLICATION,
+                    balance_before: profile.credits_balance,
+                    balance_after: profile.credits_balance - CREDITS_PER_APPLICATION,
+                    reference_type: 'application',
+                    reference_id: appliedProject.applied_projects_id,
+                    description: `Applied to project: ${project.project_title || `#${data.projects_task_id}`}`
+                }, trx);
+            }
 
             return {
                 application: appliedProject,
                 creditsDeducted: CREDITS_PER_APPLICATION,
-                newBalance: profile.credits_balance - CREDITS_PER_APPLICATION
+                newBalance: CREDITS_PER_APPLICATION > 0 ? profile.credits_balance - CREDITS_PER_APPLICATION : profile.credits_balance
             };
         });
 
