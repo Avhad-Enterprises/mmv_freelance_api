@@ -96,6 +96,14 @@ class AppliedProjectsRoute implements Route {
       this.appliedProjectsController.getCompletedProjectsCount
     );
 
+    // Check if user can chat with another user
+    // Accessible to both clients and freelancers
+    this.router.get(
+      `${this.path}/check-can-chat/:userId`,
+      requirePermission('projects.view'),
+      this.appliedProjectsController.checkCanChat
+    );
+
   }
 }
 export default AppliedProjectsRoute;

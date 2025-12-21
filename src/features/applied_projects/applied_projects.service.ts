@@ -225,8 +225,10 @@ class AppliedProjectsService {
         }
         const applications = await DB(T.APPLIED_PROJECTS)
             .join('projects_task', 'applied_projects.projects_task_id', '=', 'projects_task.projects_task_id')
-            .leftJoin(`${T.USERS_TABLE} as client`, 'projects_task.client_id', 'client.user_id')
-            .leftJoin(T.CLIENT_PROFILES, 'projects_task.client_id', `${T.CLIENT_PROFILES}.user_id`)
+            // First join client_profiles (projects_task.client_id -> client_profiles.client_id)
+            .leftJoin(T.CLIENT_PROFILES, 'projects_task.client_id', `${T.CLIENT_PROFILES}.client_id`)
+            // Then join users via client_profiles.user_id
+            .leftJoin(`${T.USERS_TABLE} as client`, `${T.CLIENT_PROFILES}.user_id`, 'client.user_id')
             .leftJoin(T.SUBMITTED_PROJECTS, function () {
                 this.on('projects_task.projects_task_id', '=', `${T.SUBMITTED_PROJECTS}.projects_task_id`)
                     .andOn('applied_projects.user_id', '=', `${T.SUBMITTED_PROJECTS}.user_id`)
@@ -470,14 +472,30 @@ class AppliedProjectsService {
     public async ongoingprojects(user_id: number): Promise<any[]> {
         return await DB(`${T.APPLIED_PROJECTS} as ap`)
             .join(`${T.PROJECTS_TASK} as pt`, 'pt.projects_task_id', 'ap.projects_task_id')
+            // First join client_profiles (pt.client_id -> client_profiles.client_id)
+            .leftJoin(T.CLIENT_PROFILES, 'pt.client_id', `${T.CLIENT_PROFILES}.client_id`)
+            // Then join users via client_profiles.user_id
+            .leftJoin(`${T.USERS_TABLE} as client`, `${T.CLIENT_PROFILES}.user_id`, 'client.user_id')
             .select(
                 'ap.applied_projects_id',
                 'ap.description',
                 'ap.status',
                 'ap.created_at as applied_at',
+                'pt.projects_task_id',
                 'pt.project_title',
+                'pt.project_description',
                 'pt.deadline',
-                'pt.budget'
+                'pt.budget',
+                'pt.currency',
+                'pt.skills_required',
+                'pt.project_category',
+                // Client info
+                'client.user_id as client_user_id',
+                'client.first_name as client_first_name',
+                'client.last_name as client_last_name',
+                'client.profile_picture as client_profile_picture',
+                `${T.CLIENT_PROFILES}.company_name as client_company_name`,
+                `${T.CLIENT_PROFILES}.industry as client_industry`
             )
             .where({
                 'ap.user_id': user_id,
@@ -534,6 +552,58 @@ class AppliedProjectsService {
             .first();
 
         return parseInt(String(result?.count || '0'), 10);
+    }
+
+    /**
+     * Check if a user can chat with another user
+     * Chat is allowed only if freelancer has applied to any of client's projects
+     * 
+     * @param currentUserId - The user making the request
+     * @param otherUserId - The user they want to chat with
+     * @param currentUserRole - 'client' or 'freelancer'
+     * @returns { canChat: boolean, reason?: string }
+     */
+    public async checkCanChat(
+        currentUserId: number,
+        otherUserId: number,
+        currentUserRole: 'client' | 'freelancer'
+    ): Promise<{ canChat: boolean; reason?: string }> {
+        try {
+            let clientId: number;
+            let freelancerId: number;
+
+            if (currentUserRole === 'client') {
+                clientId = currentUserId;
+                freelancerId = otherUserId;
+            } else {
+                clientId = otherUserId;
+                freelancerId = currentUserId;
+            }
+
+            // Check if freelancer has applied to any of client's projects
+            const application = await DB(T.APPLIED_PROJECTS)
+                .join(T.PROJECTS_TASK, `${T.APPLIED_PROJECTS}.projects_task_id`, '=', `${T.PROJECTS_TASK}.projects_task_id`)
+                .join(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, '=', `${T.CLIENT_PROFILES}.client_id`)
+                .where({
+                    [`${T.APPLIED_PROJECTS}.user_id`]: freelancerId,
+                    [`${T.CLIENT_PROFILES}.user_id`]: clientId,
+                    [`${T.APPLIED_PROJECTS}.is_deleted`]: false,
+                })
+                .select(`${T.APPLIED_PROJECTS}.applied_projects_id`)
+                .first();
+
+            if (application) {
+                return { canChat: true };
+            }
+
+            return {
+                canChat: false,
+                reason: 'Chat is only available after a freelancer applies to a project'
+            };
+        } catch (error) {
+            console.error('Error checking chat permission:', error);
+            throw new HttpException(500, 'Failed to check chat permission');
+        }
     }
 
 
