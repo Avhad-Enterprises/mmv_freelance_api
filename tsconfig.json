@@ -1,8 +1,13 @@
 {
   "compilerOptions": {
     "target": "es2017",
-    "lib": ["es2017", "esnext.asynciterable"],
-    "typeRoots": ["./node_modules/@types"],
+    "lib": [
+      "es2017",
+      "esnext.asynciterable"
+    ],
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -16,8 +21,15 @@
     "noEmit": false,
     "esModuleInterop": true
   },
-  "include": ["./src/**/*", "./database/**/*", ".env"],
- 
-  "exclude": ["node_modules", "dist", "**/*.njk"]
-
+  "include": [
+    "./src/**/*",
+    "./database/**/*",
+    ".env",
+    "scripts/cascade_setup.schema.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.njk"
+  ]
 }

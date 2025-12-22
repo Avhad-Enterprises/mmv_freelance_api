@@ -43,11 +43,13 @@ export const migrate = async (dropFirst = false) => {
             table
                 .integer("payer_id")
                 .references("user_id")
-                .inTable(T.USERS_TABLE);
+                .inTable(T.USERS_TABLE)
+                .onDelete('CASCADE');
             table
                 .integer("payee_id")
                 .references("user_id")
-                .inTable(T.USERS_TABLE);
+                .inTable(T.USERS_TABLE)
+                .onDelete('CASCADE');
             table.decimal("amount", 12, 2);
             table.string("currency").defaultTo("INR"); // INR, US $ etc.
             table.string("payment_gateway"); // Razorpay or Stripe

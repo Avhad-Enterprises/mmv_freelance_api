@@ -24,7 +24,10 @@ export const migrate = async (dropFirst = false) => {
             console.log('Creating Notification Table');
             await DB.schema.createTable(NOTIFICATION, table => {
                 table.increments('id').primary();  //ID
-                table.integer('user_id').notNullable();
+                table.integer('user_id').notNullable()
+                    .references('user_id')
+                    .inTable('users')
+                    .onDelete('CASCADE');
                 table.string('title').notNullable();
                 table.text('message').notNullable();
                 table.string('type').notNullable();

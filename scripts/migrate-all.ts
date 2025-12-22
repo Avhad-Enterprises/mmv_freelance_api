@@ -14,8 +14,8 @@ import {
 // Schema dependency order (tables that depend on others should come after)
 const MIGRATION_ORDER = [
   // Independent lookup tables first
+  'category.schema.ts', // Defines update_timestamp() function
   'skill.schema.ts',
-  'category.schema.ts',
   'tags.schema.ts',
 
   // Core tables
