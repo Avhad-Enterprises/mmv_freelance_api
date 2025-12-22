@@ -108,6 +108,21 @@ const predefinedPermissions: PermissionData[] = [
     description: 'Full project management access',
     is_critical: false,
   },
+  {
+    name: 'projects.withdraw',
+    label: 'Withdraw Application',
+    module: 'projects',
+    description: 'Withdraw application from a project',
+    is_critical: false,
+  },
+  {
+    name: 'applications.view',
+    label: 'View Applications',
+    module: 'projects',
+    description: 'View applications received for projects',
+    is_critical: false,
+  },
+
 
   // ========== Payment Management ==========
   {
@@ -138,6 +153,79 @@ const predefinedPermissions: PermissionData[] = [
     description: 'Full payment management access',
     is_critical: true,
   },
+
+  // ========== Credits Management ==========
+  {
+    name: 'credits.view_own',
+    label: 'View Own Credits',
+    module: 'credits',
+    description: 'View own credit balance and history',
+    is_critical: false,
+  },
+  {
+    name: 'credits.purchase',
+    label: 'Purchase Credits',
+    module: 'credits',
+    description: 'Purchase new credits',
+    is_critical: false,
+  },
+  {
+    name: 'credits.view_packages',
+    label: 'View Credit Packages',
+    module: 'credits',
+    description: 'View available credit packages',
+    is_critical: false,
+  },
+  {
+    name: 'credits.view_history',
+    label: 'View Credit History',
+    module: 'credits',
+    description: 'View own credit transaction history',
+    is_critical: false,
+  },
+  {
+    name: 'credits.request_refund',
+    label: 'Request Credit Refund',
+    module: 'credits',
+    description: 'Check refund eligibility and request refunds',
+    is_critical: false,
+  },
+  {
+    name: 'credits.admin.view_all',
+    label: 'View All Transactions',
+    module: 'credits',
+    description: 'Admin: View all credit transactions',
+    is_critical: false,
+  },
+  {
+    name: 'credits.admin.adjust',
+    label: 'Adjust Credits',
+    module: 'credits',
+    description: 'Admin: Add or deduct credits from users',
+    is_critical: true,
+  },
+  {
+    name: 'credits.admin.analytics',
+    label: 'View Credit Analytics',
+    module: 'credits',
+    description: 'Admin: View credit system analytics',
+    is_critical: false,
+  },
+  {
+    name: 'credits.admin.refund',
+    label: 'Process Refunds',
+    module: 'credits',
+    description: 'Admin: Process project cancellation refunds',
+    is_critical: true,
+  },
+  {
+    name: 'credits.admin.export',
+    label: 'Export Transactions',
+    module: 'credits',
+    description: 'Admin: Export credit transactions',
+    is_critical: false,
+  },
+
 
   // ========== Content Management ==========
   {
@@ -328,51 +416,61 @@ const predefinedPermissions: PermissionData[] = [
 ];
 
 export const migrate = async (dropFirst = false) => {
-    try {
-        if (dropFirst) {
-            console.log('Dropping Tables');
-            await DB.raw(`DROP TABLE IF EXISTS "${PERMISSION}" CASCADE`);
-            console.log('Dropped Tables');
-        }
-        console.log('Seeding Tables');
+  try {
+    if (dropFirst) {
+      console.log('Dropping Tables');
+      await DB.raw(`DROP TABLE IF EXISTS "${PERMISSION}" CASCADE`);
+      console.log('Dropped Tables');
+    }
+    console.log('Seeding Tables');
 
-        // Check if table exists
-        const tableExists = await DB.schema.hasTable(PERMISSION);
-        
-        if (!tableExists) {
-            await DB.schema.createTable(PERMISSION, table => {
-                table.increments('permission_id').primary();
-                table.string('name', 100).unique().notNullable();
-                table.string('label', 100);
-                table.string('module', 50);
-                table.text('description');
-                table.boolean('is_critical').defaultTo(false);
-                table.timestamp('created_at').defaultTo(DB.fn.now());
-                table.timestamp('updated_at').defaultTo(DB.fn.now());
-                table.integer('updated_by').nullable();
-            });
+    // Check if table exists
+    const tableExists = await DB.schema.hasTable(PERMISSION);
 
-            console.log('Inserting permission data...');
-            await DB(PERMISSION).insert(predefinedPermissions);
-            console.log(`Inserted ${predefinedPermissions.length} permissions`);
+    if (!tableExists) {
+      await DB.schema.createTable(PERMISSION, table => {
+        table.increments('permission_id').primary();
+        table.string('name', 100).unique().notNullable();
+        table.string('label', 100);
+        table.string('module', 50);
+        table.text('description');
+        table.boolean('is_critical').defaultTo(false);
+        table.timestamp('created_at').defaultTo(DB.fn.now());
+        table.timestamp('updated_at').defaultTo(DB.fn.now());
+        table.integer('updated_by').nullable();
+      });
 
-            console.log('Finished Seeding Tables');
-            console.log('Creating Triggers');
-            await DB.raw(`
+      console.log('Inserting permission data...');
+      await DB(PERMISSION).insert(predefinedPermissions);
+      console.log(`Inserted ${predefinedPermissions.length} permissions`);
+
+      console.log('Finished Seeding Tables');
+      console.log('Creating Triggers');
+      await DB.raw(`
               CREATE TRIGGER update_timestamp
               BEFORE UPDATE
               ON ${PERMISSION}
               FOR EACH ROW
               EXECUTE PROCEDURE update_timestamp();
             `);
-            console.log('Finished Creating Triggers');
-        } else {
-            console.log('Table already exists, skipping creation');
+      console.log('Finished Creating Triggers');
+    } else {
+      console.log('Table already exists, checking for new permissions...');
+      // Insert missing permissions
+      let insertedCount = 0;
+      for (const perm of predefinedPermissions) {
+        const existing = await DB(PERMISSION).where({ name: perm.name }).first();
+        if (!existing) {
+          await DB(PERMISSION).insert(perm);
+          insertedCount++;
         }
-    } catch (error) {
-        console.error('Migration failed for permission:', error);
-        throw error;
+      }
+      console.log(`Added ${insertedCount} new permissions`);
     }
+  } catch (error) {
+    console.error('Migration failed for permission:', error);
+    throw error;
+  }
 };
 
 // Version: 1.0.0 - Permissions table for granular access control

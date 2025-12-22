@@ -12,6 +12,7 @@ import authMiddleware from "./middlewares/auth.middleware";
 import dotenv from 'dotenv';
 import multerErrorHandler from './middlewares/multer-error.middleware';
 import DB from '../database/index';
+import SocketService from './socket';
 dotenv.config();
 
 
@@ -24,7 +25,7 @@ class App {
     this.app = express();
     this.port = process.env.PORT || 8000;
     this.env = process.env.NODE_ENV || "development";
-    
+
     this.initializeMiddlewares();
     this.initializeRoutes(routes);
     this.initializeErrorHandling();
@@ -37,11 +38,16 @@ class App {
       await DB.raw('SELECT 1 as test');
       console.log('✅ Database connection successful');
 
-      this.app.listen(this.port, () => {
+      const server = this.app.listen(this.port, () => {
         logger.info(
           `🚀 App listening on the port ${this.port}. Current Env ${this.env}.`
         );
-      }).on('error', (error: any) => {
+      });
+
+      // Initialize Socket.IO
+      SocketService.init(server);
+
+      server.on('error', (error: any) => {
         if (error.code === 'EADDRINUSE') {
           logger.error(`❌ Port ${this.port} is already in use. Please use a different port or kill the process using it.`);
           logger.error(`To kill processes on port ${this.port}, run: lsof -ti:${this.port} | xargs kill -9`);
@@ -74,7 +80,8 @@ class App {
       "https://makemyvid.io",
       "https://www.makemyvid.io",
       "http://localhost:3000",
-      "http://localhost:3001"
+      "http://localhost:3001",
+      "http://192.168.1.20:3000"
     ];
 
     this.app.use(
@@ -84,7 +91,7 @@ class App {
           if (!origin) {
             return callback(null, true);
           }
-          
+
           if (allowedOrigins.includes(origin)) {
             callback(null, true);
           } else {

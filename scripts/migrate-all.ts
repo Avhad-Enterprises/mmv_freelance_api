@@ -17,23 +17,23 @@ const MIGRATION_ORDER = [
   'skill.schema.ts',
   'category.schema.ts',
   'tags.schema.ts',
-  
+
   // Core tables
   'users.schema.ts',
   'role.schema.ts',
   'permission.schema.ts',
-  
+
   // Profile tables (must come after users)
   'freelancer_profiles.schema.ts',
   'client_profiles.schema.ts',
   'admin_profiles.schema.ts',
   'videographer_profiles.schema.ts',
   'videoeditor_profiles.schema.ts',
-  
+
   // Relationship tables
   'user_role.schema.ts',
   'role_permission.schema.ts',
-  
+
   // Feature tables
   'projectstask.schema.ts',
   'applied_projects.schema.ts',
@@ -57,7 +57,7 @@ const MIGRATION_ORDER = [
   'report_system.schema.ts',
   'report_templates.schema.ts',
   'transactions.schema.ts', // Move transactions after projects are created
-  
+
   // Log/audit tables last  
   'visitor_logs.schema.ts',
   'emailog.schema.ts'
@@ -66,11 +66,11 @@ const MIGRATION_ORDER = [
 // Drop all tables in reverse dependency order for clean slate
 const dropAllTables = async () => {
   console.log('🗑️  Dropping all existing tables for clean slate...');
-  
+
   // Tables in reverse dependency order (most dependent first)
   const tablesToDrop = [
     T.EMAIL_LOG_TABLE,
-    T.VISITOR_LOGS, 
+    T.VISITOR_LOGS,
     T.TRANSACTION_TABLE,
     T.REPORT_TEMPLATES,
     T.REPORT_TABLE,
@@ -108,7 +108,7 @@ const dropAllTables = async () => {
     T.SKILLS,
     SCHEMA_MIGRATIONS_TABLE // Drop migration tracking table too
   ];
-  
+
   for (const table of tablesToDrop) {
     try {
       await DB.schema.dropTableIfExists(table);
@@ -123,7 +123,7 @@ const dropAllTables = async () => {
       }
     }
   }
-  
+
   console.log('✅ All tables dropped successfully');
 };
 
@@ -137,43 +137,43 @@ const getMigratedSchemas = async (): Promise<Set<string>> => {
 const migrateAll = async (dropFirst = false, verbose = false) => {
   try {
     console.log('🚀 Starting schema-based migration...');
-    
+
     // For clean slate, drop all existing tables first
     if (dropFirst) {
       await dropAllTables();
     }
-    
+
     await ensureSchemaMigrationsTable();
     const migratedSchemas = await getMigratedSchemas();
-    
+
     let migratedCount = 0;
     let skippedCount = 0;
-    
+
     // Use normal order for creating (dependencies handled)
     const migrationOrder = MIGRATION_ORDER;
-    
+
     for (const schemaFile of migrationOrder) {
       const schemaName = schemaFile.replace('.schema.ts', '');
       const schemaPath = path.join(DATABASE_DIR, schemaFile);
-      
+
       if (!fs.existsSync(schemaPath)) {
         console.log(`⚠️  Schema file not found: ${schemaFile}`);
         continue;
       }
-      
+
       // Skip if already migrated (unless dropping first)
       if (!dropFirst && migratedSchemas.has(schemaName)) {
         console.log(`⏭️  Skipping ${schemaName} (already migrated)`);
         skippedCount++;
         continue;
       }
-      
+
       try {
         console.log(`📦 Migrating ${schemaName}...`);
-        
+
         // Import the schema module
         const schemaModule = await import(schemaPath);
-        
+
         if (typeof schemaModule.migrate === 'function') {
           await schemaModule.migrate(dropFirst);
         } else if (typeof schemaModule.seed === 'function') {
@@ -183,20 +183,20 @@ const migrateAll = async (dropFirst = false, verbose = false) => {
           console.log(`⚠️  No migrate or seed function found in ${schemaFile}`);
           continue;
         }
-        
+
         // Record migration
         const version = getSchemaVersion(schemaPath);
         await recordMigration(schemaName, version);
-        
+
         console.log(`✅ Successfully migrated ${schemaName}`);
         migratedCount++;
-        
+
       } catch (error: any) {
         // Handle specific database errors more gracefully
         if (error.code === '42P01' && error.message.includes('does not exist')) {
           // Table doesn't exist, this is expected for fresh installs
           console.log(`   📝 Creating ${schemaName} (fresh install)`);
-          
+
           // Try to create the table
           try {
             const schemaModule = await import(schemaPath);
@@ -205,7 +205,7 @@ const migrateAll = async (dropFirst = false, verbose = false) => {
             } else if (typeof schemaModule.seed === 'function') {
               await schemaModule.seed(false);
             }
-            
+
             const version = getSchemaVersion(schemaPath);
             await recordMigration(schemaName, version);
             console.log(`✅ Successfully created ${schemaName}`);
@@ -217,7 +217,7 @@ const migrateAll = async (dropFirst = false, verbose = false) => {
         } else if (error.code === '2BP01' && error.message.includes('cannot drop table')) {
           // Foreign key constraint issue - table has dependencies, skip drop and try to create
           console.log(`   🔗 ${schemaName} has dependencies, skipping drop but creating table`);
-          
+
           try {
             const schemaModule = await import(schemaPath);
             if (typeof schemaModule.migrate === 'function') {
@@ -225,7 +225,7 @@ const migrateAll = async (dropFirst = false, verbose = false) => {
             } else if (typeof schemaModule.seed === 'function') {
               await schemaModule.seed(false);
             }
-            
+
             const version = getSchemaVersion(schemaPath);
             await recordMigration(schemaName, version);
             console.log(`✅ Successfully created ${schemaName}`);
@@ -246,12 +246,12 @@ const migrateAll = async (dropFirst = false, verbose = false) => {
         }
       }
     }
-    
+
     console.log('\n🎉 Migration completed!');
     console.log(`📊 Summary: ${migratedCount} migrated, ${skippedCount} skipped`);
-    
+
     // RBAC data seeding is now handled by individual schema migrations
-    
+
   } catch (error) {
     console.error('💥 Migration failed:', error);
     throw error;

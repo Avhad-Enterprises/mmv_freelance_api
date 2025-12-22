@@ -9,18 +9,18 @@ import { TicketNoteDto } from './support-ticket-notes.dto';
 import { hasRole, getUserRoles } from '../../utils/rbac/role-checker';
 
 class supportTicketService {
- public async createTicket(ticketData: Partial<SupportTicket>): Promise<SupportTicket> {
-  if (!ticketData || Object.keys(ticketData).length === 0) {
-    throw new HttpException(400, 'Ticket data is required');
-  }
+  public async createTicket(ticketData: Partial<SupportTicket>): Promise<SupportTicket> {
+    if (!ticketData || Object.keys(ticketData).length === 0) {
+      throw new HttpException(400, 'Ticket data is required');
+    }
 
-  const { subject, ticket_category, description, priority, user_id, email } = ticketData;
+    const { subject, ticket_category, description, priority, user_id, email } = ticketData;
 
-  if (!subject || !ticket_category || !description) {
-    throw new HttpException(400, 'Subject, category, and description are required');
-  }
+    if (!subject || !ticket_category || !description) {
+      throw new HttpException(400, 'Subject, category, and description are required');
+    }
 
-  const emailContent = `
+    const emailContent = `
 New Support Ticket Received
 
 Subject: ${subject}
@@ -32,53 +32,53 @@ From User ID: ${user_id ?? 'N/A'}
 User Email: ${email ?? 'N/A'}
 `;
 
-  const supportEmail = process.env.SUPPORT_EMAIL || 'ujalag.cs.22@nitj.ac.in';
-  const replyTo = email ?? undefined;
+    const supportEmail = process.env.SUPPORT_EMAIL || 'ujalag.cs.22@nitj.ac.in';
+    const replyTo = email ?? undefined;
 
-  const insertData: Partial<SupportTicket> = {
-    ...ticketData,
-    priority: priority ?? 'low',
-    status: 'open',
-    created_at: DB.fn.now(),
-    updated_at: DB.fn.now(),
-  };
+    const insertData: Partial<SupportTicket> = {
+      ...ticketData,
+      priority: priority ?? 'low',
+      status: 'open',
+      created_at: DB.fn.now(),
+      updated_at: DB.fn.now(),
+    };
 
-  const [ticket] = await DB(T.SUPPORT_TICKETS_TABLE).insert(insertData).returning('*');
+    const [ticket] = await DB(T.SUPPORT_TICKETS_TABLE).insert(insertData).returning('*');
 
-  try {
-    await sendSupportTicketEmail({
-      to: supportEmail,
-      subject: 'New Support Ticket',
-      ticketId: ticket.id.toString(),
-      message: emailContent,
-      replyTo
-    });
+    try {
+      await sendSupportTicketEmail({
+        to: supportEmail,
+        subject: 'New Support Ticket',
+        ticketId: ticket.id.toString(),
+        message: emailContent,
+        replyTo
+      });
 
-    // ✅ Log success in email_logs table
-    await DB(T.EMAIL_LOG_TABLE).insert({
-      ticket_id: ticket.id,
-      to_email: supportEmail,
-      subject: 'New Support Ticket',
-      body: emailContent,
-      status: 'sent',
-      sent_at: DB.fn.now(),
-    });
-  } catch (err) {
-    console.error('Support email send failed:', err);
+      // ✅ Log success in email_logs table
+      await DB(T.EMAIL_LOG_TABLE).insert({
+        ticket_id: ticket.id,
+        to_email: supportEmail,
+        subject: 'New Support Ticket',
+        body: emailContent,
+        status: 'sent',
+        sent_at: DB.fn.now(),
+      });
+    } catch (err) {
+      console.error('Support email send failed:', err);
 
-    // ✅ Log failure in email_logs table
-    await DB(T.EMAIL_LOG_TABLE).insert({
-      ticket_id: ticket.id,
-      to_email: supportEmail,
-      subject: 'New Support Ticket',
-      body: emailContent,
-      status: 'failed',
-      sent_at: DB.fn.now(),
-    });
+      // ✅ Log failure in email_logs table
+      await DB(T.EMAIL_LOG_TABLE).insert({
+        ticket_id: ticket.id,
+        to_email: supportEmail,
+        subject: 'New Support Ticket',
+        body: emailContent,
+        status: 'failed',
+        sent_at: DB.fn.now(),
+      });
+    }
+
+    return ticket;
   }
-
-  return ticket;
-}
 
 
   public async addAdminNote(data: TicketNoteDto): Promise<ITicketNote> {
@@ -247,153 +247,155 @@ User Email: ${email ?? 'N/A'}
     return updated as SupportTicket;
   }
 
- public async addTicketReply(data: {
-  ticket_id: number;
-  sender_id: number;
-  sender_role: "client" | "freelancer" | "admin";
-  message: string;
-}): Promise<string> {
-  const { ticket_id, sender_id, sender_role, message } = data;
+  public async addTicketReply(data: {
+    ticket_id: number;
+    sender_id: number;
+    sender_role: "client" | "freelancer" | "admin";
+    message: string;
+  }): Promise<string> {
+    const { ticket_id, sender_id, sender_role, message } = data;
 
-  if (!ticket_id || !sender_id || !sender_role || !message.trim()) {
-    throw new HttpException(400, "ticket_id, sender_id, sender_role, and message are required");
-  }
-
-  // ✅ Verify sender exists and has the claimed role using RBAC
-  const sender = await DB(T.USERS_TABLE).where({ user_id: sender_id }).first();
-  if (!sender) {
-    throw new HttpException(404, "Sender not found");
-  }
-
-  // Map legacy role names to RBAC role names
-  const roleMap: { [key: string]: string } = {
-    'client': 'CLIENT',
-    'freelancer': 'VIDEOGRAPHER', // or VIDEO_EDITOR
-    'admin': 'ADMIN'
-  };
-
-  // Verify sender has the claimed role
-  if (sender_role === 'admin') {
-    const isAdmin = await hasRole(sender_id, 'ADMIN');
-    if (!isAdmin) {
-      throw new HttpException(403, "Sender does not have admin role");
+    if (!ticket_id || !sender_id || !sender_role || !message.trim()) {
+      throw new HttpException(400, "ticket_id, sender_id, sender_role, and message are required");
     }
-  } else if (sender_role === 'client') {
-    const isClient = await hasRole(sender_id, 'CLIENT');
-    if (!isClient) {
-      throw new HttpException(403, "Sender does not have client role");
+
+    // ✅ Verify sender exists and has the claimed role using RBAC
+    const sender = await DB(T.USERS_TABLE).where({ user_id: sender_id }).first();
+    if (!sender) {
+      throw new HttpException(404, "Sender not found");
     }
-  } else if (sender_role === 'freelancer') {
-    // Check if user is either videographer or video editor
-    const userRoles = await getUserRoles(sender_id);
-    const isFreelancer = userRoles.includes('VIDEOGRAPHER') || userRoles.includes('VIDEO_EDITOR');
-    if (!isFreelancer) {
-      throw new HttpException(403, "Sender does not have freelancer role");
+
+    // Map legacy role names to RBAC role names
+    const roleMap: { [key: string]: string } = {
+      'client': 'CLIENT',
+      'freelancer': 'VIDEOGRAPHER', // or VIDEO_EDITOR
+      'admin': 'ADMIN'
+    };
+
+    // Verify sender has the claimed role
+    if (sender_role === 'admin') {
+      const isAdmin = await hasRole(sender_id, 'ADMIN');
+      if (!isAdmin) {
+        throw new HttpException(403, "Sender does not have admin role");
+      }
+    } else if (sender_role === 'client') {
+      const isClient = await hasRole(sender_id, 'CLIENT');
+      if (!isClient) {
+        throw new HttpException(403, "Sender does not have client role");
+      }
+    } else if (sender_role === 'freelancer') {
+      // Check if user is either videographer or video editor
+      const userRoles = await getUserRoles(sender_id);
+      const isFreelancer = userRoles.includes('VIDEOGRAPHER') || userRoles.includes('VIDEO_EDITOR');
+      if (!isFreelancer) {
+        throw new HttpException(403, "Sender does not have freelancer role");
+      }
     }
-  }
 
-  const ticket = await DB(T.SUPPORT_TICKETS_TABLE).where({ id: ticket_id }).first();
-  if (!ticket) throw new HttpException(404, "Ticket not found");
+    const ticket = await DB(T.SUPPORT_TICKETS_TABLE).where({ id: ticket_id }).first();
+    if (!ticket) throw new HttpException(404, "Ticket not found");
 
-  await DB(T.TICKET_REPLY_TABLE).insert({
-    ticket_id,
-    sender_id,
-    sender_role,
-    message,
-    created_at: DB.fn.now(),
-  });
+    await DB(T.TICKET_REPLY_TABLE).insert({
+      ticket_id,
+      sender_id,
+      sender_role,
+      message,
+      created_at: DB.fn.now(),
+    });
 
-  let recipientEmail = "";
+    let recipientEmail = "";
 
-  if (sender_role === "admin") {
-    const user = await DB(T.USERS_TABLE).where({ user_id: ticket.user_id }).first();
-    if (user) recipientEmail = user.email;
-  } else {
-    // ✅ Find an admin using RBAC system
-    const admin = await DB(T.USERS_TABLE)
-      .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
-      .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
-      .where(`${T.ROLE}.name`, 'ADMIN')
-      .where(`${T.USERS_TABLE}.is_active`, true)
-      .select(`${T.USERS_TABLE}.*`)
-      .first();
-    
-    if (admin) {
-      recipientEmail = admin.email || "aanyagupta980@gmail.com";
+    if (sender_role === "admin") {
+      const user = await DB(T.USERS_TABLE).where({ user_id: ticket.user_id }).first();
+      if (user) recipientEmail = user.email;
+    } else {
+      // ✅ Find an admin using RBAC system
+      const admin = await DB(T.USERS_TABLE)
+        .join(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
+        .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
+        .where(`${T.ROLE}.name`, 'ADMIN')
+        .where(`${T.USERS_TABLE}.is_active`, true)
+        .select(`${T.USERS_TABLE}.*`)
+        .first();
+
+      if (admin) {
+        recipientEmail = admin.email || "aanyagupta980@gmail.com";
+      }
     }
-  }
 
-  const emailContent = `
+    const emailContent = `
 New reply to Support Ticket #${ticket_id}
 
 From: ${sender_role} (${sender.email})
 Message: ${message}
 `;
 
-  if (recipientEmail) {
-    try {
-      await sendSupportTicketEmail({
-        to: recipientEmail,
-        subject: 'Support Ticket Reply',
-        ticketId: ticket_id.toString(),
-        message: message,
-        replyTo: sender.email
-      });
+    if (recipientEmail) {
+      try {
+        await sendSupportTicketEmail({
+          to: recipientEmail,
+          subject: 'Support Ticket Reply',
+          ticketId: ticket_id.toString(),
+          message: message,
+          replyTo: sender.email
+        });
 
-      // ✅ Log successful email
-      await DB(T.EMAIL_LOG_TABLE).insert({
-        ticket_id,
-        to_email: recipientEmail,
-        subject: `Reply to Ticket #${ticket_id}`,
-        body: emailContent,
-        status: 'sent',
-        sent_at: DB.fn.now(),
-      });
-    } catch (err) {
-      console.error('Reply email send failed:', err);
+        // ✅ Log successful email
+        await DB(T.EMAIL_LOG_TABLE).insert({
+          ticket_id,
+          to_email: recipientEmail,
+          subject: `Reply to Ticket #${ticket_id}`,
+          body: emailContent,
+          status: 'sent',
+          sent_at: DB.fn.now(),
+        });
+      } catch (err) {
+        console.error('Reply email send failed:', err);
 
-      // ✅ Log failed email
-      await DB(T.EMAIL_LOG_TABLE).insert({
-        ticket_id,
-        to_email: recipientEmail,
-        subject: `Reply to Ticket #${ticket_id}`,
-        body: emailContent,
-        status: 'failed',
-        sent_at: DB.fn.now(),
-      });
+        // ✅ Log failed email
+        await DB(T.EMAIL_LOG_TABLE).insert({
+          ticket_id,
+          to_email: recipientEmail,
+          subject: `Reply to Ticket #${ticket_id}`,
+          body: emailContent,
+          status: 'failed',
+          sent_at: DB.fn.now(),
+        });
+      }
     }
+
+    return "Reply added and notification sent";
   }
+  public getallticketsid = async (user_id: number, projects_task_id: number): Promise<any[]> => {
+    if (!user_id || !projects_task_id) {
+      throw new HttpException(400, "user_id and project_task_id are required");
+    }
 
-  return "Reply added and notification sent";
-}
-public getallticketsid = async (user_id: number, projects_task_id: number): Promise<any[]> => {
-  if (!user_id || !projects_task_id) {
-    throw new HttpException(400, "user_id and project_task_id are required");
-  }
+    const result = await DB(T.SUPPORT_TICKETS_TABLE)
+      .leftJoin(`${T.PROJECTS_TASK} as project`, `${T.SUPPORT_TICKETS_TABLE}.project_id`, 'project.projects_task_id')
+      .leftJoin(`${T.USERS_TABLE} as user`, `${T.SUPPORT_TICKETS_TABLE}.user_id`, 'user.user_id')
+      .where(`${T.SUPPORT_TICKETS_TABLE}.is_deleted`, false)
+      .andWhere(`${T.SUPPORT_TICKETS_TABLE}.project_id`, projects_task_id)
+      .andWhere(`${T.SUPPORT_TICKETS_TABLE}.user_id`, user_id)
+      .orderBy(`${T.SUPPORT_TICKETS_TABLE}.created_at`, 'desc')
+      .select(
+        `${T.SUPPORT_TICKETS_TABLE}.*`,
 
-  const result = await DB(T.SUPPORT_TICKETS_TABLE)
-   .leftJoin(`${T.PROJECTS_TASK} as project`, `${T.SUPPORT_TICKETS_TABLE}.project_id`, 'project.projects_task_id')
-    .leftJoin(`${T.USERS_TABLE} as user`, `${T.SUPPORT_TICKETS_TABLE}.user_id`, 'user.user_id')
-    .where(`${T.SUPPORT_TICKETS_TABLE}.is_deleted`, false)
-    .andWhere(`${T.SUPPORT_TICKETS_TABLE}.project_id`, projects_task_id)
-    .andWhere(`${T.SUPPORT_TICKETS_TABLE}.user_id`, user_id)
-    .orderBy(`${T.SUPPORT_TICKETS_TABLE}.created_at`, 'desc')
-    .select(
-      `${T.SUPPORT_TICKETS_TABLE}.*`,
+        // PROJECT
+        'project.projects_task_id as project_id',
+        'project.project_title as project_title',
 
-      // PROJECT
-      'project.projects_task_id as project_id',
-      'project.project_title as project_title',
+        // USER
+        'user.user_id as user_id',
+        'user.first_name as user_first_name',
+        'user.last_name as user_last_name',
+        'user.profile_picture as user_profile_picture'
+      );
 
-      // USER
-      'user.user_id as user_id',
-      'user.first_name as user_first_name',
-      'user.last_name as user_last_name',
-      'user.profile_picture as user_profile_picture'
-    );
+    return result;
+  };
 
-  return result;
-};
+
 }
 
 export default supportTicketService;

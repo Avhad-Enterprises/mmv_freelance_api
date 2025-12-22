@@ -155,6 +155,34 @@ class UserAuthService {
         login_attempts: 0
       });
   }
+  /**
+   * Set password (for users who don't have one)
+   */
+  public async setPassword(
+    user_id: number,
+    newPassword: string
+  ): Promise<void> {
+    const user = await DB(T.USERS_TABLE)
+      .where({ user_id })
+      .first();
+
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
+
+    if (user.password && user.password.length > 0) {
+      throw new HttpException(400, "User already has a password. Use change-password instead.");
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    await DB(T.USERS_TABLE)
+      .where({ user_id })
+      .update({
+        password: hashedNewPassword,
+        updated_at: DB.fn.now()
+      });
+  }
 }
 
 export default UserAuthService;

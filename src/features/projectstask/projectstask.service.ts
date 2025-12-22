@@ -155,8 +155,10 @@ class ProjectstaskService {
 
   public getAllProjectsTask = async (): Promise<any[]> => {
     const result = await DB(T.PROJECTS_TASK)
-      .leftJoin(`${T.USERS_TABLE} as client`, `${T.PROJECTS_TASK}.client_id`, 'client.user_id')
-      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.user_id`)
+      // First join client_profiles (PROJECTS_TASK.client_id -> client_profiles.client_id)
+      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.client_id`)
+      // Then join users via client_profiles.user_id
+      .leftJoin(`${T.USERS_TABLE} as client`, `${T.CLIENT_PROFILES}.user_id`, 'client.user_id')
       .leftJoin(`${T.USERS_TABLE} as editor`, `${T.PROJECTS_TASK}.freelancer_id`, 'editor.user_id')
       .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.freelancer_id`, `${T.FREELANCER_PROFILES}.user_id`)
       .where(`${T.PROJECTS_TASK}.is_deleted`, false)
@@ -549,8 +551,10 @@ class ProjectstaskService {
 
   public getAllProjectslisting = async (): Promise<any[]> => {
     const result = await DB(T.PROJECTS_TASK)
-      .leftJoin(`${T.USERS_TABLE} as client`, `${T.PROJECTS_TASK}.client_id`, 'client.user_id')
+      // First join client_profiles (PROJECTS_TASK.client_id -> client_profiles.client_id)
       .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.client_id`)
+      // Then join users via client_profiles.user_id
+      .leftJoin(`${T.USERS_TABLE} as client`, `${T.CLIENT_PROFILES}.user_id`, 'client.user_id')
       .leftJoin(`${T.USERS_TABLE} as freelancer`, `${T.PROJECTS_TASK}.freelancer_id`, 'freelancer.user_id')
       .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.freelancer_id`, `${T.FREELANCER_PROFILES}.freelancer_id`)
       .where(`${T.PROJECTS_TASK}.is_deleted`, false)

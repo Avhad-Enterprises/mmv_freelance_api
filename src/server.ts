@@ -46,10 +46,11 @@ import RobotsTxtRoute from './features/robots-txt/robots-txt.routes';
 import EMCRoute from './features/emc/emc.routes';
 import ReportTemplatesRoute from './features/report-templates/report-templates.routes';
 import AdminInvitesRoutes from './features/admin-invites/admin-invites.routes';
+import AdminRBACRoute from './features/admin-rbac/admin-rbac.routes';
 
 import validateEnv from './utils/validation/validateEnv';
 import { FreelancerRoutes } from './features/freelancers/freelancer.routes';
-import { CreditsRoutes } from './features/credits/credits.routes';
+import { CreditsRoutes, AdminCreditsRoutes } from './features/credits/routes';
 import { OAuthRoutes } from './features/oauth/oauth.routes';
 // Validate .env variables
 validateEnv();
@@ -64,10 +65,12 @@ const app = new App([
   new VideoEditorRoutes(),
   new FreelancerRoutes(),
   new CreditsRoutes(),
+  new AdminCreditsRoutes(),
 
   // RBAC routes
   new roleRoute(),
   new permissionRoute(),
+  new AdminRBACRoute(),
   new SubmissionRoute(),
   new projectstaskRoute(),
   new AppliedProjectsRoute(),
@@ -107,9 +110,38 @@ const app = new App([
 ]);
 
 // Start server
+let appInstance: any;
+
 (async () => {
-  await app.listen();
+  try {
+    appInstance = await app.listen();
+  } catch (error) {
+    console.error('Failed to start app:', error);
+  }
 })();
+
+// Graceful shutdown
+const gracefulShutdown = async (signal: string) => {
+  console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
+  try {
+    if (appInstance) {
+      // Close app/socket resources if exposed
+      // Note: app.listen() in app.ts initializes SocketService singleton
+      // We should call close on the singleton
+      const { default: SocketService } = await import('./socket/index'); // dynamic import to avoid eager load issues if any
+      await SocketService.close();
+    }
+
+    // DB.destroy() is usually handled by knex or process exit, but we can explicit if needed
+    // process.exit(0);
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // Global error handlers to prevent app crashes
 process.on('uncaughtException', (error) => {
