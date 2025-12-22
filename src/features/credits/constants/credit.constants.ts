@@ -30,7 +30,7 @@ export const CREDIT_PACKAGES = [
         name: 'Starter',
         credits: 5,
         price: 250,  // 5 × ₹50
-        description: 'Perfect for trying out the platform'
+        description: 'Perfect for trying platform'
     },
     {
         id: 2,
