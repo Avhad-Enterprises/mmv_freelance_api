@@ -107,15 +107,23 @@ class SubmissionService {
 
     // Send notification to Client that submission was received
     if (project && project.client_id && freelancer) {
-      await this.notificationService.createNotification({
-        user_id: project.client_id, // Client
-        title: "New Submission Received",
-        message: `${freelancer.first_name || 'A freelancer'} has submitted work for "${project.project_title || 'your project'}". Please review.`,
-        type: "submission_received",
-        related_id: submitted_project[0].submission_id,
-        related_type: "submissions",
-        is_read: false
-      });
+      // Get the actual user_id from client_profiles (client_id != user_id)
+      const clientProfile = await DB(T.CLIENT_PROFILES)
+        .where({ client_id: project.client_id })
+        .select('user_id')
+        .first();
+
+      if (clientProfile && clientProfile.user_id) {
+        await this.notificationService.createNotification({
+          user_id: clientProfile.user_id, // Use user_id, not client_id
+          title: "New Submission Received",
+          message: `${freelancer.first_name || 'A freelancer'} has submitted work for "${project.project_title || 'your project'}". Please review.`,
+          type: "submission_received",
+          related_id: submitted_project[0].submission_id,
+          related_type: "submissions",
+          is_read: false
+        });
+      }
     }
 
     return submitted_project[0];

@@ -9,7 +9,7 @@ import HttpException from '../../exceptions/HttpException';
  * Handles client-specific operations and profile management
  */
 class ClientService extends UserService {
-  
+
   /**
    * Get client with profile
    */
@@ -33,15 +33,18 @@ class ClientService extends UserService {
       .first();
 
     // Parse JSON fields
-    const jsonFields = ['projects_created', 'payment_method', 'bank_account_info', 'business_document_urls'];
+    const jsonFields = ['projects_created', 'payment_method', 'bank_account_info', 'business_document_urls', 'social_links'];
     jsonFields.forEach(field => {
-      if (profile && profile[field]) {
+      if (profile && profile[field] && typeof profile[field] === 'string' && profile[field].trim() !== '') {
         try {
           profile[field] = JSON.parse(profile[field]);
         } catch (e) {
-          // If parsing fails, keep as string
-          console.warn(`Failed to parse JSON field ${field}:`, e);
+          // If parsing fails, set appropriate default
+          profile[field] = ['projects_created', 'business_document_urls'].includes(field) ? [] : null;
         }
+      } else if (profile && profile[field] === '') {
+        // Empty string - set appropriate default
+        profile[field] = ['projects_created', 'business_document_urls'].includes(field) ? [] : null;
       }
     });
 
@@ -56,7 +59,7 @@ class ClientService extends UserService {
    * Update client profile
    */
   public async updateClientProfile(
-    user_id: number, 
+    user_id: number,
     profileData: any
   ): Promise<any> {
     // Verify user is a client
@@ -76,8 +79,8 @@ class ClientService extends UserService {
 
     // Handle array and object fields that need to be stored as JSON
     const processedData = { ...profileData };
-    const jsonFields = ['projects_created', 'payment_method', 'bank_account_info', 'business_document_urls'];
-    
+    const jsonFields = ['projects_created', 'payment_method', 'bank_account_info', 'business_document_urls', 'social_links'];
+
     jsonFields.forEach(field => {
       if (processedData[field] && (Array.isArray(processedData[field]) || typeof processedData[field] === 'object')) {
         processedData[field] = JSON.stringify(processedData[field]);
@@ -114,16 +117,19 @@ class ClientService extends UserService {
       .orderBy(`${T.USERS_TABLE}.created_at`, "desc");
 
     // Parse JSON fields for each client
-    const jsonFields = ['projects_created', 'payment_method', 'bank_account_info', 'business_document_urls'];
+    const jsonFields = ['projects_created', 'payment_method', 'bank_account_info', 'business_document_urls', 'social_links'];
     clients.forEach(client => {
       jsonFields.forEach(field => {
-        if (client && client[field]) {
+        if (client && client[field] && typeof client[field] === 'string' && client[field].trim() !== '') {
           try {
             client[field] = JSON.parse(client[field]);
           } catch (e) {
-            // If parsing fails, keep as string
-            console.warn(`Failed to parse JSON field ${field} for client ${client.user_id}:`, e);
+            // If parsing fails, set appropriate default
+            client[field] = ['projects_created', 'business_document_urls'].includes(field) ? [] : null;
           }
+        } else if (client && client[field] === '') {
+          // Empty string - set appropriate default
+          client[field] = ['projects_created', 'business_document_urls'].includes(field) ? [] : null;
         }
       });
     });
@@ -146,8 +152,8 @@ class ClientService extends UserService {
     return {
       projects_created: profile.projects_created || [],
       total_spent: profile.total_spent || 0,
-      active_projects: Array.isArray(profile.projects_created) 
-        ? profile.projects_created.length 
+      active_projects: Array.isArray(profile.projects_created)
+        ? profile.projects_created.length
         : 0
     };
   }
