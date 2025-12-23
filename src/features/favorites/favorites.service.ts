@@ -126,9 +126,22 @@ class favoritesservices {
    */
   public async getFavoritesByUser(user_id: number): Promise<any> {
     const favorites = await DB(T.FAVORITES_TABLE)
-      .where({ user_id, is_active: true, is_deleted: false })
-      .select("*")
-      .orderBy('created_at', 'desc');
+      .where({
+        [`${T.FAVORITES_TABLE}.user_id`]: user_id,
+        [`${T.FAVORITES_TABLE}.is_active`]: true,
+        [`${T.FAVORITES_TABLE}.is_deleted`]: false
+      })
+      .leftJoin(
+        T.FREELANCER_PROFILES,
+        `${T.FREELANCER_PROFILES}.freelancer_id`,
+        '=',
+        `${T.FAVORITES_TABLE}.freelancer_id`
+      )
+      .select(
+        `${T.FAVORITES_TABLE}.*`,
+        `${T.FREELANCER_PROFILES}.user_id as freelancer_user_id`
+      )
+      .orderBy(`${T.FAVORITES_TABLE}.created_at`, 'desc');
 
     return favorites;
   }
@@ -147,13 +160,20 @@ class favoritesservices {
         [`${T.FAVORITES_TABLE}.is_deleted`]: false,
       })
       .leftJoin(
-        `${T.USERS_TABLE}`,
+        T.FREELANCER_PROFILES,
+        `${T.FREELANCER_PROFILES}.freelancer_id`,
+        '=',
+        `${T.FAVORITES_TABLE}.freelancer_id`
+      )
+      .leftJoin(
+        T.USERS_TABLE,
         `${T.USERS_TABLE}.user_id`,
         '=',
-        `${T.FAVORITES_TABLE}.freelancer_id` // Fixed: was incorrectly joining on id
+        `${T.FREELANCER_PROFILES}.user_id`
       )
       .select(
         `${T.FAVORITES_TABLE}.*`,
+        `${T.USERS_TABLE}.user_id as freelancer_user_id`,
         `${T.USERS_TABLE}.username`,
         `${T.USERS_TABLE}.email`,
         `${T.USERS_TABLE}.first_name`,
