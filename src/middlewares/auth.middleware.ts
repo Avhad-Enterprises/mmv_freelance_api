@@ -34,6 +34,8 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       '/blog',  // GET /blog and GET /blog/:id (public read-only)
       '/faq',  // GET /faq and GET /faq/:id (public read-only)
       '/contact/submit',  // POST /contact/submit (public contact form)
+      // CMS Landing Page routes (public)
+      '/cms-landing/public',  // GET /cms-landing/public/* (all public CMS endpoints)
       // OAuth routes (public)
       '/oauth/providers',
       '/oauth/google',
