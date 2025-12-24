@@ -1,5 +1,5 @@
 import { NextFunction, Response } from "express";
-import { AuthenticatedRequest } from "./cms.types";
+import { AuthenticatedRequest } from "./cms.interface";
 import CmsService from "./cms.service";
 import {
     CreateHeroDto, UpdateHeroDto,

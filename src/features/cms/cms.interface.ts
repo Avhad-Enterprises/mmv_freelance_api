@@ -63,3 +63,42 @@ export interface ICms {
     deleted_by?: number;
     deleted_at?: string;
 }
+
+// Extended types from cms.types.ts
+import { Request } from 'express';
+
+export interface AuthenticatedUser {
+    user_id: number;
+    email: string;
+    role?: string;
+    permissions?: string[];
+}
+
+export interface AuthenticatedRequest extends Request {
+    user: AuthenticatedUser;
+}
+
+export interface LandingPageContent {
+    hero: ICms[];
+    trustedCompanies: ICms[];
+    whyChooseUs: ICms[];
+    featuredCreators: ICms[];
+    successStories: ICms[];
+    faqs: ICms[];
+}
+
+export interface ReorderResult {
+    message: string;
+    count: number;
+    updated: number[];
+}
+
+export enum SectionType {
+    HERO = 'hero',
+    TRUSTED_COMPANY = 'trusted_company',
+    WHY_CHOOSE_US = 'why_choose_us',
+    FEATURED_CREATOR = 'featured_creator',
+    SUCCESS_STORY = 'success_story',
+    LANDING_FAQ = 'landing_faq',
+    GENERAL = 'general'
+}
