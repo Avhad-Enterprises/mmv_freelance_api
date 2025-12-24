@@ -8,6 +8,7 @@ import {
     CreateFeaturedCreatorDto, UpdateFeaturedCreatorDto,
     CreateSuccessStoryDto, UpdateSuccessStoryDto,
     CreateLandingFaqDto, UpdateLandingFaqDto,
+    CreateSocialMediaDto, UpdateSocialMediaDto,
     BulkReorderDto, DeleteItemDto
 } from "./cms.dto";
 
@@ -18,7 +19,8 @@ const SECTION_TYPES = {
     WHY_CHOOSE_US: 'why_choose_us',
     FEATURED_CREATOR: 'featured_creator',
     SUCCESS_STORY: 'success_story',
-    LANDING_FAQ: 'landing_faq'
+    LANDING_FAQ: 'landing_faq',
+    SOCIAL_MEDIA: 'social_media'
 } as const;
 
 class CmsService {
@@ -531,16 +533,89 @@ class CmsService {
         return { message: "Reorder successful", count: data.items.length };
     }
 
+    // ==================== SOCIAL MEDIA ====================
+
+    public async getAllSocialMedia(): Promise<any[]> {
+        return await DB(T.CMS)
+            .where({ section_type: SECTION_TYPES.SOCIAL_MEDIA, is_deleted: false })
+            .orderBy('created_at', 'desc');
+    }
+
+    public async getActiveSocialMedia(): Promise<any> {
+        return await DB(T.CMS)
+            .where({ section_type: SECTION_TYPES.SOCIAL_MEDIA, is_active: true, is_deleted: false })
+            .first();
+    }
+
+    public async getSocialMediaById(id: number): Promise<any> {
+        const socialMedia = await DB(T.CMS)
+            .where({ cms_id: id, section_type: SECTION_TYPES.SOCIAL_MEDIA, is_deleted: false })
+            .first();
+        if (!socialMedia) throw new HttpException(404, "Social media settings not found");
+        return socialMedia;
+    }
+
+    public async createSocialMedia(data: CreateSocialMediaDto): Promise<any> {
+        if (isEmpty(data)) throw new HttpException(400, "Social media data is empty");
+
+        const socialMediaData = {
+            section_type: SECTION_TYPES.SOCIAL_MEDIA,
+            ...data,
+            created_by: data.created_by || 1,
+            is_active: data.is_active !== undefined ? data.is_active : true,
+            is_deleted: false
+        };
+
+        const [inserted] = await DB(T.CMS).insert(socialMediaData).returning("*");
+        return inserted;
+    }
+
+    public async updateSocialMedia(data: UpdateSocialMediaDto): Promise<any> {
+        if (!data.id) throw new HttpException(400, "Social media ID is required");
+
+        const updateData = {
+            ...data,
+            updated_by: data.updated_by || 1,
+            updated_at: DB.fn.now()
+        };
+        delete (updateData as any).id;
+
+        const [updated] = await DB(T.CMS)
+            .where({ cms_id: data.id, section_type: SECTION_TYPES.SOCIAL_MEDIA, is_deleted: false })
+            .update(updateData)
+            .returning("*");
+
+        if (!updated) throw new HttpException(404, "Social media settings not found");
+        return updated;
+    }
+
+    public async deleteSocialMedia(data: DeleteItemDto): Promise<any> {
+        if (!data.id) throw new HttpException(400, "Social media ID is required");
+
+        const [deleted] = await DB(T.CMS)
+            .where({ cms_id: data.id, section_type: SECTION_TYPES.SOCIAL_MEDIA })
+            .update({
+                is_deleted: true,
+                deleted_by: data.deleted_by || 1,
+                deleted_at: DB.fn.now()
+            })
+            .returning("*");
+
+        if (!deleted) throw new HttpException(404, "Social media settings not found");
+        return deleted;
+    }
+
     // ==================== COMPLETE LANDING PAGE ====================
 
     public async getActiveLandingPageContent(): Promise<any> {
-        const [hero, trustedCompanies, whyChooseUs, featuredCreators, successStories, faqs] = await Promise.all([
+        const [hero, trustedCompanies, whyChooseUs, featuredCreators, successStories, faqs, socialMedia] = await Promise.all([
             this.getActiveHero(),
             this.getActiveTrustedCompanies(),
             this.getActiveWhyChooseUs(),
             this.getActiveFeaturedCreators(),
             this.getActiveSuccessStories(),
-            this.getActiveLandingFaqs()
+            this.getActiveLandingFaqs(),
+            this.getActiveSocialMedia()
         ]);
 
         return {
@@ -549,7 +624,8 @@ class CmsService {
             whyChooseUs,
             featuredCreators,
             successStories,
-            faqs
+            faqs,
+            socialMedia: socialMedia || null
         };
     }
 }

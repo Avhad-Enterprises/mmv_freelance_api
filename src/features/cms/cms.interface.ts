@@ -1,56 +1,39 @@
-// Base CMS Interface
+// Base CMS Interface - Simplified Version 3.0.0
 export interface ICms {
     cms_id?: number;
     section_type?: string;
 
-    // Hero Section Fields
+    // Hero Section Fields (title, subtitle, background_image)
     title?: string;
     subtitle?: string;
-    description?: string;
-    primary_button_text?: string;
-    primary_button_link?: string;
-    secondary_button_text?: string;
-    secondary_button_link?: string;
     background_image?: string;
-    hero_image?: string;
-    custom_data?: Record<string, any>;
 
-    // Trusted Company Fields
+    // Trusted Company Fields (company_name, logo_url)
     company_name?: string;
     logo_url?: string;
-    website_url?: string;
 
-    // Why Choose Us Fields
-    content?: string;
-    icon?: string;
-    metadata?: Record<string, any>;
+    // Why Choose Us Fields (question stored in title, answer stored in description)
+    description?: string;
 
-    // Featured Creator Fields
+    // Featured Creator Fields (name, bio)
     name?: string;
     bio?: string;
-    profile_image?: string;
-    portfolio_url?: string;
-    social_linkedin?: string;
-    social_twitter?: string;
-    social_instagram?: string;
-    skills?: string[];
-    stats?: Record<string, any>;
 
-    // Success Story Fields
+    // Success Story Fields (client_name, client_title, testimonial, rating)
     client_name?: string;
     client_title?: string;
-    client_image?: string;
     testimonial?: string;
     rating?: number;
-    project_type?: string;
-    company?: string;
-    company_logo?: string;
 
-    // Landing FAQ Fields
-    category?: string;
+    // Landing FAQ Fields (question, answer)
     question?: string;
     answer?: string;
-    tags?: string[];
+
+    // Social Media Fields (WhatsApp, LinkedIn, Google, Instagram)
+    social_whatsapp?: string;
+    social_linkedin?: string;
+    social_google?: string;
+    social_instagram?: string;
 
     // Common Fields
     is_active?: boolean;
@@ -85,6 +68,7 @@ export interface LandingPageContent {
     featuredCreators: ICms[];
     successStories: ICms[];
     faqs: ICms[];
+    socialMedia: ICms[];
 }
 
 export interface ReorderResult {
@@ -100,5 +84,5 @@ export enum SectionType {
     FEATURED_CREATOR = 'featured_creator',
     SUCCESS_STORY = 'success_story',
     LANDING_FAQ = 'landing_faq',
-    GENERAL = 'general'
+    SOCIAL_MEDIA = 'social_media'
 }

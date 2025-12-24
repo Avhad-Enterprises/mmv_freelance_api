@@ -434,7 +434,7 @@ class CmsController {
         try {
             if (!req.user?.user_id) {
                 throw new HttpException(401, 'Authentication required');
-            }
+                }
             const faqData: CreateLandingFaqDto = { ...req.body, created_by: req.user.user_id };
             const data = await this.service.createLandingFaq(faqData);
             res.status(201).json({ success: true, data, message: "Landing FAQ created successfully" });
