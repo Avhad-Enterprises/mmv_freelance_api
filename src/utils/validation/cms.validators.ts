@@ -1,6 +1,24 @@
 import { isURL } from 'validator';
 import HttpException from '../../exceptions/HttpException';
-import { VALIDATION_RULES } from './cms.types';
+
+/**
+ * CMS-specific validation utilities
+ */
+
+// Validation constants
+export const VALIDATION_RULES = {
+    STRING_MAX_LENGTH: 255,
+    TEXT_MAX_LENGTH: 500,
+    LONG_TEXT_MAX_LENGTH: 2048,
+    DESCRIPTION_MAX_LENGTH: 5000,
+    URL_MAX_LENGTH: 2048,
+    RATING_MIN: 1,
+    RATING_MAX: 5,
+    SORT_ORDER_MIN: 0,
+    SORT_ORDER_MAX: 9999,
+    MAX_SKILLS_COUNT: 20,
+    MAX_TAGS_COUNT: 10
+};
 
 /**
  * Sanitizes HTML content to prevent XSS attacks
@@ -101,51 +119,24 @@ export function validateTags(tags: string[]): void {
 }
 
 /**
- * Validates string length
+ * Validates reorder items array
  */
-export function validateStringLength(value: string, fieldName: string, maxLength: number = VALIDATION_RULES.STRING_MAX_LENGTH): void {
-    if (value && value.length > maxLength) {
-        throw new HttpException(400, `${fieldName} exceeds maximum length of ${maxLength} characters`);
+export function validateReorderItems(items: Array<{ cms_id: number; sort_order: number }>): void {
+    if (!Array.isArray(items)) {
+        throw new HttpException(400, 'Items must be an array');
     }
-}
 
-/**
- * Validates text content length
- */
-export function validateTextLength(value: string, fieldName: string): void {
-    if (value && value.length > VALIDATION_RULES.TEXT_MAX_LENGTH) {
-        throw new HttpException(400, `${fieldName} exceeds maximum length of ${VALIDATION_RULES.TEXT_MAX_LENGTH} characters`);
+    if (items.length === 0) {
+        throw new HttpException(400, 'Items array cannot be empty');
     }
-}
 
-/**
- * Validates metadata object
- */
-export function validateMetadata(metadata: any): void {
-    if (metadata !== null && typeof metadata !== 'object') {
-        throw new HttpException(400, 'Metadata must be a valid JSON object');
-    }
-    
-    // Prevent excessive metadata size
-    if (metadata) {
-        const jsonString = JSON.stringify(metadata);
-        if (jsonString.length > 10000) {
-            throw new HttpException(400, 'Metadata exceeds maximum size');
+    items.forEach((item, index) => {
+        if (!item.cms_id || typeof item.cms_id !== 'number') {
+            throw new HttpException(400, `Invalid cms_id at index ${index}`);
         }
-    }
-}
-
-/**
- * Sanitizes all string fields in an object
- */
-export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
-    const sanitized = { ...obj };
-    
-    Object.keys(sanitized).forEach(key => {
-        if (typeof sanitized[key] === 'string') {
-            sanitized[key] = sanitizeHtml(sanitized[key]);
+        if (typeof item.sort_order !== 'number') {
+            throw new HttpException(400, `Invalid sort_order at index ${index}`);
         }
+        validateSortOrder(item.sort_order);
     });
-    
-    return sanitized;
 }

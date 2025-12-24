@@ -1,5 +1,5 @@
 /**
- * Simple in-memory cache for CMS content
+ * Generic in-memory cache utility
  * In production, replace with Redis or similar distributed cache
  */
 
@@ -8,7 +8,7 @@ interface CacheEntry<T> {
     expiresAt: number;
 }
 
-class CmsCache {
+class Cache {
     private cache: Map<string, CacheEntry<any>> = new Map();
     private defaultTTL: number = 5 * 60 * 1000; // 5 minutes in milliseconds
 
@@ -79,25 +79,19 @@ class CmsCache {
             }
         });
     }
+
+    /**
+     * Get cache size
+     */
+    public size(): number {
+        return this.cache.size;
+    }
 }
 
 // Singleton instance
-export const cmsCache = new CmsCache();
-
-// Cache keys
-export const CACHE_KEYS = {
-    ACTIVE_HERO: 'cms:active:hero',
-    ACTIVE_TRUSTED_COMPANIES: 'cms:active:trusted_companies',
-    ACTIVE_WHY_CHOOSE_US: 'cms:active:why_choose_us',
-    ACTIVE_FEATURED_CREATORS: 'cms:active:featured_creators',
-    ACTIVE_SUCCESS_STORIES: 'cms:active:success_stories',
-    ACTIVE_LANDING_FAQS: 'cms:active:landing_faqs',
-    LANDING_PAGE_CONTENT: 'cms:landing_page:content',
-    getItemKey: (sectionType: string, id: number) => `cms:${sectionType}:${id}`,
-    getAllKey: (sectionType: string) => `cms:${sectionType}:all`
-};
+export const cache = new Cache();
 
 // Run cleanup every 10 minutes
 setInterval(() => {
-    cmsCache.cleanup();
+    cache.cleanup();
 }, 10 * 60 * 1000);
