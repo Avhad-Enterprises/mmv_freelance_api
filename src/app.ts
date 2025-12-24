@@ -81,6 +81,7 @@ class App {
       "https://www.makemyvid.io",
       "http://localhost:3000",
       "http://localhost:3001",
+      "http://localhost:5173", // Vite dev server (admin panel)
       "http://192.168.1.20:3000"
     ];
 
