@@ -52,6 +52,18 @@ export const migrate = async (dropFirst = false) => {
       // Why Choose Us Fields (question in title, answer in description, sort_order only)
       table.text("description").nullable(); // Why Choose Us: answer / Description
 
+      // Why Choose Us - 5 Points Structure (title in title field, points below)
+      table.string("point_1", 255).nullable(); // Why Choose Us: Point 1 title
+      table.text("point_1_description").nullable(); // Why Choose Us: Point 1 description
+      table.string("point_2", 255).nullable(); // Why Choose Us: Point 2 title
+      table.text("point_2_description").nullable(); // Why Choose Us: Point 2 description
+      table.string("point_3", 255).nullable(); // Why Choose Us: Point 3 title
+      table.text("point_3_description").nullable(); // Why Choose Us: Point 3 description
+      table.string("point_4", 255).nullable(); // Why Choose Us: Point 4 title
+      table.text("point_4_description").nullable(); // Why Choose Us: Point 4 description
+      table.string("point_5", 255).nullable(); // Why Choose Us: Point 5 title
+      table.text("point_5_description").nullable(); // Why Choose Us: Point 5 description
+
       // Featured Creators Fields (name, bio, sort_order)
       table.string("name", 255).nullable(); // Featured Creators: name
       table.text("bio").nullable(); // Featured Creators: bio
