@@ -40,14 +40,16 @@ export const migrate = async (dropFirst = false) => {
           "hero, trusted_company, why_choose_us, featured_creator, success_story, landing_faq, social_media"
         );
 
-      // Hero Section Fields (title, subtitle, background_image)
+      // Hero Section Fields (title, subtitle, left/right images)
       table.string("title", 255).nullable(); // Hero: title, Why Choose Us: question
       table.text("subtitle").nullable(); // Hero: subtitle
-      table.text("background_image").nullable(); // Hero: background
+      table.text("hero_left_image").nullable(); // Hero: left side illustration (SVG/PNG URL)
+      table.text("hero_right_image").nullable(); // Hero: right side illustration (SVG/PNG URL)
+      table.text("background_image").nullable(); // Hero: optional background (deprecated, use left/right)
 
       // Trusted Companies Fields (company_name, logo_url, sort_order)
       table.string("company_name", 255).nullable(); // Trusted Companies: name
-      table.text("logo_url").nullable(); // Trusted Companies: logo
+      table.text("logo_url").nullable(); // Trusted Companies: logo (SVG/PNG URL)
 
       // Why Choose Us Fields (question in title, answer in description, sort_order only)
       table.text("description").nullable(); // Why Choose Us: answer / Description

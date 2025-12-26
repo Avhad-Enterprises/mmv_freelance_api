@@ -19,7 +19,7 @@ import {
 import { Type } from "class-transformer";
 
 // ==================== HERO SECTION DTOs ====================
-// Fields: title, subtitle, background_image
+// Fields: title, subtitle, hero_left_image, hero_right_image, background_image (legacy)
 
 export class CreateHeroDto {
   @IsNotEmpty({ message: "Title is required" })
@@ -31,6 +31,20 @@ export class CreateHeroDto {
   @IsString({ message: "Subtitle must be a string" })
   @MaxLength(500, { message: "Subtitle cannot exceed 500 characters" })
   subtitle?: string;
+
+  @IsOptional()
+  @IsString({ message: "Hero left image must be a string (URL)" })
+  @MaxLength(2048, {
+    message: "Hero left image URL cannot exceed 2048 characters",
+  })
+  hero_left_image?: string;
+
+  @IsOptional()
+  @IsString({ message: "Hero right image must be a string (URL)" })
+  @MaxLength(2048, {
+    message: "Hero right image URL cannot exceed 2048 characters",
+  })
+  hero_right_image?: string;
 
   @IsOptional()
   @IsUrl({}, { message: "Background image must be a valid URL" })
@@ -67,6 +81,20 @@ export class UpdateHeroDto {
   @IsString({ message: "Subtitle must be a string" })
   @MaxLength(500, { message: "Subtitle cannot exceed 500 characters" })
   subtitle?: string;
+
+  @IsOptional()
+  @IsString({ message: "Hero left image must be a string (URL)" })
+  @MaxLength(2048, {
+    message: "Hero left image URL cannot exceed 2048 characters",
+  })
+  hero_left_image?: string;
+
+  @IsOptional()
+  @IsString({ message: "Hero right image must be a string (URL)" })
+  @MaxLength(2048, {
+    message: "Hero right image URL cannot exceed 2048 characters",
+  })
+  hero_right_image?: string;
 
   @IsOptional()
   @IsUrl({}, { message: "Background image must be a valid URL" })
