@@ -36,7 +36,7 @@ export const CREDIT_PACKAGES = [
         id: 2,
         name: 'Basic',
         credits: 10,
-        price: 500,  // 10 × ₹50
+        price: 450,  // 10 × ₹45 (Discounted)
         description: 'Great for regular freelancers',
         popular: true
     },
@@ -44,7 +44,7 @@ export const CREDIT_PACKAGES = [
         id: 3,
         name: 'Pro',
         credits: 25,
-        price: 1250, // 25 × ₹50
+        price: 1000, // 25 × ₹40 (Discounted)
         description: 'For active professionals'
     },
     {
