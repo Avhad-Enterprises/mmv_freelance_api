@@ -22,10 +22,15 @@ export const migrate = async (dropFirst = false) => {
       console.log("Dropped CMS Table");
     }
 
-    // Check if table already exists
     const tableExists = await DB.schema.hasTable(CMS);
     if (tableExists && !dropFirst) {
       console.log("✓ CMS Table already exists, checking for schema updates...");
+
+      // FIX: Ensure title column is nullable (addresses persistent NOT NULL constraint issues)
+      await DB.schema.alterTable(CMS, (table) => {
+        table.string("title", 255).nullable().alter();
+      });
+      console.log("✓ Updated 'title' column to be nullable");
 
       const columnsToAdd = [
         { name: "profile_image", type: "text" },

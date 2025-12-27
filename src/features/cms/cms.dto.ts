@@ -516,6 +516,11 @@ export class CreateSuccessStoryDto {
   client_name: string;
 
   @IsOptional()
+  @IsString({ message: "Title must be a string" })
+  @MaxLength(255, { message: "Title cannot exceed 255 characters" })
+  title?: string;
+
+  @IsOptional()
   @IsString({ message: "Client title must be a string" })
   @MaxLength(255, { message: "Client title cannot exceed 255 characters" })
   client_title?: string;
@@ -580,6 +585,11 @@ export class UpdateSuccessStoryDto {
   client_name?: string;
 
   @IsOptional()
+  @IsString({ message: "Title must be a string" })
+  @MaxLength(255, { message: "Title cannot exceed 255 characters" })
+  title?: string;
+
+  @IsOptional()
   @IsString({ message: "Client title must be a string" })
   @MaxLength(255, { message: "Client title cannot exceed 255 characters" })
   client_title?: string;
@@ -641,6 +651,11 @@ export class CreateLandingFaqDto {
   @MaxLength(500, { message: "Question cannot exceed 500 characters" })
   question: string;
 
+  @IsOptional()
+  @IsString({ message: "Title must be a string" })
+  @MaxLength(255, { message: "Title cannot exceed 255 characters" })
+  title?: string;
+
   @IsNotEmpty({ message: "Answer is required" })
   @IsString({ message: "Answer must be a string" })
   @MaxLength(5000, { message: "Answer cannot exceed 5000 characters" })
@@ -679,6 +694,11 @@ export class UpdateLandingFaqDto {
   @IsString({ message: "Question must be a string" })
   @MaxLength(500, { message: "Question cannot exceed 500 characters" })
   question?: string;
+
+  @IsOptional()
+  @IsString({ message: "Title must be a string" })
+  @MaxLength(255, { message: "Title cannot exceed 255 characters" })
+  title?: string;
 
   @IsOptional()
   @IsString({ message: "Answer must be a string" })
