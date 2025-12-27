@@ -117,7 +117,7 @@ export class UpdateHeroDto {
 }
 
 // ==================== TRUSTED COMPANIES DTOs ====================
-// Fields: company_name, logo_url, sort_order
+// Fields: company_name, logo_url, description, sort_order
 
 export class CreateTrustedCompanyDto {
   @IsNotEmpty({ message: "Company name is required" })
@@ -129,6 +129,11 @@ export class CreateTrustedCompanyDto {
   @IsUrl({}, { message: "Logo URL must be a valid URL" })
   @MaxLength(2048, { message: "Logo URL cannot exceed 2048 characters" })
   logo_url: string;
+
+  @IsOptional()
+  @IsString({ message: "Description must be a string" })
+  @MaxLength(2000, { message: "Description cannot exceed 2000 characters" })
+  description?: string;
 
   @IsOptional()
   @IsBoolean({ message: "is_active must be a boolean" })
@@ -158,6 +163,11 @@ export class UpdateTrustedCompanyDto {
   @IsUrl({}, { message: "Logo URL must be a valid URL" })
   @MaxLength(2048, { message: "Logo URL cannot exceed 2048 characters" })
   logo_url?: string;
+
+  @IsOptional()
+  @IsString({ message: "Description must be a string" })
+  @MaxLength(2000, { message: "Description cannot exceed 2000 characters" })
+  description?: string;
 
   @IsOptional()
   @IsBoolean({ message: "is_active must be a boolean" })
@@ -359,7 +369,7 @@ export class UpdateWhyChooseUsDto {
 }
 
 // ==================== FEATURED CREATORS DTOs ====================
-// Fields: name, bio, sort_order
+// Fields: name, title, bio, profile_image, skills, stats, portfolio_url, social_links, sort_order
 
 export class CreateFeaturedCreatorDto {
   @IsNotEmpty({ message: "Name is required" })
@@ -368,9 +378,50 @@ export class CreateFeaturedCreatorDto {
   name: string;
 
   @IsOptional()
+  @IsString({ message: "Title must be a string" })
+  @MaxLength(255, { message: "Title cannot exceed 255 characters" })
+  title?: string;
+
+  @IsOptional()
   @IsString({ message: "Bio must be a string" })
   @MaxLength(2000, { message: "Bio cannot exceed 2000 characters" })
   bio?: string;
+
+  @IsOptional()
+  @IsString({ message: "Profile image must be a string" })
+  @MaxLength(2048, {
+    message: "Profile image URL cannot exceed 2048 characters",
+  })
+  profile_image?: string;
+
+  @IsOptional()
+  @IsArray({ message: "Skills must be an array" })
+  @IsString({ each: true, message: "Each skill must be a string" })
+  skills?: string[];
+
+  @IsOptional()
+  @IsObject({ message: "Stats must be an object" })
+  stats?: any;
+
+  @IsOptional()
+  @IsUrl({}, { message: "Portfolio URL must be a valid URL" })
+  @MaxLength(2048, { message: "Portfolio URL cannot exceed 2048 characters" })
+  portfolio_url?: string;
+
+  @IsOptional()
+  @IsUrl({}, { message: "LinkedIn URL must be a valid URL" })
+  @MaxLength(255, { message: "LinkedIn URL cannot exceed 255 characters" })
+  social_linkedin?: string;
+
+  @IsOptional()
+  @IsUrl({}, { message: "Twitter URL must be a valid URL" })
+  @MaxLength(255, { message: "Twitter URL cannot exceed 255 characters" })
+  social_twitter?: string;
+
+  @IsOptional()
+  @IsUrl({}, { message: "Instagram URL must be a valid URL" })
+  @MaxLength(255, { message: "Instagram URL cannot exceed 255 characters" })
+  social_instagram?: string;
 
   @IsOptional()
   @IsBoolean({ message: "is_active must be a boolean" })
@@ -397,9 +448,50 @@ export class UpdateFeaturedCreatorDto {
   name?: string;
 
   @IsOptional()
+  @IsString({ message: "Title must be a string" })
+  @MaxLength(255, { message: "Title cannot exceed 255 characters" })
+  title?: string;
+
+  @IsOptional()
   @IsString({ message: "Bio must be a string" })
   @MaxLength(2000, { message: "Bio cannot exceed 2000 characters" })
   bio?: string;
+
+  @IsOptional()
+  @IsString({ message: "Profile image must be a string" })
+  @MaxLength(2048, {
+    message: "Profile image URL cannot exceed 2048 characters",
+  })
+  profile_image?: string;
+
+  @IsOptional()
+  @IsArray({ message: "Skills must be an array" })
+  @IsString({ each: true, message: "Each skill must be a string" })
+  skills?: string[];
+
+  @IsOptional()
+  @IsObject({ message: "Stats must be an object" })
+  stats?: any;
+
+  @IsOptional()
+  @IsUrl({}, { message: "Portfolio URL must be a valid URL" })
+  @MaxLength(2048, { message: "Portfolio URL cannot exceed 2048 characters" })
+  portfolio_url?: string;
+
+  @IsOptional()
+  @IsUrl({}, { message: "LinkedIn URL must be a valid URL" })
+  @MaxLength(255, { message: "LinkedIn URL cannot exceed 255 characters" })
+  social_linkedin?: string;
+
+  @IsOptional()
+  @IsUrl({}, { message: "Twitter URL must be a valid URL" })
+  @MaxLength(255, { message: "Twitter URL cannot exceed 255 characters" })
+  social_twitter?: string;
+
+  @IsOptional()
+  @IsUrl({}, { message: "Instagram URL must be a valid URL" })
+  @MaxLength(255, { message: "Instagram URL cannot exceed 255 characters" })
+  social_instagram?: string;
 
   @IsOptional()
   @IsBoolean({ message: "is_active must be a boolean" })
@@ -415,7 +507,7 @@ export class UpdateFeaturedCreatorDto {
 }
 
 // ==================== SUCCESS STORIES DTOs ====================
-// Fields: client_name, client_title, testimonial, rating, sort_order
+// Fields: client_name, client_title, client_image, testimonial, rating, company, company_logo, project_type, sort_order
 
 export class CreateSuccessStoryDto {
   @IsNotEmpty({ message: "Client name is required" })
@@ -424,9 +516,21 @@ export class CreateSuccessStoryDto {
   client_name: string;
 
   @IsOptional()
+  @IsString({ message: "Title must be a string" })
+  @MaxLength(255, { message: "Title cannot exceed 255 characters" })
+  title?: string;
+
+  @IsOptional()
   @IsString({ message: "Client title must be a string" })
   @MaxLength(255, { message: "Client title cannot exceed 255 characters" })
   client_title?: string;
+
+  @IsOptional()
+  @IsString({ message: "Client image must be a string (URL)" })
+  @MaxLength(2048, {
+    message: "Client image URL cannot exceed 2048 characters",
+  })
+  client_image?: string;
 
   @IsNotEmpty({ message: "Testimonial is required" })
   @IsString({ message: "Testimonial must be a string" })
@@ -438,6 +542,23 @@ export class CreateSuccessStoryDto {
   @Min(1, { message: "Rating must be at least 1" })
   @Max(5, { message: "Rating cannot exceed 5" })
   rating?: number;
+
+  @IsOptional()
+  @IsString({ message: "Company must be a string" })
+  @MaxLength(255, { message: "Company cannot exceed 255 characters" })
+  company?: string;
+
+  @IsOptional()
+  @IsString({ message: "Company logo must be a string (URL)" })
+  @MaxLength(2048, {
+    message: "Company logo URL cannot exceed 2048 characters",
+  })
+  company_logo?: string;
+
+  @IsOptional()
+  @IsString({ message: "Project type must be a string" })
+  @MaxLength(255, { message: "Project type cannot exceed 255 characters" })
+  project_type?: string;
 
   @IsOptional()
   @IsBoolean({ message: "is_active must be a boolean" })
@@ -464,9 +585,21 @@ export class UpdateSuccessStoryDto {
   client_name?: string;
 
   @IsOptional()
+  @IsString({ message: "Title must be a string" })
+  @MaxLength(255, { message: "Title cannot exceed 255 characters" })
+  title?: string;
+
+  @IsOptional()
   @IsString({ message: "Client title must be a string" })
   @MaxLength(255, { message: "Client title cannot exceed 255 characters" })
   client_title?: string;
+
+  @IsOptional()
+  @IsString({ message: "Client image must be a string (URL)" })
+  @MaxLength(2048, {
+    message: "Client image URL cannot exceed 2048 characters",
+  })
+  client_image?: string;
 
   @IsOptional()
   @IsString({ message: "Testimonial must be a string" })
@@ -478,6 +611,23 @@ export class UpdateSuccessStoryDto {
   @Min(1, { message: "Rating must be at least 1" })
   @Max(5, { message: "Rating cannot exceed 5" })
   rating?: number;
+
+  @IsOptional()
+  @IsString({ message: "Company must be a string" })
+  @MaxLength(255, { message: "Company cannot exceed 255 characters" })
+  company?: string;
+
+  @IsOptional()
+  @IsString({ message: "Company logo must be a string (URL)" })
+  @MaxLength(2048, {
+    message: "Company logo URL cannot exceed 2048 characters",
+  })
+  company_logo?: string;
+
+  @IsOptional()
+  @IsString({ message: "Project type must be a string" })
+  @MaxLength(255, { message: "Project type cannot exceed 255 characters" })
+  project_type?: string;
 
   @IsOptional()
   @IsBoolean({ message: "is_active must be a boolean" })
@@ -493,7 +643,7 @@ export class UpdateSuccessStoryDto {
 }
 
 // ==================== LANDING FAQs DTOs ====================
-// Fields: question, answer, sort_order
+// Fields: question, answer, category, tags, sort_order
 
 export class CreateLandingFaqDto {
   @IsNotEmpty({ message: "Question is required" })
@@ -501,10 +651,25 @@ export class CreateLandingFaqDto {
   @MaxLength(500, { message: "Question cannot exceed 500 characters" })
   question: string;
 
+  @IsOptional()
+  @IsString({ message: "Title must be a string" })
+  @MaxLength(255, { message: "Title cannot exceed 255 characters" })
+  title?: string;
+
   @IsNotEmpty({ message: "Answer is required" })
   @IsString({ message: "Answer must be a string" })
   @MaxLength(5000, { message: "Answer cannot exceed 5000 characters" })
   answer: string;
+
+  @IsOptional()
+  @IsString({ message: "Category must be a string" })
+  @MaxLength(255, { message: "Category cannot exceed 255 characters" })
+  category?: string;
+
+  @IsOptional()
+  @IsArray({ message: "Tags must be an array" })
+  @IsString({ each: true, message: "Each tag must be a string" })
+  tags?: string[];
 
   @IsOptional()
   @IsBoolean({ message: "is_active must be a boolean" })
@@ -531,9 +696,24 @@ export class UpdateLandingFaqDto {
   question?: string;
 
   @IsOptional()
+  @IsString({ message: "Title must be a string" })
+  @MaxLength(255, { message: "Title cannot exceed 255 characters" })
+  title?: string;
+
+  @IsOptional()
   @IsString({ message: "Answer must be a string" })
   @MaxLength(5000, { message: "Answer cannot exceed 5000 characters" })
   answer?: string;
+
+  @IsOptional()
+  @IsString({ message: "Category must be a string" })
+  @MaxLength(255, { message: "Category cannot exceed 255 characters" })
+  category?: string;
+
+  @IsOptional()
+  @IsArray({ message: "Tags must be an array" })
+  @IsString({ each: true, message: "Each tag must be a string" })
+  tags?: string[];
 
   @IsOptional()
   @IsBoolean({ message: "is_active must be a boolean" })
