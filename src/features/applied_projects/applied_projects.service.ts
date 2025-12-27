@@ -82,6 +82,7 @@ class AppliedProjectsService {
             })
             .select(
                 `${T.PROJECTS_TASK}.bidding_enabled`,
+                `${T.PROJECTS_TASK}.status`,
                 `${T.CLIENT_PROFILES}.user_id`,
                 `${T.PROJECTS_TASK}.project_title`
             )
@@ -89,6 +90,11 @@ class AppliedProjectsService {
 
         if (!project) {
             throw new HttpException(404, "Project not found");
+        }
+
+        // Check if project is still accepting applications (only pending projects accept new applications)
+        if (project.status !== 0) {
+            throw new HttpException(400, "This project is no longer accepting applications. A freelancer has already been assigned.");
         }
 
         if (project.bidding_enabled) {

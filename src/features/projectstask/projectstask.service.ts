@@ -539,6 +539,27 @@ class ProjectstaskService {
       updateData.freelancer_id = null;
       updateData.assigned_at = null;
       updateData.completed_at = null;
+    } else if (status === 3) { // Closing project
+      if (user_role !== 'ADMIN' && user_role !== 'SUPER_ADMIN' && user_role !== 'CLIENT') {
+        throw new HttpException(403, "Only admins and clients can close projects");
+      }
+
+      // Only allow closing pending projects (status 0)
+      if (currentProject.status !== 0) {
+        throw new HttpException(400, "Only pending projects can be closed");
+      }
+
+      // Reject all pending applications for this project
+      await DB(T.APPLIED_PROJECTS)
+        .where({
+          projects_task_id,
+          status: 0, // pending applications
+          is_deleted: false
+        })
+        .update({
+          status: 3, // rejected
+          updated_at: new Date()
+        });
     }
 
     const updated = await DB(T.PROJECTS_TASK)
