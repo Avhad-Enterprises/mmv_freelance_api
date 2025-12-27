@@ -195,7 +195,7 @@ export class CreditsService {
         // Dynamic package pricing
         const packages = CREDIT_PACKAGES.map(pkg => ({
             ...pkg,
-            price: pkg.credits * pricePerCredit
+            price: pkg.price || (pkg.credits * pricePerCredit)
         }));
 
         return {

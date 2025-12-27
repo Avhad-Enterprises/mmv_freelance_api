@@ -85,9 +85,13 @@ export class CreditsController {
                     throw new HttpException(400, "Invalid package ID");
                 }
                 credits = pkg.credits;
-                // Use dynamic pricing service instead of static pkg.price
-                const priceInfo = await this.creditsService.calculatePrice(credits);
-                amount = Math.round(priceInfo.price * 100);
+                if (pkg.price) {
+                    amount = Math.round(pkg.price * 100);
+                } else {
+                    // Fallback to dynamic pricing
+                    const priceInfo = await this.creditsService.calculatePrice(credits);
+                    amount = Math.round(priceInfo.price * 100);
+                }
                 packageName = pkg.name;
             } else {
                 credits = credits_amount;
