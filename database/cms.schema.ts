@@ -3,6 +3,7 @@
 // Migration Commands:
 // 1. Standard Migration: npm run migrate:schema -- cms
 //    - Creates/updates the cms table while preserving existing data
+//    - Adds missing columns if table exists
 //
 // 2. Drop and Recreate: npm run migrate:schema -- cms --drop
 //    - Completely drops and recreates the cms table from scratch
@@ -24,7 +25,34 @@ export const migrate = async (dropFirst = false) => {
     // Check if table already exists
     const tableExists = await DB.schema.hasTable(CMS);
     if (tableExists && !dropFirst) {
-      console.log("✓ CMS Table already exists, skipping creation");
+      console.log("✓ CMS Table already exists, checking for schema updates...");
+
+      const columnsToAdd = [
+        { name: "profile_image", type: "text" },
+        { name: "skills", type: "jsonb" },
+        { name: "stats", type: "jsonb" },
+        { name: "portfolio_url", type: "string", length: 2048 },
+        { name: "social_twitter", type: "string", length: 255 },
+        { name: "client_image", type: "text" },
+        { name: "company", type: "string", length: 255 },
+        { name: "company_logo", type: "text" },
+        { name: "project_type", type: "string", length: 255 },
+        { name: "category", type: "string", length: 255 },
+        { name: "tags", type: "jsonb" },
+      ];
+
+      for (const col of columnsToAdd) {
+        const hasColumn = await DB.schema.hasColumn(CMS, col.name);
+        if (!hasColumn) {
+          console.log(`Adding missing column: ${col.name}`);
+          await DB.schema.table(CMS, (table) => {
+            if (col.type === "jsonb") table.jsonb(col.name).nullable();
+            else if (col.type === "text") table.text(col.name).nullable();
+            else if (col.type === "string")
+              table.string(col.name, col.length as number).nullable();
+          });
+        }
+      }
       return;
     }
 
@@ -41,54 +69,66 @@ export const migrate = async (dropFirst = false) => {
         );
 
       // Hero Section Fields (title, subtitle, left/right images)
-      table.string("title", 255).nullable(); // Hero: title, Why Choose Us: question
+      table.string("title", 255).nullable(); // Hero: title, Why Choose Us: question, Featured Creator: title
       table.text("subtitle").nullable(); // Hero: subtitle
       table.text("hero_left_image").nullable(); // Hero: left side illustration (SVG/PNG URL)
       table.text("hero_right_image").nullable(); // Hero: right side illustration (SVG/PNG URL)
       table.text("background_image").nullable(); // Hero: optional background (deprecated, use left/right)
 
-      // Trusted Companies Fields (company_name, logo_url, sort_order)
-      table.string("company_name", 255).nullable(); // Trusted Companies: name
-      table.text("logo_url").nullable(); // Trusted Companies: logo (SVG/PNG URL)
+      // Trusted Companies Fields
+      table.string("company_name", 255).nullable();
+      table.text("logo_url").nullable();
+      // description is shared below
 
-      // Why Choose Us Fields (question in title, answer in description, sort_order only)
-      table.text("description").nullable(); // Why Choose Us: answer / Description
+      // Why Choose Us Fields
+      table.text("description").nullable(); // Why Choose Us: answer, Trusted Company: description
 
-      // Why Choose Us - 5 Points Structure (title in title field, points below)
-      table.string("point_1", 255).nullable(); // Why Choose Us: Point 1 title
-      table.text("point_1_description").nullable(); // Why Choose Us: Point 1 description
-      table.string("point_2", 255).nullable(); // Why Choose Us: Point 2 title
-      table.text("point_2_description").nullable(); // Why Choose Us: Point 2 description
-      table.string("point_3", 255).nullable(); // Why Choose Us: Point 3 title
-      table.text("point_3_description").nullable(); // Why Choose Us: Point 3 description
-      table.string("point_4", 255).nullable(); // Why Choose Us: Point 4 title
-      table.text("point_4_description").nullable(); // Why Choose Us: Point 4 description
-      table.string("point_5", 255).nullable(); // Why Choose Us: Point 5 title
-      table.text("point_5_description").nullable(); // Why Choose Us: Point 5 description
+      // Why Choose Us - 5 Points Structure
+      table.string("point_1", 255).nullable();
+      table.text("point_1_description").nullable();
+      table.string("point_2", 255).nullable();
+      table.text("point_2_description").nullable();
+      table.string("point_3", 255).nullable();
+      table.text("point_3_description").nullable();
+      table.string("point_4", 255).nullable();
+      table.text("point_4_description").nullable();
+      table.string("point_5", 255).nullable();
+      table.text("point_5_description").nullable();
 
-      // Featured Creators Fields (name, bio, sort_order)
-      table.string("name", 255).nullable(); // Featured Creators: name
-      table.text("bio").nullable(); // Featured Creators: bio
+      // Featured Creators Fields
+      table.string("name", 255).nullable();
+      table.text("bio").nullable();
+      table.text("profile_image").nullable();
+      table.jsonb("skills").nullable();
+      table.jsonb("stats").nullable();
+      table.string("portfolio_url", 2048).nullable();
 
-      // Success Stories Fields (client_name, client_title, testimonial, rating, sort_order)
-      table.string("client_name", 255).nullable(); // Success Stories: client name
-      table.string("client_title", 255).nullable(); // Success Stories: client title
-      table.text("testimonial").nullable(); // Success Stories: testimonial
-      table.integer("rating").nullable(); // Success Stories: rating (1-5)
+      // Success Stories Fields
+      table.string("client_name", 255).nullable();
+      table.string("client_title", 255).nullable();
+      table.text("testimonial").nullable();
+      table.integer("rating").nullable();
+      table.text("client_image").nullable();
+      table.string("company", 255).nullable();
+      table.text("company_logo").nullable();
+      table.string("project_type", 255).nullable();
 
-      // Landing FAQs Fields (question, answer, sort_order)
-      table.text("question").nullable(); // Landing FAQs: question
-      table.text("answer").nullable(); // Landing FAQs: answer
+      // Landing FAQs Fields
+      table.text("question").nullable();
+      table.text("answer").nullable();
+      table.string("category", 255).nullable();
+      table.jsonb("tags").nullable();
 
-      // Social Media Links (social_media section type - no sort_order needed)
-      table.string("social_whatsapp", 255).nullable(); // Social Media: WhatsApp
-      table.string("social_linkedin", 255).nullable(); // Social Media: LinkedIn
-      table.string("social_google", 255).nullable(); // Social Media: Google
-      table.string("social_instagram", 255).nullable(); // Social Media: Instagram
+      // Social Media Links
+      table.string("social_whatsapp", 255).nullable();
+      table.string("social_linkedin", 255).nullable();
+      table.string("social_google", 255).nullable();
+      table.string("social_instagram", 255).nullable();
+      table.string("social_twitter", 255).nullable();
 
       // Status & Ordering (Common for ALL sections)
       table.boolean("is_active").defaultTo(true);
-      table.integer("sort_order").defaultTo(0); // Controls sequence for all sections
+      table.integer("sort_order").defaultTo(0);
 
       // Audit Fields
       table.integer("created_by").notNullable();
@@ -145,13 +185,3 @@ export const migrate = async (dropFirst = false) => {
     throw error;
   }
 };
-
-// Version: 3.0.0 - Simplified CMS table with only required fields for each content type
-// Section Types:
-// - 'hero' - Hero section with title, subtitle, background_image
-// - 'trusted_company' - Company name, logo, sort_order
-// - 'why_choose_us' - Question (title field), answer (description field), sort_order
-// - 'featured_creator' - Name, bio, sort_order
-// - 'success_story' - Client name, title, testimonial, rating, sort_order
-// - 'landing_faq' - Question, answer, sort_order
-// - 'social_media' - WhatsApp, LinkedIn, Google, Instagram URLs
