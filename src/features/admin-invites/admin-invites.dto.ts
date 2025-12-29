@@ -13,6 +13,10 @@ export class CreateAdminInviteDto {
   @IsEmail()
   @IsNotEmpty()
   email: string;
+
+  @IsOptional()
+  @IsString()
+  assigned_role?: string;
 }
 
 export class AdminInviteResponseDto {
