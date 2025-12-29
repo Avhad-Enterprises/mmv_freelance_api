@@ -86,6 +86,8 @@ class App {
       "http://localhost:3001",
       "http://192.168.1.20:3000",
       "http://localhost:5173",
+      "http://192.168.1.34:5173",
+      "http://172.16.0.2:5173",
     ];
 
     this.app.use(

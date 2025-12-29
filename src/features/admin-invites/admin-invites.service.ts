@@ -37,14 +37,20 @@ class AdminInvitesService {
       // Check if there's already a pending invite for this email
       const existingInvite = await DB(INVITATION_TABLE)
         .where("email", dto.email)
-        .where("status", "pending")
         .first();
 
       if (existingInvite) {
-        throw new HttpException(
-          400,
-          "An invitation is already pending for this email"
-        );
+        // If pending, throw error
+        if (existingInvite.status === "pending") {
+          throw new HttpException(
+            400,
+            "An invitation is already pending for this email"
+          );
+        }
+        // If expired, revoked, or accepted - delete old record to allow new invite
+        await DB(INVITATION_TABLE)
+          .where("invitation_id", existingInvite.invitation_id)
+          .delete();
       }
 
       // Generate secure token
@@ -390,9 +396,7 @@ class AdminInvitesService {
         .select("first_name", "last_name", "email")
         .first();
 
-      const inviteUrl = `${
-        process.env.ADMIN_PANEL_URL || "http://localhost:3000"
-      }/register?token=${token}`;
+      const inviteUrl = `${process.env.ADMIN_PANEL_URL}/register?token=${token}`;
 
       const emailHtml = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

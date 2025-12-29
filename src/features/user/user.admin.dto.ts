@@ -1,4 +1,11 @@
-import { IsEmail, IsNotEmpty, IsString, IsOptional, IsIn, IsObject } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsIn,
+  IsObject,
+} from "class-validator";
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -38,8 +45,8 @@ export class CreateUserDto {
   username?: string;
 
   @IsOptional()
-  @IsIn(['CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'])
-  roleName?: string;
+  @IsString()
+  roleName?: string; // Dynamic validation in service layer
 
   @IsOptional()
   @IsObject()
@@ -49,8 +56,7 @@ export class CreateUserDto {
 export class AssignRoleDto {
   @IsNotEmpty()
   @IsString()
-  @IsIn(['CLIENT', 'VIDEOGRAPHER', 'VIDEO_EDITOR', 'ADMIN', 'SUPER_ADMIN'])
-  roleName: string;
+  roleName: string; // Dynamic validation in service layer
 }
 
 export class UpdateUserDto {
