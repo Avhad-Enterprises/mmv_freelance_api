@@ -17,12 +17,12 @@ dotenv.config();
 
 class App {
   public app: express.Application;
-  public port: string | number;
+  public port: number;
   public env: string;
 
   constructor(routes: Routes[]) {
     this.app = express();
-    this.port = process.env.PORT || 8000;
+    this.port = parseInt(process.env.PORT || '8000', 10);
     this.env = process.env.NODE_ENV || "development";
 
     this.initializeMiddlewares();
@@ -37,7 +37,7 @@ class App {
       await DB.raw("SELECT 1 as test");
       console.log("✅ Database connection successful");
 
-      const server = this.app.listen(this.port, () => {
+      const server = this.app.listen(this.port, '0.0.0.0', () => {
         logger.info(
           `🚀 App listening on the port ${this.port}. Current Env ${this.env}.`
         );
