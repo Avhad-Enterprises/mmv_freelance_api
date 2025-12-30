@@ -16,15 +16,14 @@ import DB from '../database/index';
 import SocketService from './socket';
 dotenv.config();
 
-
 class App {
   public app: express.Application;
-  public port: string | number;
+  public port: number;
   public env: string;
 
   constructor(routes: Routes[]) {
     this.app = express();
-    this.port = process.env.PORT || 8000;
+    this.port = parseInt(process.env.PORT || '8000', 10);
     this.env = process.env.NODE_ENV || "development";
 
     this.initializeMiddlewares();
@@ -35,11 +34,11 @@ class App {
   public async listen() {
     try {
       // Test database connection before starting server
-      console.log('🔍 Testing database connection...');
-      await DB.raw('SELECT 1 as test');
-      console.log('✅ Database connection successful');
+      console.log("🔍 Testing database connection...");
+      await DB.raw("SELECT 1 as test");
+      console.log("✅ Database connection successful");
 
-      const server = this.app.listen(this.port, () => {
+      const server = this.app.listen(this.port, '0.0.0.0', () => {
         logger.info(
           `🚀 App listening on the port ${this.port}. Current Env ${this.env}.`
         );
@@ -48,10 +47,14 @@ class App {
       // Initialize Socket.IO
       SocketService.init(server);
 
-      server.on('error', (error: any) => {
-        if (error.code === 'EADDRINUSE') {
-          logger.error(`❌ Port ${this.port} is already in use. Please use a different port or kill the process using it.`);
-          logger.error(`To kill processes on port ${this.port}, run: lsof -ti:${this.port} | xargs kill -9`);
+      server.on("error", (error: any) => {
+        if (error.code === "EADDRINUSE") {
+          logger.error(
+            `❌ Port ${this.port} is already in use. Please use a different port or kill the process using it.`
+          );
+          logger.error(
+            `To kill processes on port ${this.port}, run: lsof -ti:${this.port} | xargs kill -9`
+          );
           process.exit(1);
         } else {
           logger.error(`❌ Server startup error: ${error.message}`);
@@ -59,7 +62,7 @@ class App {
         }
       });
     } catch (error: any) {
-      console.error('❌ Database connection failed:', error.message);
+      console.error("❌ Database connection failed:", error.message);
       logger.error(`❌ Database connection failed: ${error.message}`);
       process.exit(1);
     }
@@ -83,6 +86,10 @@ class App {
       "http://localhost:3000",
       "http://localhost:3001",
       "http://localhost:5173"
+      "http://192.168.1.20:3000",
+      "http://localhost:5173",
+      "http://192.168.1.34:5173",
+      "http://172.16.0.2:5173",
     ];
 
     this.app.use(
@@ -101,10 +108,19 @@ class App {
           }
         },
         credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'x-test-mode', 'x-api-key', 'x-client-id'],
-        exposedHeaders: ['Content-Range', 'X-Content-Range'],
-        maxAge: 86400 // 24 hours
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allowedHeaders: [
+          "Content-Type",
+          "Authorization",
+          "X-Requested-With",
+          "Accept",
+          "Origin",
+          "x-test-mode",
+          "x-api-key",
+          "x-client-id",
+        ],
+        exposedHeaders: ["Content-Range", "X-Content-Range"],
+        maxAge: 86400, // 24 hours
       })
     );
 
@@ -122,7 +138,7 @@ class App {
       res.status(200).json({
         status: "OK",
         timestamp: new Date().toISOString(),
-        environment: this.env
+        environment: this.env,
       });
     });
 
@@ -136,6 +152,13 @@ class App {
     // 404 handler for unmatched routes
     // 404 handler for unmatched routes
     this.app.use(notFoundMiddleware);
+    this.app.use("*", (req, res) => {
+      res.status(404).json({
+        success: false,
+        message: "Route not found",
+        path: req.originalUrl,
+      });
+    });
   }
 
   private initializeErrorHandling() {

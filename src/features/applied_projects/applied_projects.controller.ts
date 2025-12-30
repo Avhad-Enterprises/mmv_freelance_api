@@ -103,20 +103,31 @@ class AppliedProjectsController {
     }
   };
 
+  /**
+   * Withdraw application with automatic refund
+   * DELETE /api/v1/applications/:application_id
+   */
   public withdrawApplication = async (
-    req: Request,
+    req: RequestWithUser,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
       const { application_id } = req.params;
+      const user_id = req.user.user_id;
+
       if (!application_id) {
         throw new HttpException(400, "application_id is required");
       }
-      await this.AppliedProjectsService.withdrawApplication(parseInt(application_id));
+
+      const result = await this.AppliedProjectsService.withdrawApplication(
+        parseInt(application_id),
+        user_id
+      );
+
       res.status(200).json({
         success: true,
-        message: "Application withdrawn successfully"
+        message: result.message
       });
     } catch (error) {
       next(error);
@@ -223,6 +234,40 @@ class AppliedProjectsController {
         success: true,
         data: { completed_projects: count },
         message: "Completed project count fetched successfully"
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Check if current user can chat with another user
+   * GET /api/v1/applications/check-can-chat/:userId
+   */
+  public checkCanChat = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const currentUserId = req.user.user_id;
+      const otherUserId = parseInt(req.params.userId);
+
+      if (isNaN(otherUserId)) {
+        throw new HttpException(400, "Invalid user ID");
+      }
+
+      // Determine user role from request (set by auth middleware)
+      const userRoles = req.user.roles || [];
+      const isClient = userRoles.includes('CLIENT');
+      const currentUserRole: 'client' | 'freelancer' = isClient ? 'client' : 'freelancer';
+
+      const result = await this.AppliedProjectsService.checkCanChat(
+        currentUserId,
+        otherUserId,
+        currentUserRole
+      );
+
+      res.status(200).json({
+        success: true,
+        canChat: result.canChat,
+        reason: result.reason
       });
     } catch (error) {
       next(error);

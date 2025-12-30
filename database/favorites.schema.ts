@@ -22,8 +22,14 @@ export const migrate = async (dropFirst = false) => {
         // await DB.raw("set search_path to public")
         await DB.schema.createTable(FAVORITES_TABLE, table => {
             table.increments('id').primary();  //ID
-            table.integer('user_id').notNullable();
-            table.integer('freelancer_id').notNullable();
+            table.integer('user_id').notNullable()
+                .references('user_id')
+                .inTable('users')
+                .onDelete('CASCADE');
+            table.integer('freelancer_id').notNullable()
+                .references('freelancer_id')
+                .inTable('freelancer_profiles')
+                .onDelete('CASCADE');
             table.boolean("is_active").defaultTo(true);
             table.integer('created_by').notNullable();
             table.timestamp('created_at').defaultTo(DB.fn.now());

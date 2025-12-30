@@ -155,8 +155,10 @@ class ProjectstaskService {
 
   public getAllProjectsTask = async (): Promise<any[]> => {
     const result = await DB(T.PROJECTS_TASK)
-      .leftJoin(`${T.USERS_TABLE} as client`, `${T.PROJECTS_TASK}.client_id`, 'client.user_id')
-      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.user_id`)
+      // First join client_profiles (PROJECTS_TASK.client_id -> client_profiles.client_id)
+      .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.client_id`)
+      // Then join users via client_profiles.user_id
+      .leftJoin(`${T.USERS_TABLE} as client`, `${T.CLIENT_PROFILES}.user_id`, 'client.user_id')
       .leftJoin(`${T.USERS_TABLE} as editor`, `${T.PROJECTS_TASK}.freelancer_id`, 'editor.user_id')
       .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.freelancer_id`, `${T.FREELANCER_PROFILES}.user_id`)
       .where(`${T.PROJECTS_TASK}.is_deleted`, false)
@@ -537,6 +539,27 @@ class ProjectstaskService {
       updateData.freelancer_id = null;
       updateData.assigned_at = null;
       updateData.completed_at = null;
+    } else if (status === 3) { // Closing project
+      if (user_role !== 'ADMIN' && user_role !== 'SUPER_ADMIN' && user_role !== 'CLIENT') {
+        throw new HttpException(403, "Only admins and clients can close projects");
+      }
+
+      // Only allow closing pending projects (status 0)
+      if (currentProject.status !== 0) {
+        throw new HttpException(400, "Only pending projects can be closed");
+      }
+
+      // Reject all pending applications for this project
+      await DB(T.APPLIED_PROJECTS)
+        .where({
+          projects_task_id,
+          status: 0, // pending applications
+          is_deleted: false
+        })
+        .update({
+          status: 3, // rejected
+          updated_at: new Date()
+        });
     }
 
     const updated = await DB(T.PROJECTS_TASK)
@@ -549,8 +572,10 @@ class ProjectstaskService {
 
   public getAllProjectslisting = async (): Promise<any[]> => {
     const result = await DB(T.PROJECTS_TASK)
-      .leftJoin(`${T.USERS_TABLE} as client`, `${T.PROJECTS_TASK}.client_id`, 'client.user_id')
+      // First join client_profiles (PROJECTS_TASK.client_id -> client_profiles.client_id)
       .leftJoin(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, `${T.CLIENT_PROFILES}.client_id`)
+      // Then join users via client_profiles.user_id
+      .leftJoin(`${T.USERS_TABLE} as client`, `${T.CLIENT_PROFILES}.user_id`, 'client.user_id')
       .leftJoin(`${T.USERS_TABLE} as freelancer`, `${T.PROJECTS_TASK}.freelancer_id`, 'freelancer.user_id')
       .leftJoin(T.FREELANCER_PROFILES, `${T.PROJECTS_TASK}.freelancer_id`, `${T.FREELANCER_PROFILES}.freelancer_id`)
       .where(`${T.PROJECTS_TASK}.is_deleted`, false)

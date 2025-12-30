@@ -16,6 +16,7 @@ export class ProjectsTaskDto {
   @IsString()
   project_title: string;
 
+  @IsOptional()
   @IsString()
   project_category: string;
 
@@ -29,6 +30,10 @@ export class ProjectsTaskDto {
   @Type(() => Number)
   @IsNumber()
   budget: number;
+
+  @IsOptional()
+  @IsString()
+  currency?: string;
 
   @IsOptional()
   @IsJSON()
@@ -49,6 +54,7 @@ export class ProjectsTaskDto {
   @IsInt({ groups: ['create', 'update'] })
   status?: number;
 
+  @IsOptional()
   @IsString()
   projects_type: string;
 

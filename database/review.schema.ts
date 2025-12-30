@@ -23,14 +23,23 @@ export const migrate = async (dropFirst = false) => {
 
     await DB.schema.createTable(REVIEWS_TABLE, table => {
       table.increments('id').primary(); // Review ID
-      table.integer('project_id').notNullable();
-      table.integer('client_id').notNullable(); // Reviewer
-      table.integer('user_id').notNullable(); // Freelancer receiving review
+      table.integer('project_id').notNullable()
+        .references('projects_task_id')
+        .inTable('projects_task')
+        .onDelete('CASCADE');
+      table.integer('client_id').notNullable()
+        .references('client_id')
+        .inTable('client_profiles')
+        .onDelete('CASCADE'); // Reviewer
+      table.integer('user_id').notNullable()
+        .references('user_id')
+        .inTable('users')
+        .onDelete('CASCADE'); // Freelancer receiving review
 
       table.integer('rating').notNullable(); // 1–5 stars
       table.text('review').notNullable();    // Actual review text
 
-     
+
       table.boolean('is_deleted').defaultTo(false);
       table.timestamp('deleted_at').nullable();
       table.timestamp('created_at').defaultTo(DB.fn.now());

@@ -14,20 +14,24 @@ class favoritesservices {
       throw new HttpException(400, "Data Invalid");
     }
 
-    // Check if freelancer exists
-    const freelancerExists = await DB(T.USERS_TABLE)
+    // The frontend sends user_id as freelancer_id, but we need the actual freelancer_id from freelancer_profiles
+    // Look up the freelancer profile using the user_id that was passed
+    const freelancerProfile = await DB(T.FREELANCER_PROFILES)
       .where({ user_id: data.freelancer_id })
       .first();
 
-    if (!freelancerExists) {
-      throw new HttpException(404, "Freelancer not found");
+    if (!freelancerProfile) {
+      throw new HttpException(404, "Freelancer profile not found");
     }
+
+    // Use the actual freelancer_id from the profile
+    const actualFreelancerId = freelancerProfile.freelancer_id;
 
     // Check if already exists (including deleted records)
     const existing = await DB(T.FAVORITES_TABLE)
       .where({
         user_id: data.user_id,
-        freelancer_id: data.freelancer_id
+        freelancer_id: actualFreelancerId
       })
       .first();
 
@@ -51,8 +55,12 @@ class favoritesservices {
       return updated[0];
     }
 
-    // Create new favorite
-    const res = await DB(T.FAVORITES_TABLE).insert(data).returning("*");
+    // Create new favorite with the actual freelancer_id
+    const insertData = {
+      ...data,
+      freelancer_id: actualFreelancerId
+    };
+    const res = await DB(T.FAVORITES_TABLE).insert(insertData).returning("*");
     return res[0];
   }
 
@@ -62,9 +70,20 @@ class favoritesservices {
   public async removeFavorite(dto: favoritesDto): Promise<string> {
     const { user_id, freelancer_id } = dto;
 
+    // Look up the actual freelancer_id from freelancer_profiles
+    const freelancerProfile = await DB(T.FREELANCER_PROFILES)
+      .where({ user_id: freelancer_id })
+      .first();
+
+    if (!freelancerProfile) {
+      throw new HttpException(404, "Freelancer profile not found");
+    }
+
+    const actualFreelancerId = freelancerProfile.freelancer_id;
+
     // Check if the favorite exists
     const existing = await DB(T.FAVORITES_TABLE)
-      .where({ user_id, freelancer_id, is_deleted: false })
+      .where({ user_id, freelancer_id: actualFreelancerId, is_deleted: false })
       .first();
 
     if (!existing) {
@@ -73,7 +92,7 @@ class favoritesservices {
 
     // Soft delete
     const deleted = await DB(T.FAVORITES_TABLE)
-      .where({ user_id, freelancer_id })
+      .where({ user_id, freelancer_id: actualFreelancerId })
       .update({
         is_deleted: true,
         deleted_by: user_id,
@@ -107,9 +126,22 @@ class favoritesservices {
    */
   public async getFavoritesByUser(user_id: number): Promise<any> {
     const favorites = await DB(T.FAVORITES_TABLE)
-      .where({ user_id, is_active: true, is_deleted: false })
-      .select("*")
-      .orderBy('created_at', 'desc');
+      .where({
+        [`${T.FAVORITES_TABLE}.user_id`]: user_id,
+        [`${T.FAVORITES_TABLE}.is_active`]: true,
+        [`${T.FAVORITES_TABLE}.is_deleted`]: false
+      })
+      .leftJoin(
+        T.FREELANCER_PROFILES,
+        `${T.FREELANCER_PROFILES}.freelancer_id`,
+        '=',
+        `${T.FAVORITES_TABLE}.freelancer_id`
+      )
+      .select(
+        `${T.FAVORITES_TABLE}.*`,
+        `${T.FREELANCER_PROFILES}.user_id as freelancer_user_id`
+      )
+      .orderBy(`${T.FAVORITES_TABLE}.created_at`, 'desc');
 
     return favorites;
   }
@@ -128,13 +160,20 @@ class favoritesservices {
         [`${T.FAVORITES_TABLE}.is_deleted`]: false,
       })
       .leftJoin(
-        `${T.USERS_TABLE}`,
+        T.FREELANCER_PROFILES,
+        `${T.FREELANCER_PROFILES}.freelancer_id`,
+        '=',
+        `${T.FAVORITES_TABLE}.freelancer_id`
+      )
+      .leftJoin(
+        T.USERS_TABLE,
         `${T.USERS_TABLE}.user_id`,
         '=',
-        `${T.FAVORITES_TABLE}.freelancer_id` // Fixed: was incorrectly joining on id
+        `${T.FREELANCER_PROFILES}.user_id`
       )
       .select(
         `${T.FAVORITES_TABLE}.*`,
+        `${T.USERS_TABLE}.user_id as freelancer_user_id`,
         `${T.USERS_TABLE}.username`,
         `${T.USERS_TABLE}.email`,
         `${T.USERS_TABLE}.first_name`,

@@ -2,20 +2,48 @@ import { AppliedProjectsDto } from "./applied_projects.dto";
 import DB, { T } from "../../../database/index";
 import HttpException from "../../exceptions/HttpException";
 import { isEmpty } from "../../utils/common";
-import { CreditsService } from "../credits/credits.service";
+import { CreditsService } from "../credits/services";
+import { CreditLoggerService } from "../credits/services/credit-logger.service";
 import NotificationService from "../notification/notification.service";
+
+/**
+ * Applied Projects Service
+ * 
+ * Handles job applications from freelancers to client projects.
+ * 
+ * WORKFLOW:
+ * 1. Freelancer applies → Application Status = 0 (Pending)
+ * 2. Client approves → Application Status = 1 (Approved)
+ *                    → Project Task Status = 1 (Assigned/In Progress)
+ *                    → project.freelancer_id is set
+ * 3. Freelancer submits work → Submission created
+ * 4. Client approves submission → Application Status = 2 (Completed)
+ *                               → Project Task Status = 2 (Completed)
+ * 
+ * STATUS CODES:
+ * - 0: Pending (waiting for client review)
+ * - 1: Approved (freelancer hired, project in progress)
+ * - 2: Completed (project finished)
+ * - 3: Rejected (client rejected application)
+ */
 
 class AppliedProjectsService {
     private creditsService = new CreditsService();
+    private creditLogger = new CreditLoggerService();
     private notificationService = new NotificationService();
 
+    /**
+     * Apply to a project with atomic transaction
+     * SECURITY: Credits and application are in same transaction
+     * If application insert fails, credits are automatically rolled back
+     */
     public async apply(data: AppliedProjectsDto): Promise<any> {
         // Validate required fields
         if (!data.projects_task_id || !data.user_id) {
             throw new HttpException(400, "Project Task ID and User ID are required");
         }
 
-        // Check if already applied
+        // Check if already applied (outside transaction for performance)
         const existing = await DB(T.APPLIED_PROJECTS)
             .where({
                 projects_task_id: data.projects_task_id,
@@ -31,19 +59,21 @@ class AppliedProjectsService {
             };
         }
 
-        // Check if freelancer has enough credits (assuming 1 credit per application)
-        const CREDITS_PER_APPLICATION = 1;
-        const hasEnoughCredits = await this.creditsService.hasEnoughCredits(
-            data.user_id,
-            CREDITS_PER_APPLICATION
-        );
+        // Check if user is videographer - videographers apply freely (no keys required)
+        // This can be re-enabled by setting VIDEOGRAPHER_KEYS_ENABLED = true
+        const VIDEOGRAPHER_KEYS_ENABLED = false;
 
-        if (!hasEnoughCredits) {
-            throw new HttpException(400, "Insufficient credits. Please purchase more credits to apply.");
-        }
+        // Check user's role from roles table
+        const userRole = await DB(T.USER_ROLES)
+            .join(T.ROLE, `${T.USER_ROLES}.role_id`, '=', `${T.ROLE}.role_id`)
+            .where({ [`${T.USER_ROLES}.user_id`]: data.user_id })
+            .select(`${T.ROLE}.name as role_name`)
+            .first();
 
-        // Check if project has bidding enabled and validate bid_amount
-        // Check if project has bidding enabled and validate bid_amount
+        const isVideographer = userRole?.role_name === 'VIDEOGRAPHER';
+        const CREDITS_PER_APPLICATION = (isVideographer && !VIDEOGRAPHER_KEYS_ENABLED) ? 0 : 1;
+
+        // Check project exists and get details (outside transaction)
         const project = await DB(T.PROJECTS_TASK)
             .join(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, '=', `${T.CLIENT_PROFILES}.client_id`)
             .where({
@@ -52,6 +82,7 @@ class AppliedProjectsService {
             })
             .select(
                 `${T.PROJECTS_TASK}.bidding_enabled`,
+                `${T.PROJECTS_TASK}.status`,
                 `${T.CLIENT_PROFILES}.user_id`,
                 `${T.PROJECTS_TASK}.project_title`
             )
@@ -61,53 +92,113 @@ class AppliedProjectsService {
             throw new HttpException(404, "Project not found");
         }
 
+        // Check if project is still accepting applications (only pending projects accept new applications)
+        if (project.status !== 0) {
+            throw new HttpException(400, "This project is no longer accepting applications. A freelancer has already been assigned.");
+        }
+
         if (project.bidding_enabled) {
             if (!data.bid_amount || data.bid_amount <= 0) {
                 throw new HttpException(400, "Bid amount is required and must be greater than 0 for projects with bidding enabled");
             }
         }
 
-        // Deduct credits for application
+        // ATOMIC TRANSACTION: Credits + Application together
+        // If any step fails, everything is rolled back
+        const result = await DB.transaction(async (trx) => {
+            // Step 1: Lock and get freelancer profile
+            const profile = await trx(T.FREELANCER_PROFILES)
+                .where({ user_id: data.user_id })
+                .select('credits_balance', 'credits_used')
+                .forUpdate() // Row-level lock prevents race condition
+                .first();
+
+            if (!profile) {
+                throw new HttpException(404, "Freelancer profile not found");
+            }
+
+            // Only check and deduct credits for video editors (not videographers)
+            if (CREDITS_PER_APPLICATION > 0) {
+                if (profile.credits_balance < CREDITS_PER_APPLICATION) {
+                    throw new HttpException(400, {
+                        code: 'INSUFFICIENT_CREDITS',
+                        message: 'Insufficient keys. Please purchase more keys to apply.',
+                        required: CREDITS_PER_APPLICATION,
+                        available: profile.credits_balance,
+                        purchaseUrl: '/api/v1/credits/packages'
+                    });
+                }
+
+                // Step 2: Deduct credits (only for video editors)
+                await trx(T.FREELANCER_PROFILES)
+                    .where({ user_id: data.user_id })
+                    .update({
+                        credits_balance: profile.credits_balance - CREDITS_PER_APPLICATION,
+                        credits_used: profile.credits_used + CREDITS_PER_APPLICATION,
+                        updated_at: trx.fn.now()
+                    });
+            }
+
+            // Step 3: Create application (if this fails, credits are rolled back)
+            const applicationData = {
+                ...data,
+                credits_spent: CREDITS_PER_APPLICATION,
+                status: data.status ?? 0, // 0 = pending
+                is_active: true,
+                is_deleted: false,
+                created_at: new Date(),
+                updated_at: new Date()
+            };
+
+            const [appliedProject] = await trx(T.APPLIED_PROJECTS)
+                .insert(applicationData)
+                .returning("*");
+
+            // Step 4: Log the credit transaction for history tracking (only if credits were spent)
+            if (CREDITS_PER_APPLICATION > 0) {
+                await this.creditLogger.log({
+                    user_id: data.user_id,
+                    transaction_type: 'deduction',
+                    amount: -CREDITS_PER_APPLICATION,
+                    balance_before: profile.credits_balance,
+                    balance_after: profile.credits_balance - CREDITS_PER_APPLICATION,
+                    reference_type: 'application',
+                    reference_id: appliedProject.applied_projects_id,
+                    description: `Applied to project: ${project.project_title || `#${data.projects_task_id}`}`
+                }, trx);
+            }
+
+            return {
+                application: appliedProject,
+                creditsDeducted: CREDITS_PER_APPLICATION,
+                newBalance: CREDITS_PER_APPLICATION > 0 ? profile.credits_balance - CREDITS_PER_APPLICATION : profile.credits_balance
+            };
+        });
+
+        // Send Notification (outside transaction - non-critical)
         try {
-            await this.creditsService.deductCredits(
-                data.user_id,
-                CREDITS_PER_APPLICATION,
-                data.projects_task_id
-            );
-        } catch (creditError) {
-            throw new HttpException(400, "Failed to deduct credits for application");
-        }
-
-        const applicationData = {
-            ...data,
-            status: data.status ?? 0, // 0 = pending
-            is_active: true,
-            is_deleted: false,
-            created_at: new Date(),
-            updated_at: new Date()
-        };
-        const appliedProject = await DB(T.APPLIED_PROJECTS)
-            .insert(applicationData)
-            .returning("*");
-
-        // Send Notification to Project Owner (Client)
-        if (project.user_id) {
-            await this.notificationService.createNotification({
-                user_id: project.user_id, // The Client
-                title: "New Proposal Received",
-                message: `A freelancer has applied to your project: ${project.project_title || 'Untitled Project'}`,
-                type: "proposal",
-                related_id: appliedProject[0].applied_projects_id,
-                related_type: "applied_projects",
-                is_read: false
-            });
+            if (project.user_id) {
+                await this.notificationService.createNotification({
+                    user_id: project.user_id,
+                    title: "New Proposal Received",
+                    message: `A freelancer has applied to your project: ${project.project_title || 'Untitled Project'}`,
+                    type: "proposal",
+                    related_id: result.application.applied_projects_id,
+                    related_type: "applied_projects",
+                    is_read: false
+                });
+            }
+        } catch (notificationError) {
+            // Log but don't fail - notification is not critical
+            console.error('Failed to send notification:', notificationError);
         }
 
         return {
             alreadyApplied: false,
             message: "Applied to project successfully",
-            data: appliedProject[0],
-            credits_deducted: CREDITS_PER_APPLICATION
+            data: result.application,
+            credits_deducted: result.creditsDeducted,
+            new_balance: result.newBalance
         };
     }
 
@@ -140,6 +231,15 @@ class AppliedProjectsService {
         }
         const applications = await DB(T.APPLIED_PROJECTS)
             .join('projects_task', 'applied_projects.projects_task_id', '=', 'projects_task.projects_task_id')
+            // First join client_profiles (projects_task.client_id -> client_profiles.client_id)
+            .leftJoin(T.CLIENT_PROFILES, 'projects_task.client_id', `${T.CLIENT_PROFILES}.client_id`)
+            // Then join users via client_profiles.user_id
+            .leftJoin(`${T.USERS_TABLE} as client`, `${T.CLIENT_PROFILES}.user_id`, 'client.user_id')
+            .leftJoin(T.SUBMITTED_PROJECTS, function () {
+                this.on('projects_task.projects_task_id', '=', `${T.SUBMITTED_PROJECTS}.projects_task_id`)
+                    .andOn('applied_projects.user_id', '=', `${T.SUBMITTED_PROJECTS}.user_id`)
+                    .andOn(`${T.SUBMITTED_PROJECTS}.is_deleted`, '=', DB.raw('false'));
+            })
             .where({
                 'applied_projects.user_id': user_id,
                 'applied_projects.is_deleted': false
@@ -147,7 +247,20 @@ class AppliedProjectsService {
             .orderBy('applied_projects.created_at', 'desc')
             .select(
                 'applied_projects.*',
-                'projects_task.*'
+                'projects_task.*',
+                // Client information
+                'client.user_id as client_user_id',
+                'client.first_name as client_first_name',
+                'client.last_name as client_last_name',
+                'client.profile_picture as client_profile_picture',
+                `${T.CLIENT_PROFILES}.company_name as client_company_name`,
+                `${T.CLIENT_PROFILES}.industry as client_industry`,
+                // Submission information
+                `${T.SUBMITTED_PROJECTS}.submission_id`,
+                `${T.SUBMITTED_PROJECTS}.status as submission_status`,
+                `${T.SUBMITTED_PROJECTS}.submitted_files`,
+                `${T.SUBMITTED_PROJECTS}.additional_notes as submission_notes`,
+                `${T.SUBMITTED_PROJECTS}.created_at as submitted_at`
             );
         return applications;
     }
@@ -240,7 +353,15 @@ class AppliedProjectsService {
         return updated[0];
     }
 
-    public async withdrawApplication(applied_projects_id: number): Promise<void> {
+    /**
+     * Withdraw application
+     * SECURITY: Verifies user owns the application
+     * NOTE: Credits are not refunded when withdrawing applications
+     */
+    public async withdrawApplication(
+        applied_projects_id: number,
+        user_id: number
+    ): Promise<{ message: string }> {
         if (!applied_projects_id) {
             throw new HttpException(400, "applied_projects_id is required");
         }
@@ -253,16 +374,62 @@ class AppliedProjectsService {
             throw new HttpException(404, "Application not found");
         }
 
+        // SECURITY: Verify user owns this application
+        if (application.user_id !== user_id) {
+            throw new HttpException(403, "You can only withdraw your own applications");
+        }
+
         if (application.is_deleted) {
             throw new HttpException(400, "Application has already been withdrawn.");
+        }
+
+        // Check if application is already approved (status = 1)
+        if (application.status === 1) {
+            throw new HttpException(400, "Cannot withdraw from an approved project. Please contact support if you have concerns.");
         }
 
         await DB(T.APPLIED_PROJECTS)
             .where({ applied_projects_id })
             .update({
                 is_deleted: true,
+                is_active: false,
+                deleted_at: new Date(),
+                deleted_by: user_id,
                 updated_at: new Date()
             });
+
+        // Fetch project details to get client_id and project_title
+        const project = await DB(T.PROJECTS_TASK)
+            .where({ projects_task_id: application.projects_task_id })
+            .first();
+
+        // Fetch freelancer details to get name
+        const freelancer = await DB(T.USERS_TABLE)
+            .where({ user_id: application.user_id })
+            .first();
+
+        // Send notification to Client that application was withdrawn
+        if (project && project.client_id && freelancer) {
+            // Get the actual user_id from client_profiles (client_id != user_id)
+            const clientProfile = await DB(T.CLIENT_PROFILES)
+                .where({ client_id: project.client_id })
+                .select('user_id')
+                .first();
+
+            if (clientProfile && clientProfile.user_id) {
+                await this.notificationService.createNotification({
+                    user_id: clientProfile.user_id, // Use user_id, not client_id
+                    title: "Application Withdrawn",
+                    message: `${freelancer.first_name} ${freelancer.last_name} has withdrawn their application for "${project.project_title || 'your project'}".`,
+                    type: "application_withdrawn",
+                    related_id: application.projects_task_id,
+                    related_type: "projects_task",
+                    is_read: false
+                });
+            }
+        }
+
+        return { message: "Application withdrawn successfully" };
     }
 
     public async getApplicationCountByProject(projects_task_id: number): Promise<number> {
@@ -319,14 +486,30 @@ class AppliedProjectsService {
     public async ongoingprojects(user_id: number): Promise<any[]> {
         return await DB(`${T.APPLIED_PROJECTS} as ap`)
             .join(`${T.PROJECTS_TASK} as pt`, 'pt.projects_task_id', 'ap.projects_task_id')
+            // First join client_profiles (pt.client_id -> client_profiles.client_id)
+            .leftJoin(T.CLIENT_PROFILES, 'pt.client_id', `${T.CLIENT_PROFILES}.client_id`)
+            // Then join users via client_profiles.user_id
+            .leftJoin(`${T.USERS_TABLE} as client`, `${T.CLIENT_PROFILES}.user_id`, 'client.user_id')
             .select(
                 'ap.applied_projects_id',
                 'ap.description',
                 'ap.status',
                 'ap.created_at as applied_at',
+                'pt.projects_task_id',
                 'pt.project_title',
+                'pt.project_description',
                 'pt.deadline',
-                'pt.budget'
+                'pt.budget',
+                'pt.currency',
+                'pt.skills_required',
+                'pt.project_category',
+                // Client info
+                'client.user_id as client_user_id',
+                'client.first_name as client_first_name',
+                'client.last_name as client_last_name',
+                'client.profile_picture as client_profile_picture',
+                `${T.CLIENT_PROFILES}.company_name as client_company_name`,
+                `${T.CLIENT_PROFILES}.industry as client_industry`
             )
             .where({
                 'ap.user_id': user_id,
@@ -383,6 +566,58 @@ class AppliedProjectsService {
             .first();
 
         return parseInt(String(result?.count || '0'), 10);
+    }
+
+    /**
+     * Check if a user can chat with another user
+     * Chat is allowed only if freelancer has applied to any of client's projects
+     * 
+     * @param currentUserId - The user making the request
+     * @param otherUserId - The user they want to chat with
+     * @param currentUserRole - 'client' or 'freelancer'
+     * @returns { canChat: boolean, reason?: string }
+     */
+    public async checkCanChat(
+        currentUserId: number,
+        otherUserId: number,
+        currentUserRole: 'client' | 'freelancer'
+    ): Promise<{ canChat: boolean; reason?: string }> {
+        try {
+            let clientId: number;
+            let freelancerId: number;
+
+            if (currentUserRole === 'client') {
+                clientId = currentUserId;
+                freelancerId = otherUserId;
+            } else {
+                clientId = otherUserId;
+                freelancerId = currentUserId;
+            }
+
+            // Check if freelancer has applied to any of client's projects
+            const application = await DB(T.APPLIED_PROJECTS)
+                .join(T.PROJECTS_TASK, `${T.APPLIED_PROJECTS}.projects_task_id`, '=', `${T.PROJECTS_TASK}.projects_task_id`)
+                .join(T.CLIENT_PROFILES, `${T.PROJECTS_TASK}.client_id`, '=', `${T.CLIENT_PROFILES}.client_id`)
+                .where({
+                    [`${T.APPLIED_PROJECTS}.user_id`]: freelancerId,
+                    [`${T.CLIENT_PROFILES}.user_id`]: clientId,
+                    [`${T.APPLIED_PROJECTS}.is_deleted`]: false,
+                })
+                .select(`${T.APPLIED_PROJECTS}.applied_projects_id`)
+                .first();
+
+            if (application) {
+                return { canChat: true };
+            }
+
+            return {
+                canChat: false,
+                reason: 'Chat is only available after a freelancer applies to a project'
+            };
+        } catch (error) {
+            console.error('Error checking chat permission:', error);
+            throw new HttpException(500, 'Failed to check chat permission');
+        }
     }
 
 

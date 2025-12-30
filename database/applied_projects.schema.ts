@@ -66,7 +66,7 @@ export const migrate = async (dropFirst = false) => {
 
             });
             console.log('Created Applied Projects Table');
-            
+
             console.log('Creating Triggers for Applied Projects Table');
             await DB.raw(`
               CREATE TRIGGER update_timestamp
@@ -78,7 +78,7 @@ export const migrate = async (dropFirst = false) => {
             console.log('Finished Creating Triggers');
         } else {
             console.log('Applied Projects table already exists, checking for missing columns...');
-            
+
             // Check and add bid_amount column if it doesn't exist
             const hasBidAmount = await DB.schema.hasColumn(APPLIED_PROJECTS, 'bid_amount');
             if (!hasBidAmount) {
@@ -91,10 +91,26 @@ export const migrate = async (dropFirst = false) => {
             } else {
                 console.log('bid_amount column already exists');
             }
+
+            // Check and add refund tracking columns
+            const hasCreditsSpent = await DB.schema.hasColumn(APPLIED_PROJECTS, 'credits_spent');
+            if (!hasCreditsSpent) {
+                console.log('Adding credit/refund tracking columns...');
+                await DB.schema.alterTable(APPLIED_PROJECTS, table => {
+                    table.integer('credits_spent').defaultTo(1);
+                    table.boolean('refunded').defaultTo(false);
+                    table.integer('refund_amount').defaultTo(0);
+                    table.string('refund_reason', 100).nullable();
+                    table.timestamp('refunded_at').nullable();
+                });
+                console.log('Added credit/refund tracking columns');
+            } else {
+                console.log('Credit/refund columns already exist');
+            }
         }
     } catch (error) {
         console.error('Migration failed for applied_projects:', error);
         throw error;
     }
 };
-// Version: 1.0.0 - Applied projects table for tracking freelancer applications
+// Version: 1.1.0 - Added credit/refund tracking columns

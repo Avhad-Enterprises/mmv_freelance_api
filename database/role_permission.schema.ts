@@ -27,9 +27,9 @@ const rolePermissionMappings = {
     'projects.manage', // Own projects only
     'applications.view',
 
-    // Credits
-    'credits.view_own',
-    'credits.purchase',
+    // Credits - Clients don't have credit access yet
+    // 'credits.view_own',
+    // 'credits.purchase',
 
 
     // Reviews
@@ -54,10 +54,14 @@ const rolePermissionMappings = {
     'projects.apply',
     'projects.update', // Applied projects only
     'projects.withdraw',
+    'applications.view',
 
-    // Credits
+    // Credits - All freelancer credit operations
     'credits.view_own',
     'credits.purchase',
+    'credits.view_packages',
+    'credits.view_history',
+    'credits.request_refund',
 
 
     // Reviews
@@ -82,10 +86,14 @@ const rolePermissionMappings = {
     'projects.apply',
     'projects.update', // Applied projects only
     'projects.withdraw',
+    'applications.view',
 
-    // Credits
+    // Credits - All freelancer credit operations
     'credits.view_own',
     'credits.purchase',
+    'credits.view_packages',
+    'credits.view_history',
+    'credits.request_refund',
 
 
     // Reviews
@@ -131,6 +139,13 @@ const rolePermissionMappings = {
 
     // Payments
     'payments.view',
+
+    // Credits Admin - Full credit management
+    'credits.admin.view_all',
+    'credits.admin.adjust',
+    'credits.admin.analytics',
+    'credits.admin.refund',
+    'credits.admin.export',
 
     // Reports
     'reports.view',

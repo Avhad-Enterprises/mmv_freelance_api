@@ -16,30 +16,30 @@ The admin API endpoints provide super administrators with full control over user
 
 ### User Management Endpoints
 
-| File | Endpoint | Description |
-|------|----------|-------------|
-| `GET_USER_BY_ID_FRONTEND_README.md` | `GET /users/:id` | Get basic user information by ID |
-| `GET_USER_PROFILE_BY_ID_FRONTEND_README.md` | `GET /users/:id/profile` | Get user with complete profile data by ID |
-| `GET_users.md` | `GET /users` | Get all users with pagination, search, and role filtering |
-| `POST_users.md` | `POST /users` | Create new users with role assignment and profile creation |
-| `PUT_users_id.md` | `PUT /users/:id` | Update user information (partial updates supported) |
-| `DELETE_users_id.md` | `DELETE /users/:id` | Permanently delete users (with cascade deletion) |
+| File                                        | Endpoint                 | Description                                                |
+| ------------------------------------------- | ------------------------ | ---------------------------------------------------------- |
+| `GET_USER_BY_ID_FRONTEND_README.md`         | `GET /users/:id`         | Get basic user information by ID                           |
+| `GET_USER_PROFILE_BY_ID_FRONTEND_README.md` | `GET /users/:id/profile` | Get user with complete profile data by ID                  |
+| `GET_users.md`                              | `GET /users`             | Get all users with pagination, search, and role filtering  |
+| `POST_users.md`                             | `POST /users`            | Create new users with role assignment and profile creation |
+| `PUT_users_id.md`                           | `PUT /users/:id`         | Update user information (partial updates supported)        |
+| `DELETE_users_id.md`                        | `DELETE /users/:id`      | Permanently delete users (with cascade deletion)           |
 
 ### User Moderation Endpoints
 
-| File | Endpoint | Description |
-|------|----------|-------------|
-| `POST_users_id_ban.md` | `POST /users/:id/ban` | Ban users with reason tracking |
-| `POST_users_id_unban.md` | `POST /users/:id/unban` | Unban previously banned users |
+| File                     | Endpoint                | Description                    |
+| ------------------------ | ----------------------- | ------------------------------ |
+| `POST_users_id_ban.md`   | `POST /users/:id/ban`   | Ban users with reason tracking |
+| `POST_users_id_unban.md` | `POST /users/:id/unban` | Unban previously banned users  |
 
 ### Role Management Endpoints
 
-| File | Endpoint | Description |
-|------|----------|-------------|
-| `GET_users_id_roles.md` | `GET /users/:id/roles` | Get all roles assigned to a user |
-| `POST_users_id_roles.md` | `POST /users/:id/roles` | Assign a role to a user (SUPER_ADMIN only) |
-| `DELETE_users_id_roles_roleId.md` | `DELETE /users/:id/roles/:roleId` | Remove a role from a user (SUPER_ADMIN only) |
-| `GET_users_id_permissions.md` | `GET /users/:id/permissions` | Get all permissions for a user based on roles |
+| File                              | Endpoint                          | Description                                   |
+| --------------------------------- | --------------------------------- | --------------------------------------------- |
+| `GET_users_id_roles.md`           | `GET /users/:id/roles`            | Get all roles assigned to a user              |
+| `POST_users_id_roles.md`          | `POST /users/:id/roles`           | Assign a role to a user (SUPER_ADMIN only)    |
+| `DELETE_users_id_roles_roleId.md` | `DELETE /users/:id/roles/:roleId` | Remove a role from a user (SUPER_ADMIN only)  |
+| `GET_users_id_permissions.md`     | `GET /users/:id/permissions`      | Get all permissions for a user based on roles |
 
 ## 🔐 Authorization
 
@@ -48,6 +48,7 @@ All endpoints in this documentation require **SUPER_ADMIN** role authorization. 
 ## 🧪 Testing
 
 Each endpoint has been thoroughly tested with comprehensive test scripts covering:
+
 - Authentication and authorization
 - Input validation and error handling
 - Business logic validation
@@ -56,6 +57,7 @@ Each endpoint has been thoroughly tested with comprehensive test scripts coverin
 ## 💻 Frontend Integration
 
 Each documentation file includes complete frontend implementation examples in:
+
 - **JavaScript** (Vanilla)
 - **React** (Hooks)
 - **Vue.js** (Composition API)
@@ -69,6 +71,7 @@ Each documentation file includes complete frontend implementation examples in:
 **Success Rate**: 98.3% (completed endpoints)
 
 ### User Management Endpoint Results:
+
 - ✅ GET /users/:id - 8/11 tests (72.7%)
 - ✅ GET /users/:id/profile - 10/10 tests (100%)
 - ✅ POST /users/:id/ban - 10/11 tests (90.9%)
@@ -79,6 +82,7 @@ Each documentation file includes complete frontend implementation examples in:
 - ✅ DELETE /users/:id - 7/7 tests (100%)
 
 ### Role Management Endpoints (Documented):
+
 - 📝 GET /users/:id/roles - Documentation complete, testing pending
 - 📝 POST /users/:id/roles - Documentation complete, testing pending
 - 📝 DELETE /users/:id/roles/:roleId - Documentation complete, testing pending
@@ -87,6 +91,7 @@ Each documentation file includes complete frontend implementation examples in:
 ## 🚀 Production Ready
 
 All documented endpoints are production-ready with:
+
 - Comprehensive error handling
 - Input validation
 - Security measures
@@ -113,3 +118,4 @@ All documented endpoints are production-ready with:
 **Last Updated**: October 2025
 **API Version**: v1
 **Platform**: MMV Freelance Platform
+

@@ -67,6 +67,7 @@ import { CLIENT_PROFILES } from './client_profiles.schema';
 import { ADMIN_PROFILES } from './admin_profiles.schema';
 import { CONTACT_SUBMISSIONS } from './contact.schema';
 import { OAUTH_ACCOUNTS_TABLE } from './oauth_accounts.schema';
+import { CREDIT_TRANSACTIONS_TABLE } from './credit_transactions.schema';
 
 
 export const T = {
@@ -111,6 +112,8 @@ export const T = {
   CONTACT_SUBMISSIONS,
   OAUTH_ACCOUNTS_TABLE,
   SYSTEM_ERROR_LOGS,
+  CREDIT_TRANSACTIONS_TABLE,
+  CREDIT_SETTINGS_TABLE: 'credit_settings',
 };
 
 // Creates the procedure that is then added as a trigger to every table
