@@ -57,6 +57,7 @@ import { SUBSCRIBED_EMAILS } from './subscribed_emails.schema';
 import { SKILLS } from './skill.schema';
 import { SAVED_PROJECTS } from './saved_project.schema';
 import { EMAIL_LOG_TABLE } from './emailog.schema';
+import { SYSTEM_ERROR_LOGS } from './system_error_logs.schema';
 
 // New Profile Tables (Architecture Refactor)
 import { FREELANCER_PROFILES } from './freelancer_profiles.schema';
@@ -109,6 +110,7 @@ export const T = {
   ADMIN_PROFILES,
   CONTACT_SUBMISSIONS,
   OAUTH_ACCOUNTS_TABLE,
+  SYSTEM_ERROR_LOGS,
 };
 
 // Creates the procedure that is then added as a trigger to every table
