@@ -81,7 +81,15 @@ class CategoryService {
     try {
       const query = DB(T.CATEGORY)
         .where({ is_deleted: false })
-        .select("category_id", "category_name", "category_type", "is_active")
+        .select(
+          "category_id",
+          "category_name",
+          "category_type",
+          "description",
+          "is_active",
+          "created_at",
+          "created_by"
+        )
         .orderBy("category_id");
 
       const result = await query;

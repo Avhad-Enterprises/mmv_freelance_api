@@ -170,7 +170,7 @@ class UserAdminService {
   public async updateUserById(user_id: number, updateData: any): Promise<any> {
     const { password, profileData, ...otherData } = updateData;
 
-    // Prepare update object
+    // Prepare update object for users table
     const updateObj: any = { ...otherData };
 
     // Hash new password if provided
@@ -189,6 +189,57 @@ class UserAdminService {
 
     if (!updatedUser) {
       throw new HttpException(404, "User not found");
+    }
+
+    // Update profile data if provided
+    if (profileData && Object.keys(profileData).length > 0) {
+      // Get user roles to determine which profile table to update
+      const roles = await DB(T.USER_ROLES)
+        .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
+        .where({ user_id })
+        .select("name");
+
+      const roleNames = roles.map((r) => r.name.toUpperCase());
+
+      if (roleNames.includes("CLIENT")) {
+        await DB("client_profiles").where({ user_id }).update(profileData);
+      } else if (
+        roleNames.includes("VIDEOGRAPHER") ||
+        roleNames.includes("VIDEO_EDITOR")
+      ) {
+        // Prepare freelancer profile update data
+        // Explicitly stringify JSON fields to avoid "invalid input syntax for type json"
+        // in case Knex doesn't handle the arrays automatically for this driver/config
+        const freelancerUpdateData = { ...profileData };
+
+        const jsonFields = [
+          "skills",
+          "superpowers",
+          "portfolio_links",
+          "skill_tags",
+          "base_skills",
+          "languages",
+          "certification",
+          "education",
+          "previous_works",
+          "services",
+        ];
+
+        jsonFields.forEach((field) => {
+          if (
+            freelancerUpdateData[field] &&
+            typeof freelancerUpdateData[field] !== "string"
+          ) {
+            freelancerUpdateData[field] = JSON.stringify(
+              freelancerUpdateData[field]
+            );
+          }
+        });
+
+        await DB("freelancer_profiles")
+          .where({ user_id })
+          .update(freelancerUpdateData);
+      }
     }
 
     // Remove password from response
