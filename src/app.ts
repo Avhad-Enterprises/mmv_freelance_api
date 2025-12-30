@@ -9,10 +9,11 @@ import Routes from "./interfaces/routes.interface";
 import errorMiddleware from "./middlewares/error.middleware";
 import { logger, stream } from "./utils/logger";
 import authMiddleware from "./middlewares/auth.middleware";
-import dotenv from "dotenv";
-import multerErrorHandler from "./middlewares/multer-error.middleware";
-import DB from "../database/index";
-import SocketService from "./socket";
+import notFoundMiddleware from "./middlewares/not-found.middleware";
+import dotenv from 'dotenv';
+import multerErrorHandler from './middlewares/multer-error.middleware';
+import DB from '../database/index';
+import SocketService from './socket';
 dotenv.config();
 
 class App {
@@ -84,6 +85,7 @@ class App {
       "https://www.makemyvid.io",
       "http://localhost:3000",
       "http://localhost:3001",
+      "http://localhost:5173"
       "http://192.168.1.20:3000",
       "http://localhost:5173",
       "http://192.168.1.34:5173",
@@ -148,6 +150,8 @@ class App {
     });
 
     // 404 handler for unmatched routes
+    // 404 handler for unmatched routes
+    this.app.use(notFoundMiddleware);
     this.app.use("*", (req, res) => {
       res.status(404).json({
         success: false,
