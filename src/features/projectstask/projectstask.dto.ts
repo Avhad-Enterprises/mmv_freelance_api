@@ -1,9 +1,19 @@
 import {
-  IsString, IsNotEmpty, IsDateString,
-  IsInt, IsJSON, IsArray, ArrayNotEmpty, IsUrl, IsObject,
-  IsBoolean, IsOptional, ValidateNested, IsNumber
-} from 'class-validator';
-import { Type } from 'class-transformer';
+  IsString,
+  IsNotEmpty,
+  IsDateString,
+  IsInt,
+  IsJSON,
+  IsArray,
+  ArrayNotEmpty,
+  IsUrl,
+  IsObject,
+  IsBoolean,
+  IsOptional,
+  ValidateNested,
+  IsNumber,
+} from "class-validator";
+import { Type } from "class-transformer";
 
 export class ProjectsTaskDto {
   @IsInt()
@@ -50,8 +60,8 @@ export class ProjectsTaskDto {
   @IsString()
   additional_notes: string;
 
-  @IsOptional({ groups: ['create', 'update'] })
-  @IsInt({ groups: ['create', 'update'] })
+  @IsOptional({ groups: ["create", "update"] })
+  @IsInt({ groups: ["create", "update"] })
   status?: number;
 
   @IsOptional()

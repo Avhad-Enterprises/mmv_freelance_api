@@ -9,7 +9,6 @@ import bcrypt from "bcrypt";
  * Handles super admin operations for user management, CRUD operations
  */
 class UserAdminService {
-
   /**
    * Get all users with pagination and filtering
    */
@@ -34,24 +33,28 @@ class UserAdminService {
           ) as roles
         `)
       )
-      .leftJoin(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
+      .leftJoin(
+        T.USER_ROLES,
+        `${T.USERS_TABLE}.user_id`,
+        `${T.USER_ROLES}.user_id`
+      )
       .leftJoin(`${T.ROLE} as r`, `${T.USER_ROLES}.role_id`, `r.role_id`)
       .groupBy(`${T.USERS_TABLE}.user_id`);
 
     // Apply search filter
     if (search) {
-      query = query.where(function() {
-        this.where(`${T.USERS_TABLE}.first_name`, 'ilike', `%${search}%`)
-          .orWhere(`${T.USERS_TABLE}.last_name`, 'ilike', `%${search}%`)
-          .orWhere(`${T.USERS_TABLE}.email`, 'ilike', `%${search}%`)
-          .orWhere(`${T.USERS_TABLE}.username`, 'ilike', `%${search}%`);
+      query = query.where(function () {
+        this.where(`${T.USERS_TABLE}.first_name`, "ilike", `%${search}%`)
+          .orWhere(`${T.USERS_TABLE}.last_name`, "ilike", `%${search}%`)
+          .orWhere(`${T.USERS_TABLE}.email`, "ilike", `%${search}%`)
+          .orWhere(`${T.USERS_TABLE}.username`, "ilike", `%${search}%`);
       });
     }
 
     // Apply role filter
     if (role) {
-      query = query.whereExists(function() {
-        this.select('*')
+      query = query.whereExists(function () {
+        this.select("*")
           .from(T.USER_ROLES)
           .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
           .whereRaw(`${T.USER_ROLES}.user_id = ${T.USERS_TABLE}.user_id`)
@@ -61,23 +64,27 @@ class UserAdminService {
 
     // Get total count
     const countQuery = DB(T.USERS_TABLE)
-      .count('* as total')
-      .leftJoin(T.USER_ROLES, `${T.USERS_TABLE}.user_id`, `${T.USER_ROLES}.user_id`)
+      .count("* as total")
+      .leftJoin(
+        T.USER_ROLES,
+        `${T.USERS_TABLE}.user_id`,
+        `${T.USER_ROLES}.user_id`
+      )
       .leftJoin(`${T.ROLE} as r`, `${T.USER_ROLES}.role_id`, `r.role_id`);
 
     if (search) {
-      countQuery.where(function() {
-        this.where(`${T.USERS_TABLE}.first_name`, 'ilike', `%${search}%`)
-          .orWhere(`${T.USERS_TABLE}.last_name`, 'ilike', `%${search}%`)
-          .orWhere(`${T.USERS_TABLE}.email`, 'ilike', `%${search}%`)
-          .orWhere(`${T.USERS_TABLE}.username`, 'ilike', `%${search}%`);
+      countQuery.where(function () {
+        this.where(`${T.USERS_TABLE}.first_name`, "ilike", `%${search}%`)
+          .orWhere(`${T.USERS_TABLE}.last_name`, "ilike", `%${search}%`)
+          .orWhere(`${T.USERS_TABLE}.email`, "ilike", `%${search}%`)
+          .orWhere(`${T.USERS_TABLE}.username`, "ilike", `%${search}%`);
       });
     }
 
     // Apply role filter to count query
     if (role) {
-      countQuery.whereExists(function() {
-        this.select('*')
+      countQuery.whereExists(function () {
+        this.select("*")
           .from(T.USER_ROLES)
           .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
           .whereRaw(`${T.USER_ROLES}.user_id = ${T.USERS_TABLE}.user_id`)
@@ -86,17 +93,20 @@ class UserAdminService {
     }
 
     const [users, totalResult] = await Promise.all([
-      query.limit(limit).offset(offset).orderBy(`${T.USERS_TABLE}.created_at`, 'desc'),
-      countQuery.first()
+      query
+        .limit(limit)
+        .offset(offset)
+        .orderBy(`${T.USERS_TABLE}.created_at`, "desc"),
+      countQuery.first(),
     ]);
 
     const total = parseInt(totalResult?.total as string) || 0;
     const totalPages = Math.ceil(total / limit);
 
     return {
-      users: users.map(user => ({
+      users: users.map((user) => ({
         ...user,
-        password: undefined // Remove password from response
+        password: undefined, // Remove password from response
       })),
       pagination: {
         page,
@@ -104,8 +114,8 @@ class UserAdminService {
         total,
         totalPages,
         hasNext: page < totalPages,
-        hasPrev: page > 1
-      }
+        hasPrev: page > 1,
+      },
     };
   }
 
@@ -116,9 +126,11 @@ class UserAdminService {
     const { password, roleName, profileData, ...userInfo } = userData;
 
     // Check if user already exists
-    const existingUser = await DB(T.USERS_TABLE).where({ email: userInfo.email }).first();
+    const existingUser = await DB(T.USERS_TABLE)
+      .where({ email: userInfo.email })
+      .first();
     if (existingUser) {
-      throw new HttpException(409, 'User with this email already exists');
+      throw new HttpException(409, "User with this email already exists");
     }
 
     // Hash password if provided
@@ -128,12 +140,14 @@ class UserAdminService {
     }
 
     // Create user
-    const [user] = await DB(T.USERS_TABLE).insert({
-      ...userInfo,
-      password: hashedPassword,
-      username: userInfo.username || userInfo.email.split('@')[0],
-      is_active: true,
-    }).returning('*');
+    const [user] = await DB(T.USERS_TABLE)
+      .insert({
+        ...userInfo,
+        password: hashedPassword,
+        username: userInfo.username || userInfo.email.split("@")[0],
+        is_active: true,
+      })
+      .returning("*");
 
     // Assign role if provided
     if (roleName) {
@@ -154,9 +168,9 @@ class UserAdminService {
    * Update user by ID
    */
   public async updateUserById(user_id: number, updateData: any): Promise<any> {
-    const { password, ...otherData } = updateData;
+    const { password, profileData, ...otherData } = updateData;
 
-    // Prepare update object
+    // Prepare update object for users table
     const updateObj: any = { ...otherData };
 
     // Hash new password if provided
@@ -169,12 +183,63 @@ class UserAdminService {
       .where({ user_id })
       .update({
         ...updateObj,
-        updated_at: DB.fn.now()
+        updated_at: DB.fn.now(),
       })
-      .returning('*');
+      .returning("*");
 
     if (!updatedUser) {
-      throw new HttpException(404, 'User not found');
+      throw new HttpException(404, "User not found");
+    }
+
+    // Update profile data if provided
+    if (profileData && Object.keys(profileData).length > 0) {
+      // Get user roles to determine which profile table to update
+      const roles = await DB(T.USER_ROLES)
+        .join(T.ROLE, `${T.USER_ROLES}.role_id`, `${T.ROLE}.role_id`)
+        .where({ user_id })
+        .select("name");
+
+      const roleNames = roles.map((r) => r.name.toUpperCase());
+
+      if (roleNames.includes("CLIENT")) {
+        await DB("client_profiles").where({ user_id }).update(profileData);
+      } else if (
+        roleNames.includes("VIDEOGRAPHER") ||
+        roleNames.includes("VIDEO_EDITOR")
+      ) {
+        // Prepare freelancer profile update data
+        // Explicitly stringify JSON fields to avoid "invalid input syntax for type json"
+        // in case Knex doesn't handle the arrays automatically for this driver/config
+        const freelancerUpdateData = { ...profileData };
+
+        const jsonFields = [
+          "skills",
+          "superpowers",
+          "portfolio_links",
+          "skill_tags",
+          "base_skills",
+          "languages",
+          "certification",
+          "education",
+          "previous_works",
+          "services",
+        ];
+
+        jsonFields.forEach((field) => {
+          if (
+            freelancerUpdateData[field] &&
+            typeof freelancerUpdateData[field] !== "string"
+          ) {
+            freelancerUpdateData[field] = JSON.stringify(
+              freelancerUpdateData[field]
+            );
+          }
+        });
+
+        await DB("freelancer_profiles")
+          .where({ user_id })
+          .update(freelancerUpdateData);
+      }
     }
 
     // Remove password from response
@@ -186,12 +251,10 @@ class UserAdminService {
    * Delete user permanently
    */
   public async deleteUserById(user_id: number): Promise<void> {
-    const user = await DB(T.USERS_TABLE)
-      .where({ user_id })
-      .first();
+    const user = await DB(T.USERS_TABLE).where({ user_id }).first();
 
     if (!user) {
-      throw new HttpException(404, 'User not found');
+      throw new HttpException(404, "User not found");
     }
 
     // Delete user (cascade will handle related records)
@@ -201,56 +264,68 @@ class UserAdminService {
   /**
    * Assign role to user
    */
-  public async assignRoleToUser(user_id: number, roleName: string): Promise<void> {
-    const { assignRole } = await import('../../utils/rbac/role-checker');
+  public async assignRoleToUser(
+    user_id: number,
+    roleName: string
+  ): Promise<void> {
+    const { assignRole } = await import("../../utils/rbac/role-checker");
     await assignRole(user_id, roleName);
   }
 
   /**
    * Remove role from user
    */
-  public async removeRoleFromUser(user_id: number, roleId: number): Promise<void> {
-    await DB(T.USER_ROLES)
-      .where({ user_id, role_id: roleId })
-      .delete();
+  public async removeRoleFromUser(
+    user_id: number,
+    roleId: number
+  ): Promise<void> {
+    await DB(T.USER_ROLES).where({ user_id, role_id: roleId }).delete();
   }
 
   /**
    * Create user profile based on role
    */
-  private async createUserProfile(user_id: number, roleName: string, profileData: any): Promise<void> {
+  private async createUserProfile(
+    user_id: number,
+    roleName: string,
+    profileData: any
+  ): Promise<void> {
     switch (roleName.toUpperCase()) {
-      case 'CLIENT':
-        await DB('client_profiles').insert({
+      case "CLIENT":
+        await DB("client_profiles").insert({
           user_id,
-          ...profileData
+          ...profileData,
         });
         break;
-      case 'VIDEOGRAPHER':
-        const [freelancerProfile] = await DB('freelancer_profiles').insert({
-          user_id,
-          ...profileData
-        }).returning('*');
+      case "VIDEOGRAPHER":
+        const [freelancerProfile] = await DB("freelancer_profiles")
+          .insert({
+            user_id,
+            ...profileData,
+          })
+          .returning("*");
 
-        await DB('videographer_profiles').insert({
-          freelancer_id: freelancerProfile.freelancer_id
+        await DB("videographer_profiles").insert({
+          freelancer_id: freelancerProfile.freelancer_id,
         });
         break;
-      case 'VIDEO_EDITOR':
-        const [editorProfile] = await DB('freelancer_profiles').insert({
-          user_id,
-          ...profileData
-        }).returning('*');
+      case "VIDEO_EDITOR":
+        const [editorProfile] = await DB("freelancer_profiles")
+          .insert({
+            user_id,
+            ...profileData,
+          })
+          .returning("*");
 
-        await DB('videoeditor_profiles').insert({
-          freelancer_id: editorProfile.freelancer_id
+        await DB("videoeditor_profiles").insert({
+          freelancer_id: editorProfile.freelancer_id,
         });
         break;
-      case 'ADMIN':
-      case 'SUPER_ADMIN':
+      case "ADMIN":
+      case "SUPER_ADMIN":
         await DB(T.ADMIN_PROFILES).insert({
           user_id,
-          ...profileData
+          ...profileData,
         });
         break;
     }

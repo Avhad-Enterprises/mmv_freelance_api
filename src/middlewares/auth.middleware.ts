@@ -55,9 +55,16 @@ const authMiddleware = async (
     // Check if the current path matches any public route
     // GET requests to public routes don't require auth
     // Only specific POST routes don't require auth (registration, login, password reset, contact submit)
+    // Exclude admin-only endpoints like /faq/all that need auth
+    const adminOnlyRoutes = ["/faq/all"];
+    const isAdminOnlyRoute = adminOnlyRoutes.some((route) =>
+      req.path.startsWith(route)
+    );
+
     const isPublicGetRoute =
       publicRoutes.some((route) => req.path.startsWith(route)) &&
-      req.method === "GET";
+      req.method === "GET" &&
+      !isAdminOnlyRoute;
 
     // Specific POST routes that are allowed without authentication
     const publicPostRoutes = [
