@@ -26,10 +26,10 @@ class SubmissionController {
       };
 
       const submission = await this.submissionService.submit(submitData);
-      res.status(201).json({ 
-        data: submission, 
+      res.status(201).json({
+        data: submission,
         message: 'Project submitted successfully',
-        success: true 
+        success: true
       });
     } catch (error) {
       next(error);
@@ -44,7 +44,7 @@ class SubmissionController {
     try {
       const raw = req.params.submissionId;
       const submission_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
-      const { status } = req.body;
+      const { status, rejection_reason } = req.body;
 
       if (isNaN(submission_id)) {
         res.status(400).json({ error: 'submission_id must be a number' });
@@ -52,19 +52,20 @@ class SubmissionController {
       }
 
       if (status === undefined || (status !== 0 && status !== 1 && status !== 2)) {
-        res.status(400).json({ 
-          error: 'status is required and must be 0 (pending), 1 (approved), or 2 (rejected)' 
+        res.status(400).json({
+          error: 'status is required and must be 0 (pending), 1 (approved), or 2 (rejected)'
         });
         return;
       }
 
-      const approved = await this.submissionService.approve(submission_id, status, { 
-        updated_by: req.user?.user_id 
+      const approved = await this.submissionService.approve(submission_id, status, {
+        updated_by: req.user?.user_id,
+        rejection_reason: status === 2 ? rejection_reason : null // Only store rejection reason if rejecting
       });
-      res.status(200).json({ 
-        data: approved, 
+      res.status(200).json({
+        data: approved,
         message: 'Submission status updated successfully',
-        success: true 
+        success: true
       });
     } catch (error) {
       next(error);
@@ -92,9 +93,9 @@ class SubmissionController {
         return;
       }
 
-      res.status(200).json({ 
-        data: submission, 
-        success: true 
+      res.status(200).json({
+        data: submission,
+        success: true
       });
     } catch (error) {
       next(error);
@@ -117,10 +118,10 @@ class SubmissionController {
 
       const submissions = await this.submissionService.getSubmissionsByProject(projects_task_id);
 
-      res.status(200).json({ 
-        data: submissions, 
+      res.status(200).json({
+        data: submissions,
         count: submissions.length,
-        success: true 
+        success: true
       });
     } catch (error) {
       next(error);
@@ -143,10 +144,10 @@ class SubmissionController {
 
       const submissions = await this.submissionService.getSubmissionsByFreelancer(user_id);
 
-      res.status(200).json({ 
-        data: submissions, 
+      res.status(200).json({
+        data: submissions,
         count: submissions.length,
-        success: true 
+        success: true
       });
     } catch (error) {
       next(error);
@@ -162,21 +163,21 @@ class SubmissionController {
       const { status, projects_task_id, user_id } = req.query;
 
       const filters: any = {};
-      
+
       if (status !== undefined) {
         const statusNum = parseInt(status as string, 10);
         if (!isNaN(statusNum)) {
           filters.status = statusNum;
         }
       }
-      
+
       if (projects_task_id) {
         const projectIdNum = parseInt(projects_task_id as string, 10);
         if (!isNaN(projectIdNum)) {
           filters.projects_task_id = projectIdNum;
         }
       }
-      
+
       if (user_id) {
         const userIdNum = parseInt(user_id as string, 10);
         if (!isNaN(userIdNum)) {
@@ -186,10 +187,10 @@ class SubmissionController {
 
       const submissions = await this.submissionService.getAllSubmissions(filters);
 
-      res.status(200).json({ 
-        data: submissions, 
+      res.status(200).json({
+        data: submissions,
         count: submissions.length,
-        success: true 
+        success: true
       });
     } catch (error) {
       next(error);

@@ -297,7 +297,8 @@ class AppliedProjectsService {
                 `${T.SUBMITTED_PROJECTS}.status as submission_status`,
                 `${T.SUBMITTED_PROJECTS}.submitted_files`,
                 `${T.SUBMITTED_PROJECTS}.additional_notes as submission_notes`,
-                `${T.SUBMITTED_PROJECTS}.created_at as submitted_at`
+                `${T.SUBMITTED_PROJECTS}.created_at as submitted_at`,
+                `${T.SUBMITTED_PROJECTS}.rejection_reason` // Rejection reason from client for submission
             );
         return applications;
     }
