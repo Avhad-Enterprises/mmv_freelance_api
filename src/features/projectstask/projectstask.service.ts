@@ -92,6 +92,10 @@ class ProjectstaskService {
     updateData: any
   ): Promise<any> => {
     try {
+      console.log('=== UPDATE PROJECT DEBUG ===');
+      console.log('Project ID:', projects_task_id);
+      console.log('Incoming updateData:', JSON.stringify(updateData, null, 2));
+
       // 1. check if project exists
       const project = await DB(T.PROJECTS_TASK)
         .where({ projects_task_id })
@@ -116,21 +120,62 @@ class ProjectstaskService {
         }
       }
 
-      // 3. update project
+      // 3. Whitelist allowed fields for update to prevent invalid columns
+      const allowedFields = [
+        'project_title', 'project_category', 'deadline', 'project_description',
+        'budget', 'currency', 'tags', 'skills_required', 'reference_links',
+        'additional_notes', 'projects_type', 'project_format', 'audio_voiceover',
+        'audio_description', 'video_length', 'preferred_video_style',
+        'sample_project_file', 'project_files', 'show_all_files', 'url',
+        'meta_title', 'meta_description', 'is_active', 'bidding_enabled'
+      ];
+
+      const formattedUpdate: any = {};
+
+      // Only include allowed fields
+      allowedFields.forEach(field => {
+        if (updateData[field] !== undefined) {
+          formattedUpdate[field] = updateData[field];
+        }
+      });
+
+      // 5. Format JSON fields - ensure they are valid JSON strings
+      const jsonFields = ['tags', 'skills_required', 'reference_links', 'sample_project_file', 'project_files', 'show_all_files'];
+
+      jsonFields.forEach(field => {
+        if (formattedUpdate[field] !== undefined && formattedUpdate[field] !== null) {
+          // If it's not already a string, stringify it
+          if (typeof formattedUpdate[field] !== 'string') {
+            formattedUpdate[field] = JSON.stringify(formattedUpdate[field]);
+          } else {
+            // It's a string - validate it's valid JSON, if not wrap it
+            try {
+              JSON.parse(formattedUpdate[field]);
+              // It's valid JSON string, keep as is
+            } catch (e) {
+              // Not valid JSON, wrap as array
+              formattedUpdate[field] = JSON.stringify([formattedUpdate[field]]);
+            }
+          }
+        }
+      });
+
+      console.log('Formatted update payload:', JSON.stringify(formattedUpdate, null, 2));
+
+      // 6. update project
       await DB(T.PROJECTS_TASK)
         .where({ projects_task_id })
-        .update({
-          ...updateData,
-          updated_at: new Date(),
-        });
+        .update(formattedUpdate);
 
-      // 4. return updated project
+      // 7. return updated project
       const updatedProjecttask = await DB(T.PROJECTS_TASK)
         .where({ projects_task_id })
         .first();
 
+      console.log('=== UPDATE SUCCESS ===');
       return updatedProjecttask;
     } catch (error) {
+      console.error("=== UPDATE ERROR ===");
       console.error("Service error:", error);
       throw error;
     }
@@ -367,12 +412,18 @@ class ProjectstaskService {
     }
 
     const projects = await DB(T.PROJECTS_TASK)
-      .where({
-        client_id,
-        is_deleted: false,
+      .leftJoin(T.APPLIED_PROJECTS, function () {
+        this.on(`${T.PROJECTS_TASK}.projects_task_id`, '=', `${T.APPLIED_PROJECTS}.projects_task_id`)
+          .andOn(`${T.APPLIED_PROJECTS}.is_deleted`, '=', DB.raw('false'));
       })
-      .orderBy("created_at", "desc")
-      .select("*");
+      .where(`${T.PROJECTS_TASK}.client_id`, client_id)
+      .andWhere(`${T.PROJECTS_TASK}.is_deleted`, false)
+      .groupBy(`${T.PROJECTS_TASK}.projects_task_id`)
+      .orderBy(`${T.PROJECTS_TASK}.created_at`, 'desc')
+      .select([
+        `${T.PROJECTS_TASK}.*`,
+        DB.raw(`COUNT(${T.APPLIED_PROJECTS}.applied_projects_id)::int as application_count`)
+      ]);
 
     return projects;
   }

@@ -259,7 +259,8 @@ class AppliedProjectsService {
                 'applied_projects.refund_amount',
                 'applied_projects.refund_reason',
                 'applied_projects.refunded_at',
-                'applied_projects.rejection_reason', // Rejection reason from client
+                'applied_projects.rejection_reason as comparison_rejection_reason', // Alias to avoid any conflict
+                'applied_projects.rejection_reason', // Keep original just in case
                 'applied_projects.is_active',
                 'applied_projects.is_deleted',
                 'applied_projects.created_at',
