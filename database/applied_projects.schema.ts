@@ -107,10 +107,22 @@ export const migrate = async (dropFirst = false) => {
             } else {
                 console.log('Credit/refund columns already exist');
             }
+
+            // Check and add rejection_reason column
+            const hasRejectionReason = await DB.schema.hasColumn(APPLIED_PROJECTS, 'rejection_reason');
+            if (!hasRejectionReason) {
+                console.log('Adding rejection_reason column...');
+                await DB.schema.alterTable(APPLIED_PROJECTS, table => {
+                    table.text('rejection_reason').nullable();
+                });
+                console.log('Added rejection_reason column');
+            } else {
+                console.log('rejection_reason column already exists');
+            }
         }
     } catch (error) {
         console.error('Migration failed for applied_projects:', error);
         throw error;
     }
 };
-// Version: 1.1.0 - Added credit/refund tracking columns
+// Version: 1.2.0 - Added rejection_reason column for application rejections
