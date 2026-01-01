@@ -58,7 +58,7 @@ class AdminInvitesService {
 
       // Set expiration (7 days from now)
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
+      expiresAt.setHours(expiresAt.getHours() + 24);
 
       // Create invitation record - Admin role is assigned by default
       const invitationId = await DB(INVITATION_TABLE)
@@ -409,7 +409,7 @@ class AdminInvitesService {
                             Accept Invitation & Register
                         </a>
                     </p>
-                    <p><strong>Important:</strong> This invitation will expire in 7 days.</p>
+                    <p><strong>Important:</strong> This invitation will expire in 24 hours.</p>
                     <p>You will be able to set up your account details during registration.</p>
                     <p>If you have any questions, please contact the administrator.</p>
                     <p>Best regards,<br>The MMV Team</p>

@@ -1,18 +1,19 @@
 // Client Routes - Client-specific endpoints with RBAC
-import { Router } from 'express';
-import { ClientController } from './client.controller';
-import { requireRole } from '../../middlewares/role.middleware';
-import validationMiddleware from '../../middlewares/validation.middleware';
-import { ClientProfileUpdateDto } from './client.update.dto';
-import Route from '../../interfaces/route.interface';
+import { Router } from "express";
+import { ClientController } from "./client.controller";
+import { requireRole } from "../../middlewares/role.middleware";
+import { requirePermission } from "../../middlewares/permission.middleware";
+import validationMiddleware from "../../middlewares/validation.middleware";
+import { ClientProfileUpdateDto } from "./client.update.dto";
+import Route from "../../interfaces/route.interface";
 
 /**
  * Client Routes
  * All routes require authentication
- * Some routes restricted to CLIENT role or ADMIN
+ * Uses dynamic RBAC permissions for admin routes
  */
 export class ClientRoutes implements Route {
-  public path = '/clients';
+  public path = "/clients";
   public router = Router();
   private clientController = new ClientController();
 
@@ -21,19 +22,19 @@ export class ClientRoutes implements Route {
   }
 
   private initializeRoutes() {
-    // Public/Search routes (require authentication only)
-    
+    // Admin routes - use permission-based access
+
     /**
      * Get all clients
-     * Requires: ADMIN or SUPER_ADMIN role
+     * Requires: users.view permission
      */
     this.router.get(
       `${this.path}/getallclient`,
-      requireRole('ADMIN', 'SUPER_ADMIN'),
+      requirePermission("users.view"),
       this.clientController.getAllClients
     );
 
-    // Profile routes (CLIENT role required)
+    // Profile routes (CLIENT role required - these are self-service)
 
     /**
      * Get current client's profile
@@ -41,7 +42,7 @@ export class ClientRoutes implements Route {
      */
     this.router.get(
       `${this.path}/profile`,
-      requireRole('CLIENT'),
+      requireRole("CLIENT"),
       this.clientController.getMyProfile
     );
 
@@ -51,8 +52,8 @@ export class ClientRoutes implements Route {
      */
     this.router.patch(
       `${this.path}/profile`,
-      requireRole('CLIENT'),
-      validationMiddleware(ClientProfileUpdateDto, 'body', true, []),
+      requireRole("CLIENT"),
+      validationMiddleware(ClientProfileUpdateDto, "body", true, []),
       this.clientController.updateProfile
     );
 
@@ -62,19 +63,19 @@ export class ClientRoutes implements Route {
      */
     this.router.get(
       `${this.path}/profile/stats`,
-      requireRole('CLIENT'),
+      requireRole("CLIENT"),
       this.clientController.getStats
     );
 
-    // Admin routes
+    // Admin routes - permission-based
 
     /**
      * Get client by ID
-     * Requires: ADMIN or SUPER_ADMIN role
+     * Requires: users.view permission
      */
     this.router.get(
       `${this.path}/:id`,
-      requireRole('ADMIN', 'SUPER_ADMIN'),
+      requirePermission("users.view"),
       this.clientController.getClientById
     );
   }
