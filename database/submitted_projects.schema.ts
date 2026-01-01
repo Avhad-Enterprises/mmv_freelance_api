@@ -58,7 +58,7 @@ export const migrate = async (dropFirst = false) => {
                 table.timestamp('updated_at').defaultTo(DB.fn.now());
             });
             console.log('Created Submitted Projects Table');
-            
+
             console.log('Creating Triggers for Submitted Projects Table');
             await DB.raw(`
               CREATE TRIGGER update_timestamp
@@ -69,7 +69,19 @@ export const migrate = async (dropFirst = false) => {
             `);
             console.log('Finished Creating Triggers');
         } else {
-            console.log('Submitted Projects table already exists, skipping migration');
+            console.log('Submitted Projects table already exists, checking for missing columns...');
+
+            // Check and add rejection_reason column if it doesn't exist
+            const hasRejectionReason = await DB.schema.hasColumn(SUBMITTED_PROJECTS, 'rejection_reason');
+            if (!hasRejectionReason) {
+                console.log('Adding rejection_reason column to submitted_projects table...');
+                await DB.schema.alterTable(SUBMITTED_PROJECTS, table => {
+                    table.text('rejection_reason').nullable();
+                });
+                console.log('Added rejection_reason column successfully');
+            } else {
+                console.log('rejection_reason column already exists');
+            }
         }
     } catch (error) {
         console.error('Migration failed for submitted_projects:', error);
@@ -77,4 +89,4 @@ export const migrate = async (dropFirst = false) => {
     }
 };
 
-// Version: 1.0.0 - Submitted projects table for tracking completed work submissions
+// Version: 1.1.0 - Added rejection_reason column for submission rejections

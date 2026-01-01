@@ -246,8 +246,46 @@ class AppliedProjectsService {
             })
             .orderBy('applied_projects.created_at', 'desc')
             .select(
-                'applied_projects.*',
-                'projects_task.*',
+                'applied_projects.applied_projects_id',
+                'applied_projects.projects_task_id',
+                'applied_projects.user_id',
+                'applied_projects.freelancer_id',
+                'applied_projects.status', // Application status (0=pending, 1=approved, 2=completed, 3=rejected)
+                'applied_projects.description',
+                'applied_projects.bid_amount',
+                'applied_projects.bid_message',
+                'applied_projects.credits_spent',
+                'applied_projects.refunded',
+                'applied_projects.refund_amount',
+                'applied_projects.refund_reason',
+                'applied_projects.refunded_at',
+                'applied_projects.rejection_reason as comparison_rejection_reason', // Alias to avoid any conflict
+                'applied_projects.rejection_reason', // Keep original just in case
+                'applied_projects.is_active',
+                'applied_projects.is_deleted',
+                'applied_projects.created_at',
+                'applied_projects.updated_at',
+                // Project Task information (excluding status to avoid conflict)
+                'projects_task.project_title',
+                'projects_task.project_category',
+                'projects_task.deadline',
+                'projects_task.project_description',
+                'projects_task.budget',
+                'projects_task.currency',
+                'projects_task.tags',
+                'projects_task.skills_required',
+                'projects_task.reference_links',
+                'projects_task.additional_notes',
+                'projects_task.projects_type',
+                'projects_task.project_format',
+                'projects_task.audio_voiceover',
+                'projects_task.audio_description',
+                'projects_task.video_length',
+                'projects_task.preferred_video_style',
+                'projects_task.project_files',
+                'projects_task.bidding_enabled',
+                'projects_task.client_id',
+                'projects_task.status as project_status', // Renamed to avoid conflict with application status
                 // Client information
                 'client.user_id as client_user_id',
                 'client.first_name as client_first_name',
@@ -260,7 +298,8 @@ class AppliedProjectsService {
                 `${T.SUBMITTED_PROJECTS}.status as submission_status`,
                 `${T.SUBMITTED_PROJECTS}.submitted_files`,
                 `${T.SUBMITTED_PROJECTS}.additional_notes as submission_notes`,
-                `${T.SUBMITTED_PROJECTS}.created_at as submitted_at`
+                `${T.SUBMITTED_PROJECTS}.created_at as submitted_at`,
+                `${T.SUBMITTED_PROJECTS}.rejection_reason` // Rejection reason from client for submission
             );
         return applications;
     }
@@ -284,7 +323,11 @@ class AppliedProjectsService {
         return applications;
     }
 
-    public async updateApplicationStatus(applied_projects_id: number, status: number): Promise<any> {
+    public async updateApplicationStatus(
+        applied_projects_id: number,
+        status: number,
+        rejection_reason?: string
+    ): Promise<any> {
         if (!applied_projects_id) {
             throw new HttpException(400, "applied_projects_id is required");
         }
@@ -298,13 +341,30 @@ class AppliedProjectsService {
             throw new HttpException(404, "Application not found");
         }
 
+        // Prepare update data
+        const updateData: any = {
+            status,
+            updated_at: new Date()
+        };
+
+        // If rejecting (status = 3), include rejection reason
+        if (status === 3 && rejection_reason) {
+            updateData.rejection_reason = rejection_reason;
+        }
+
+        // Debug logging
+        console.log('=== SERVICE: Preparing Database Update ===');
+        console.log('Status:', status);
+        console.log('Rejection Reason (received):', rejection_reason);
+        console.log('Rejection Reason (type):', typeof rejection_reason);
+        console.log('Rejection Reason (length):', rejection_reason?.length);
+        console.log('Update Data:', updateData);
+        console.log('========================================');
+
         // Update the application status
         const updated = await DB(T.APPLIED_PROJECTS)
             .where({ applied_projects_id })
-            .update({
-                status,
-                updated_at: new Date()
-            })
+            .update(updateData)
             .returning('*');
 
         // If approving the application (status=1), assign the freelancer to the project
@@ -315,39 +375,57 @@ class AppliedProjectsService {
                 .first();
 
             if (freelancerProfile) {
+                // Prepare project update data
+                const projectUpdateData: any = {
+                    freelancer_id: freelancerProfile.freelancer_id,
+                    status: 1, // assigned
+                    assigned_at: new Date(),
+                    updated_at: new Date()
+                };
+
+                // If this application has a bid_amount (bidding was enabled), update the project budget
+                if (application.bid_amount && application.bid_amount > 0) {
+                    projectUpdateData.budget = application.bid_amount;
+                    console.log(`Updating project budget to approved bid amount: ${application.bid_amount}`);
+                }
+
                 // Update the project to assign the freelancer and set status to assigned
                 await DB(T.PROJECTS_TASK)
                     .where({ projects_task_id: application.projects_task_id })
-                    .update({
-                        freelancer_id: freelancerProfile.freelancer_id,
-                        status: 1, // assigned
-                        assigned_at: new Date(),
-                        updated_at: new Date()
-                    });
+                    .update(projectUpdateData);
             }
         }
 
-        // NOTIFICATION LOGIC
-        if (status === 1) { // Accepted/Hired
-            await this.notificationService.createNotification({
-                user_id: application.user_id, // The Freelancer
-                title: "Proposal Accepted!",
-                message: `Congratulations! You have been hired for the project.`,
-                type: "hired",
-                related_id: application.projects_task_id,
-                related_type: "projects_task",
-                is_read: false
-            });
-        } else if (status === 3) { // Rejected
-            await this.notificationService.createNotification({
-                user_id: application.user_id, // The Freelancer
-                title: "Proposal Update",
-                message: `Your proposal for the project was not selected.`,
-                type: "rejected",
-                related_id: application.projects_task_id,
-                related_type: "projects_task",
-                is_read: false
-            });
+        // NOTIFICATION LOGIC (wrapped in try-catch to prevent failures from affecting the update)
+        try {
+            if (status === 1) { // Accepted/Hired
+                await this.notificationService.createNotification({
+                    user_id: application.user_id, // The Freelancer
+                    title: "Proposal Accepted!",
+                    message: `Congratulations! You have been hired for the project.`,
+                    type: "hired",
+                    related_id: application.projects_task_id,
+                    related_type: "projects_task",
+                    is_read: false
+                });
+            } else if (status === 3) { // Rejected
+                const rejectionMessage = rejection_reason
+                    ? `Your proposal was not selected. Reason: ${rejection_reason}`
+                    : `Your proposal for the project was not selected.`;
+
+                await this.notificationService.createNotification({
+                    user_id: application.user_id, // The Freelancer
+                    title: "Proposal Update",
+                    message: rejectionMessage,
+                    type: "rejected",
+                    related_id: application.projects_task_id,
+                    related_type: "projects_task",
+                    is_read: false
+                });
+            }
+        } catch (notificationError) {
+            // Log the error but don't fail the entire operation
+            console.error('Failed to send notification:', notificationError);
         }
 
         return updated[0];

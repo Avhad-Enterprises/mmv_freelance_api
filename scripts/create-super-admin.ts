@@ -22,8 +22,8 @@ async function createSuperAdmin(options: CreateAdminOptions = {}) {
     const adminData = {
       firstName: options.firstName || 'Test',
       lastName: options.lastName || 'Admin',
-      email: options.email || 'testadmin@example.com',
-      password: options.password || 'TestAdmin123!',
+      email: options.email || 'mmvadmin@gmail.com',
+      password: options.password || '12345678',
     };
 
     // Check if admin already exists

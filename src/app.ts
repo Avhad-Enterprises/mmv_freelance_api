@@ -9,6 +9,7 @@ import Routes from "./interfaces/routes.interface";
 import errorMiddleware from "./middlewares/error.middleware";
 import { logger, stream } from "./utils/logger";
 import authMiddleware from "./middlewares/auth.middleware";
+import notFoundMiddleware from "./middlewares/not-found.middleware";
 import dotenv from "dotenv";
 import multerErrorHandler from "./middlewares/multer-error.middleware";
 import DB from "../database/index";
@@ -17,12 +18,12 @@ dotenv.config();
 
 class App {
   public app: express.Application;
-  public port: string | number;
+  public port: number;
   public env: string;
 
   constructor(routes: Routes[]) {
     this.app = express();
-    this.port = process.env.PORT || 8000;
+    this.port = parseInt(process.env.PORT || "8000", 10);
     this.env = process.env.NODE_ENV || "development";
 
     this.initializeMiddlewares();
@@ -37,7 +38,7 @@ class App {
       await DB.raw("SELECT 1 as test");
       console.log("✅ Database connection successful");
 
-      const server = this.app.listen(this.port, () => {
+      const server = this.app.listen(this.port, "0.0.0.0", () => {
         logger.info(
           `🚀 App listening on the port ${this.port}. Current Env ${this.env}.`
         );
@@ -84,8 +85,10 @@ class App {
       "https://www.makemyvid.io",
       "http://localhost:3000",
       "http://localhost:3001",
+      "http://localhost:5173",
       "http://192.168.1.20:3000",
       "http://localhost:5173",
+      "http://192.168.1.20:3000",
       "http://192.168.1.34:5173",
       "http://172.16.0.2:5173",
     ];
@@ -148,6 +151,8 @@ class App {
     });
 
     // 404 handler for unmatched routes
+    // 404 handler for unmatched routes
+    this.app.use(notFoundMiddleware);
     this.app.use("*", (req, res) => {
       res.status(404).json({
         success: false,

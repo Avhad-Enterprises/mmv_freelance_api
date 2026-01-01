@@ -147,13 +147,20 @@ class SubmissionService {
     }
 
     // Update the submission status
+    const updateData: any = {
+      status,
+      updated_by: data.updated_by || null,
+      updated_at: DB.fn.now()
+    };
+
+    // If rejecting (status = 2), include rejection reason
+    if (status === 2 && data.rejection_reason) {
+      updateData.rejection_reason = data.rejection_reason;
+    }
+
     const [updatedSubmission] = await DB(T.SUBMITTED_PROJECTS)
       .where({ submission_id })
-      .update({
-        status,
-        updated_by: data.updated_by || null,
-        updated_at: DB.fn.now()
-      })
+      .update(updateData)
       .returning('*');
 
     // If approving the submission (status = 1), mark project and application as completed
@@ -199,10 +206,14 @@ class SubmissionService {
       });
     } else if (status === 2) {
       // Submission rejected
+      const rejectionMessage = data.rejection_reason
+        ? `Your submission for "${project?.project_title || 'the project'}" requires changes. Reason: ${data.rejection_reason}`
+        : `Your submission for "${project?.project_title || 'the project'}" requires changes. Please review feedback and resubmit.`;
+
       await this.notificationService.createNotification({
         user_id: existingSubmission.user_id, // Freelancer
         title: "Submission Needs Revision",
-        message: `Your submission for "${project?.project_title || 'the project'}" requires changes. Please review feedback and resubmit.`,
+        message: rejectionMessage,
         type: "submission_rejected",
         related_id: submission_id,
         related_type: "submissions",

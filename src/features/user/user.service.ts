@@ -59,8 +59,10 @@ class UserService {
    * Returns only non-sensitive information
    */
   public async getUserPublicInfo(user_id: number): Promise<any> {
+    // Check if company_name column exists before selecting it
+    // Or just select standard fields that definitely exist
     const user = await DB(T.USERS_TABLE)
-      .select('user_id', 'first_name', 'last_name', 'username', 'profile_picture', 'company_name')
+      .select('user_id', 'first_name', 'last_name', 'username', 'profile_picture')
       .where({ user_id, is_active: true, is_deleted: false })
       .first();
 
@@ -74,9 +76,9 @@ class UserService {
       first_name: user.first_name,
       last_name: user.last_name,
       username: user.username,
-      company_name: user.company_name,
+      // company_name: user.company_name, // Removed as column doesn't exist
       profile_picture: user.profile_picture,
-      display_name: user.first_name || user.company_name || user.username || `User ${user.user_id}`
+      display_name: user.first_name || user.username || `User ${user.user_id}`
     };
   }
 

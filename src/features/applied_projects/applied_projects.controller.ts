@@ -88,11 +88,24 @@ class AppliedProjectsController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const { applied_projects_id, status } = req.body;
+      const { applied_projects_id, status, rejection_reason } = req.body;
+
+      // Debug logging
+      console.log('=== UPDATE APPLICATION STATUS ===');
+      console.log('Request body:', req.body);
+      console.log('Applied Projects ID:', applied_projects_id);
+      console.log('Status:', status);
+      console.log('Rejection Reason:', rejection_reason);
+      console.log('================================');
+
       if (!applied_projects_id || typeof status === 'undefined') {
         throw new HttpException(400, "applied_projects_id and status are required");
       }
-      const updated = await this.AppliedProjectsService.updateApplicationStatus(applied_projects_id, status);
+      const updated = await this.AppliedProjectsService.updateApplicationStatus(
+        applied_projects_id,
+        status,
+        rejection_reason
+      );
       res.status(200).json({
         success: true,
         data: updated,

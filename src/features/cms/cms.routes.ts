@@ -2,7 +2,7 @@ import { Router } from "express";
 import Route from "../../interfaces/route.interface";
 import validationMiddleware from "../../middlewares/validation.middleware";
 import CmsController from "./cms.controller";
-import { requireRole } from "../../middlewares/role.middleware";
+import { requirePermission } from "../../middlewares/permission.middleware";
 import { generalRateLimit } from "../../middlewares/rate-limit.middleware";
 import {
   heroUpload,
@@ -24,6 +24,10 @@ import {
   BulkReorderDto,
 } from "./cms.dto";
 
+/**
+ * CMS Routes
+ * Uses dynamic RBAC permissions instead of hardcoded roles
+ */
 class CmsRoute implements Route {
   public path = "/cms-landing";
   public router = Router();
@@ -74,33 +78,33 @@ class CmsRoute implements Route {
     // HERO SECTION (with file upload support for left/right images)
     this.router.get(
       `${this.path}/hero`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getAllHero
     );
     this.router.get(
       `${this.path}/hero/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getHeroById
     );
     this.router.post(
       `${this.path}/hero`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.create"),
       generalRateLimit,
       heroUpload,
       this.controller.createHero
     );
     this.router.put(
       `${this.path}/hero`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       generalRateLimit,
       heroUpload,
       this.controller.updateHero
     );
     this.router.delete(
       `${this.path}/hero/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.delete"),
       generalRateLimit,
       this.controller.deleteHero
     );
@@ -108,39 +112,39 @@ class CmsRoute implements Route {
     // TRUSTED COMPANIES (with file upload support for logo)
     this.router.get(
       `${this.path}/trusted-companies`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getAllTrustedCompanies
     );
     this.router.get(
       `${this.path}/trusted-companies/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getTrustedCompanyById
     );
     this.router.post(
       `${this.path}/trusted-companies`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.create"),
       generalRateLimit,
       trustedCompanyUpload,
       this.controller.createTrustedCompany
     );
     this.router.put(
       `${this.path}/trusted-companies`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       generalRateLimit,
       trustedCompanyUpload,
       this.controller.updateTrustedCompany
     );
     this.router.delete(
       `${this.path}/trusted-companies/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.delete"),
       generalRateLimit,
       this.controller.deleteTrustedCompany
     );
     this.router.put(
       `${this.path}/trusted-companies/reorder`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       generalRateLimit,
       validationMiddleware(BulkReorderDto, "body", true, []),
       this.controller.reorderTrustedCompanies
@@ -149,39 +153,39 @@ class CmsRoute implements Route {
     // WHY CHOOSE US
     this.router.get(
       `${this.path}/why-choose-us`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getAllWhyChooseUs
     );
     this.router.get(
       `${this.path}/why-choose-us/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getWhyChooseUsById
     );
     this.router.post(
       `${this.path}/why-choose-us`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.create"),
       generalRateLimit,
       validationMiddleware(CreateWhyChooseUsDto, "body", true, []),
       this.controller.createWhyChooseUs
     );
     this.router.put(
       `${this.path}/why-choose-us`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       generalRateLimit,
       validationMiddleware(UpdateWhyChooseUsDto, "body", true, []),
       this.controller.updateWhyChooseUs
     );
     this.router.delete(
       `${this.path}/why-choose-us/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.delete"),
       generalRateLimit,
       this.controller.deleteWhyChooseUs
     );
     this.router.put(
       `${this.path}/why-choose-us/reorder`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       generalRateLimit,
       validationMiddleware(BulkReorderDto, "body", true, []),
       this.controller.reorderWhyChooseUs
@@ -190,39 +194,39 @@ class CmsRoute implements Route {
     // FEATURED CREATORS
     this.router.get(
       `${this.path}/featured-creators`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getAllFeaturedCreators
     );
     this.router.get(
       `${this.path}/featured-creators/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getFeaturedCreatorById
     );
     this.router.post(
       `${this.path}/featured-creators`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.create"),
       generalRateLimit,
       validationMiddleware(CreateFeaturedCreatorDto, "body", true, []),
       this.controller.createFeaturedCreator
     );
     this.router.put(
       `${this.path}/featured-creators`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       generalRateLimit,
       validationMiddleware(UpdateFeaturedCreatorDto, "body", true, []),
       this.controller.updateFeaturedCreator
     );
     this.router.delete(
       `${this.path}/featured-creators/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.delete"),
       generalRateLimit,
       this.controller.deleteFeaturedCreator
     );
     this.router.put(
       `${this.path}/featured-creators/reorder`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       generalRateLimit,
       validationMiddleware(BulkReorderDto, "body", true, []),
       this.controller.reorderFeaturedCreators
@@ -231,39 +235,39 @@ class CmsRoute implements Route {
     // SUCCESS STORIES
     this.router.get(
       `${this.path}/success-stories`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getAllSuccessStories
     );
     this.router.get(
       `${this.path}/success-stories/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getSuccessStoryById
     );
     this.router.post(
       `${this.path}/success-stories`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.create"),
       generalRateLimit,
       validationMiddleware(CreateSuccessStoryDto, "body", true, []),
       this.controller.createSuccessStory
     );
     this.router.put(
       `${this.path}/success-stories`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       generalRateLimit,
       validationMiddleware(UpdateSuccessStoryDto, "body", true, []),
       this.controller.updateSuccessStory
     );
     this.router.delete(
       `${this.path}/success-stories/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.delete"),
       generalRateLimit,
       this.controller.deleteSuccessStory
     );
     this.router.put(
       `${this.path}/success-stories/reorder`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       generalRateLimit,
       validationMiddleware(BulkReorderDto, "body", true, []),
       this.controller.reorderSuccessStories
@@ -272,39 +276,39 @@ class CmsRoute implements Route {
     // LANDING FAQs
     this.router.get(
       `${this.path}/faqs`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getAllLandingFaqs
     );
     this.router.get(
       `${this.path}/faqs/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       generalRateLimit,
       this.controller.getLandingFaqById
     );
     this.router.post(
       `${this.path}/faqs`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.create"),
       generalRateLimit,
       validationMiddleware(CreateLandingFaqDto, "body", true, []),
       this.controller.createLandingFaq
     );
     this.router.put(
       `${this.path}/faqs`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       generalRateLimit,
       validationMiddleware(UpdateLandingFaqDto, "body", true, []),
       this.controller.updateLandingFaq
     );
     this.router.delete(
       `${this.path}/faqs/:id`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.delete"),
       generalRateLimit,
       this.controller.deleteLandingFaq
     );
     this.router.put(
       `${this.path}/faqs/reorder`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       generalRateLimit,
       validationMiddleware(BulkReorderDto, "body", true, []),
       this.controller.reorderLandingFaqs
