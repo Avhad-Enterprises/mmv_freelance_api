@@ -375,15 +375,24 @@ class AppliedProjectsService {
                 .first();
 
             if (freelancerProfile) {
+                // Prepare project update data
+                const projectUpdateData: any = {
+                    freelancer_id: freelancerProfile.freelancer_id,
+                    status: 1, // assigned
+                    assigned_at: new Date(),
+                    updated_at: new Date()
+                };
+
+                // If this application has a bid_amount (bidding was enabled), update the project budget
+                if (application.bid_amount && application.bid_amount > 0) {
+                    projectUpdateData.budget = application.bid_amount;
+                    console.log(`Updating project budget to approved bid amount: ${application.bid_amount}`);
+                }
+
                 // Update the project to assign the freelancer and set status to assigned
                 await DB(T.PROJECTS_TASK)
                     .where({ projects_task_id: application.projects_task_id })
-                    .update({
-                        freelancer_id: freelancerProfile.freelancer_id,
-                        status: 1, // assigned
-                        assigned_at: new Date(),
-                        updated_at: new Date()
-                    });
+                    .update(projectUpdateData);
             }
         }
 
