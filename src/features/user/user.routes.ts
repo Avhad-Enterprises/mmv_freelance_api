@@ -1,18 +1,22 @@
 // User Routes (Refactored) - Common user endpoints with RBAC
-import { Router } from 'express';
-import { UserController } from './user.controller';
-import { requireRole, requireSelfOrRole } from '../../middlewares/role.middleware';
+import { Router } from "express";
+import { UserController } from "./user.controller";
+import {
+  requireRole,
+  requireSelfOrRole,
+} from "../../middlewares/role.middleware";
 // import { requirePermission } from '../../middlewares/permission.middleware'; // DISABLED: Using only role-based access
-import validationMiddleware from '../../middlewares/validation.middleware';
+import validationMiddleware from "../../middlewares/validation.middleware";
 import {
   UserUpdateDto,
   ChangePasswordDto,
   PasswordResetRequestDto,
   PasswordResetDto,
-  SetPasswordDto
-} from './user.update.dto';
-import { CreateUserDto, AssignRoleDto, UpdateUserDto } from './user.admin.dto';
-import Route from '../../interfaces/route.interface';
+  SetPasswordDto,
+} from "./user.update.dto";
+import { CreateUserDto, AssignRoleDto, UpdateUserDto } from "./user.admin.dto";
+import Route from "../../interfaces/route.interface";
+import { requirePermission } from "../../middlewares/permission.middleware";
 
 /**
  * User Routes (Refactored)
@@ -20,7 +24,7 @@ import Route from '../../interfaces/route.interface';
  * Uses RBAC for authorization
  */
 export class UserRoutes implements Route {
-  public path = '/users';
+  public path = "/users";
   public router = Router();
   private userController = new UserController();
 
@@ -37,7 +41,7 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}/password-reset-request`,
-      validationMiddleware(PasswordResetRequestDto, 'body', false, []),
+      validationMiddleware(PasswordResetRequestDto, "body", false, []),
       this.userController.requestPasswordReset
     );
 
@@ -47,7 +51,7 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}/password-reset`,
-      validationMiddleware(PasswordResetDto, 'body', false, []),
+      validationMiddleware(PasswordResetDto, "body", false, []),
       this.userController.resetPassword
     );
 
@@ -57,10 +61,7 @@ export class UserRoutes implements Route {
      * Get current user's profile (with type-specific data)
      * Requires: Authentication
      */
-    this.router.get(
-      `${this.path}/me`,
-      this.userController.getMyProfile
-    );
+    this.router.get(`${this.path}/me`, this.userController.getMyProfile);
 
     /**
      * Update basic user info
@@ -69,7 +70,7 @@ export class UserRoutes implements Route {
     this.router.patch(
       `${this.path}/me`,
       // requirePermission('profile.update'), // DISABLED: Using only role-based access
-      validationMiddleware(UserUpdateDto, 'body', true, []),
+      validationMiddleware(UserUpdateDto, "body", true, []),
       this.userController.updateBasicInfo
     );
 
@@ -87,10 +88,7 @@ export class UserRoutes implements Route {
      * Get current user's roles
      * Requires: Authentication
      */
-    this.router.get(
-      `${this.path}/me/roles`,
-      this.userController.getMyRoles
-    );
+    this.router.get(`${this.path}/me/roles`, this.userController.getMyRoles);
 
     /**
      * Check if user has profile
@@ -118,7 +116,7 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}/change-password`,
-      validationMiddleware(ChangePasswordDto, 'body', false, []),
+      validationMiddleware(ChangePasswordDto, "body", false, []),
       this.userController.changePassword
     );
 
@@ -128,7 +126,7 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}/set-password`,
-      validationMiddleware(SetPasswordDto, 'body', false, []),
+      validationMiddleware(SetPasswordDto, "body", false, []),
       this.userController.setPassword
     );
 
@@ -160,7 +158,7 @@ export class UserRoutes implements Route {
      */
     this.router.get(
       `${this.path}/:id`,
-      requireRole('ADMIN', 'SUPER_ADMIN'),
+      requireRole("ADMIN", "SUPER_ADMIN"),
       // requirePermission('users.view'), // DISABLED: Using only role-based access
       this.userController.getUserById
     );
@@ -171,7 +169,7 @@ export class UserRoutes implements Route {
      */
     this.router.get(
       `${this.path}/:id/profile`,
-      requireSelfOrRole('ADMIN', 'SUPER_ADMIN'),
+      requireSelfOrRole("ADMIN", "SUPER_ADMIN"),
       // requirePermission('users.view'), // DISABLED: Using only role-based access
       this.userController.getUserWithProfileById
     );
@@ -192,7 +190,7 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}/:id/ban`,
-      requireRole('ADMIN', 'SUPER_ADMIN'),
+      requireRole("ADMIN", "SUPER_ADMIN"),
       // requirePermission('users.ban'), // DISABLED: Using only role-based access
       this.userController.banUser
     );
@@ -203,7 +201,7 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}/:id/unban`,
-      requireRole('ADMIN', 'SUPER_ADMIN'),
+      requireRole("ADMIN", "SUPER_ADMIN"),
       // requirePermission('users.ban'), // DISABLED: Using only role-based access
       this.userController.unbanUser
     );
@@ -216,7 +214,7 @@ export class UserRoutes implements Route {
      */
     this.router.get(
       `${this.path}`,
-      requireRole('SUPER_ADMIN'),
+      requireRole("SUPER_ADMIN"),
       // requirePermission('users.view'), // DISABLED: Using only role-based access
       this.userController.getAllUsers
     );
@@ -227,9 +225,9 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}`,
-      requireRole('SUPER_ADMIN'),
+      requireRole("SUPER_ADMIN"),
       // requirePermission('users.create'), // DISABLED: Using only role-based access
-      validationMiddleware(CreateUserDto, 'body', false, []),
+      validationMiddleware(CreateUserDto, "body", false, []),
       this.userController.createUser
     );
 
@@ -239,9 +237,8 @@ export class UserRoutes implements Route {
      */
     this.router.put(
       `${this.path}/:id`,
-      requireRole('SUPER_ADMIN'),
-      // requirePermission('users.update'), // DISABLED: Using only role-based access
-      validationMiddleware(UpdateUserDto, 'body', true, []),
+      requirePermission("users.update"),
+      validationMiddleware(UpdateUserDto, "body", true, []),
       this.userController.updateUserById
     );
 
@@ -251,7 +248,7 @@ export class UserRoutes implements Route {
      */
     this.router.delete(
       `${this.path}/:id`,
-      requireRole('SUPER_ADMIN'),
+      requireRole("SUPER_ADMIN"),
       // requirePermission('users.delete'), // DISABLED: Using only role-based access
       this.userController.deleteUserById
     );
@@ -264,7 +261,7 @@ export class UserRoutes implements Route {
      */
     this.router.get(
       `${this.path}/:id/roles`,
-      requireRole('ADMIN', 'SUPER_ADMIN'),
+      requireRole("ADMIN", "SUPER_ADMIN"),
       // requirePermission('admin.roles'), // DISABLED: Using only role-based access
       this.userController.getUserRoles
     );
@@ -275,9 +272,9 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}/:id/roles`,
-      requireRole('SUPER_ADMIN'),
+      requireRole("SUPER_ADMIN"),
       // requirePermission('admin.roles'), // DISABLED: Using only role-based access
-      validationMiddleware(AssignRoleDto, 'body', false, []),
+      validationMiddleware(AssignRoleDto, "body", false, []),
       this.userController.assignRoleToUser
     );
 
@@ -287,7 +284,7 @@ export class UserRoutes implements Route {
      */
     this.router.delete(
       `${this.path}/:id/roles/:roleId`,
-      requireRole('SUPER_ADMIN'),
+      requireRole("SUPER_ADMIN"),
       // requirePermission('admin.roles'), // DISABLED: Using only role-based access
       this.userController.removeRoleFromUser
     );
@@ -298,10 +295,9 @@ export class UserRoutes implements Route {
      */
     this.router.get(
       `${this.path}/:id/permissions`,
-      requireRole('ADMIN', 'SUPER_ADMIN'),
+      requireRole("ADMIN", "SUPER_ADMIN"),
       // requirePermission('admin.roles'), // DISABLED: Using only role-based access
       this.userController.getUserPermissions
     );
-
   }
 }
