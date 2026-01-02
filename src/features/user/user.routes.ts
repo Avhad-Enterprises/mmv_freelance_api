@@ -5,7 +5,7 @@ import {
   requireRole,
   requireSelfOrRole,
 } from "../../middlewares/role.middleware";
-// import { requirePermission } from '../../middlewares/permission.middleware'; // DISABLED: Using only role-based access
+import { requirePermission } from "../../middlewares/permission.middleware";
 import validationMiddleware from "../../middlewares/validation.middleware";
 import {
   UserUpdateDto,
@@ -16,7 +16,6 @@ import {
 } from "./user.update.dto";
 import { CreateUserDto, AssignRoleDto, UpdateUserDto } from "./user.admin.dto";
 import Route from "../../interfaces/route.interface";
-import { requirePermission } from "../../middlewares/permission.middleware";
 
 /**
  * User Routes (Refactored)
@@ -158,8 +157,7 @@ export class UserRoutes implements Route {
      */
     this.router.get(
       `${this.path}/:id`,
-      requireRole("ADMIN", "SUPER_ADMIN"),
-      // requirePermission('users.view'), // DISABLED: Using only role-based access
+      requirePermission("users.view"),
       this.userController.getUserById
     );
 
@@ -169,8 +167,7 @@ export class UserRoutes implements Route {
      */
     this.router.get(
       `${this.path}/:id/profile`,
-      requireSelfOrRole("ADMIN", "SUPER_ADMIN"),
-      // requirePermission('users.view'), // DISABLED: Using only role-based access
+      requireSelfOrRole("ADMIN", "SUPER_ADMIN"), // Keep role-based for self-access
       this.userController.getUserWithProfileById
     );
 
@@ -190,8 +187,7 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}/:id/ban`,
-      requireRole("ADMIN", "SUPER_ADMIN"),
-      // requirePermission('users.ban'), // DISABLED: Using only role-based access
+      requirePermission("users.ban"),
       this.userController.banUser
     );
 
@@ -201,8 +197,7 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}/:id/unban`,
-      requireRole("ADMIN", "SUPER_ADMIN"),
-      // requirePermission('users.ban'), // DISABLED: Using only role-based access
+      requirePermission("users.ban"),
       this.userController.unbanUser
     );
 
@@ -214,8 +209,7 @@ export class UserRoutes implements Route {
      */
     this.router.get(
       `${this.path}`,
-      requireRole("SUPER_ADMIN"),
-      // requirePermission('users.view'), // DISABLED: Using only role-based access
+      requirePermission("users.view"),
       this.userController.getAllUsers
     );
 
@@ -225,8 +219,7 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}`,
-      requireRole("SUPER_ADMIN"),
-      // requirePermission('users.create'), // DISABLED: Using only role-based access
+      requirePermission("users.create"),
       validationMiddleware(CreateUserDto, "body", false, []),
       this.userController.createUser
     );
@@ -248,8 +241,7 @@ export class UserRoutes implements Route {
      */
     this.router.delete(
       `${this.path}/:id`,
-      requireRole("SUPER_ADMIN"),
-      // requirePermission('users.delete'), // DISABLED: Using only role-based access
+      requirePermission("users.delete"),
       this.userController.deleteUserById
     );
 
@@ -261,8 +253,7 @@ export class UserRoutes implements Route {
      */
     this.router.get(
       `${this.path}/:id/roles`,
-      requireRole("ADMIN", "SUPER_ADMIN"),
-      // requirePermission('admin.roles'), // DISABLED: Using only role-based access
+      requirePermission("admin.roles"),
       this.userController.getUserRoles
     );
 
@@ -272,8 +263,7 @@ export class UserRoutes implements Route {
      */
     this.router.post(
       `${this.path}/:id/roles`,
-      requireRole("SUPER_ADMIN"),
-      // requirePermission('admin.roles'), // DISABLED: Using only role-based access
+      requirePermission("admin.roles"),
       validationMiddleware(AssignRoleDto, "body", false, []),
       this.userController.assignRoleToUser
     );
@@ -284,8 +274,7 @@ export class UserRoutes implements Route {
      */
     this.router.delete(
       `${this.path}/:id/roles/:roleId`,
-      requireRole("SUPER_ADMIN"),
-      // requirePermission('admin.roles'), // DISABLED: Using only role-based access
+      requirePermission("admin.roles"),
       this.userController.removeRoleFromUser
     );
 
@@ -295,8 +284,7 @@ export class UserRoutes implements Route {
      */
     this.router.get(
       `${this.path}/:id/permissions`,
-      requireRole("ADMIN", "SUPER_ADMIN"),
-      // requirePermission('admin.roles'), // DISABLED: Using only role-based access
+      requirePermission("admin.roles"),
       this.userController.getUserPermissions
     );
   }

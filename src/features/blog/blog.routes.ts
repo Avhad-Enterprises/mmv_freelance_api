@@ -1,15 +1,15 @@
-import { Router } from 'express';
-import Route from '../../interfaces/route.interface';
-import validationMiddleware from '../../middlewares/validation.middleware';
-import BlogController from './blog.controller';
-import { BlogDto } from './blog.dto';
-import { requireRole } from '../../middlewares/role.middleware';
+import { Router } from "express";
+import Route from "../../interfaces/route.interface";
+import validationMiddleware from "../../middlewares/validation.middleware";
+import BlogController from "./blog.controller";
+import { BlogDto } from "./blog.dto";
+import { requirePermission } from "../../middlewares/permission.middleware";
 
 class BlogRoute implements Route {
-  public path = '/blog';
+  public path = "/blog";
   public router = Router();
   public blogController = new BlogController();
-  
+
   constructor() {
     this.initializeRoutes();
   }
@@ -33,8 +33,8 @@ class BlogRoute implements Route {
      */
     this.router.post(
       `${this.path}`,
-      requireRole('SUPER_ADMIN', 'ADMIN'),
-      validationMiddleware(BlogDto, 'body', true, []),
+      requirePermission("content.create"),
+      validationMiddleware(BlogDto, "body", true, []),
       this.blogController.createBlog
     );
 
@@ -44,8 +44,8 @@ class BlogRoute implements Route {
      */
     this.router.put(
       `${this.path}`,
-      requireRole('SUPER_ADMIN', 'ADMIN'),
-      validationMiddleware(BlogDto, 'body', false, []),
+      requirePermission("content.update"),
+      validationMiddleware(BlogDto, "body", false, []),
       this.blogController.updateBlog
     );
 
@@ -55,8 +55,8 @@ class BlogRoute implements Route {
      */
     this.router.delete(
       `${this.path}`,
-      requireRole('SUPER_ADMIN', 'ADMIN'),
-      validationMiddleware(BlogDto, 'body', true, []),
+      requirePermission("content.delete"),
+      validationMiddleware(BlogDto, "body", true, []),
       this.blogController.deleteBlog
     );
   }

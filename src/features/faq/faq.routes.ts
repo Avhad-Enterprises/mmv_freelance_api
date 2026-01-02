@@ -3,7 +3,7 @@ import Route from "../../interfaces/route.interface";
 import validationMiddleware from "../../middlewares/validation.middleware";
 import FaqController from "./faq.controller";
 import { FaqDto } from "./faq.dto";
-import { requireRole } from "../../middlewares/role.middleware";
+import { requirePermission } from "../../middlewares/permission.middleware";
 
 class FaqRoute implements Route {
   public path = "/faq";
@@ -22,7 +22,7 @@ class FaqRoute implements Route {
      */
     this.router.get(
       `${this.path}/all`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.view"),
       this.faqController.getAllFaqsAdmin
     );
 
@@ -44,7 +44,7 @@ class FaqRoute implements Route {
      */
     this.router.post(
       `${this.path}`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.create"),
       validationMiddleware(FaqDto, "body", true, []),
       this.faqController.createFaq
     );
@@ -55,7 +55,7 @@ class FaqRoute implements Route {
      */
     this.router.put(
       `${this.path}`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.update"),
       validationMiddleware(FaqDto, "body", false, []),
       this.faqController.updateFaq
     );
@@ -66,7 +66,7 @@ class FaqRoute implements Route {
      */
     this.router.delete(
       `${this.path}`,
-      requireRole("SUPER_ADMIN", "ADMIN"),
+      requirePermission("content.delete"),
       validationMiddleware(FaqDto, "body", true, []),
       this.faqController.deleteFaq
     );

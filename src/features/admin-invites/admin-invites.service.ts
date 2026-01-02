@@ -321,8 +321,9 @@ class AdminInvitesService {
 
         const userId = userResult[0].user_id;
 
-        // Assign ADMIN role
-        const role = await trx(T.ROLE).where("name", "ADMIN").first();
+        // Assign role from invitation (defaults to ADMIN if not specified)
+        const assignedRoleName = invitation.assigned_role || "ADMIN";
+        const role = await trx(T.ROLE).where("name", assignedRoleName).first();
 
         if (role) {
           await trx(T.USER_ROLES).insert({
@@ -354,7 +355,7 @@ class AdminInvitesService {
             id: userId,
             user_id: userId,
             email: dto.email,
-            roles: ["ADMIN"],
+            roles: [assignedRoleName],
           },
           process.env.JWT_SECRET,
           { expiresIn: "24h" }
@@ -369,7 +370,7 @@ class AdminInvitesService {
         return {
           user: {
             ...user,
-            roles: ["ADMIN"],
+            roles: [assignedRoleName],
           },
           token,
         };
@@ -424,8 +425,8 @@ class AdminInvitesService {
         subject: `You're Invited to Join ${APP_NAME} Admin Panel`,
         html: emailHtml,
       });
-    } catch (error) {
-      console.error("Failed to send invitation email:", error);
+    } catch (error: any) {
+      console.error("Failed to send invitation email:", error?.message);
       // Don't throw here - invitation was created successfully, just email failed
     }
   }
