@@ -61,6 +61,17 @@ export const migrate = async (dropFirst = false) => {
                     .references('user_id')
                     .inTable('users')
                     .onDelete('SET NULL');
+
+                // Credit & Refund Tracking
+                table.integer('credits_spent').defaultTo(1);
+                table.boolean('refunded').defaultTo(false);
+                table.integer('refund_amount').defaultTo(0);
+                table.string('refund_reason', 100).nullable();
+                table.timestamp('refunded_at').nullable();
+
+                // Application Status Details
+                table.text('rejection_reason').nullable();
+
                 table.timestamp("created_at").defaultTo(DB.fn.now());
                 table.timestamp("updated_at").defaultTo(DB.fn.now());
 

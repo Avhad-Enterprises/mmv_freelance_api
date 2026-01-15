@@ -45,6 +45,7 @@ const MIGRATION_ORDER = [
   "faq.schema.ts",
   "review.schema.ts",
   "notification.schema.ts",
+  "notification_trigger.schema.ts", // Trigger depends on notification table
   "support_ticket.schema.ts",
   "support_ticket_reply.schema.ts",
   "support_ticket_note.schema.ts",
@@ -56,11 +57,25 @@ const MIGRATION_ORDER = [
   "admin_invites.schema.ts",
   "report_system.schema.ts",
   "report_templates.schema.ts",
+
+  // Financial / Credits
+  "credit_settings.schema.ts",
+  "credit_transactions.schema.ts",
+
+  // Communication / Chat
+  "conversations.schema.ts",
+  "messages.schema.ts",
+
+  // User features
+  "contact.schema.ts",
+  "oauth_accounts.schema.ts",
+
   "transactions.schema.ts", // Move transactions after projects are created
 
   // Log/audit tables last
   "visitor_logs.schema.ts",
   "emailog.schema.ts",
+  "system_error_logs.schema.ts",
 ];
 
 // Drop all tables in reverse dependency order for clean slate
@@ -69,8 +84,13 @@ const dropAllTables = async () => {
 
   // Tables in reverse dependency order (most dependent first)
   const tablesToDrop = [
+    T.SYSTEM_ERROR_LOGS,
     T.EMAIL_LOG_TABLE,
     T.VISITOR_LOGS,
+    T.MESSAGES_TABLE,
+    T.CONVERSATIONS_TABLE,
+    T.CREDIT_TRANSACTIONS_TABLE,
+    T.CREDIT_SETTINGS_TABLE,
     T.TRANSACTION_TABLE,
     T.REPORT_TEMPLATES,
     T.REPORT_TABLE,
@@ -101,6 +121,8 @@ const dropAllTables = async () => {
     T.CLIENT_PROFILES,
     T.FREELANCER_PROFILES,
     T.PERMISSION,
+    T.OAUTH_ACCOUNTS_TABLE,
+    T.CONTACT_SUBMISSIONS,
     T.ROLE,
     T.USERS_TABLE,
     T.TAGS_TABLE,
