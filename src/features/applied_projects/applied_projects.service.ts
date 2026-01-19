@@ -61,7 +61,7 @@ class AppliedProjectsService {
 
         // Check if user is videographer - videographers apply freely (no keys required)
         // This can be re-enabled by setting VIDEOGRAPHER_KEYS_ENABLED = true
-        const VIDEOGRAPHER_KEYS_ENABLED = false;
+        const VIDEOGRAPHER_KEYS_ENABLED = true;
 
         // Check user's role from roles table
         const userRole = await DB(T.USER_ROLES)

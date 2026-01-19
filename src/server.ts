@@ -31,6 +31,7 @@ import notificationRoute from './features/notification/notification.routes';
 import supportTicketsRoute from './features/support-ticket/support-ticket.routes';
 import EmailRoute from './features/email/email.routes';
 import ContactRoute from './features/contact/contact.routes';
+import ChatRoute from './features/chat/chat.routes';
 
 // Phase 8: Infrastructure Features
 import UploadRoute from './features/upload/upload.routes';
@@ -107,6 +108,7 @@ const app = new App([
 
   // OAuth Routes
   new OAuthRoutes(),
+  new ChatRoute(),
 ]);
 
 // Start server

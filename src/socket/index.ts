@@ -88,6 +88,75 @@ class SocketService {
 
                 logger.info(`🔌 User connected: ${userId} (Socket ID: ${socket.id})`);
 
+                // Chat Events
+                socket.on('join_conversation', (conversationId) => {
+                    socket.join(`conversation_${conversationId}`);
+                    // logger.info(`User ${userId} joined conversation ${conversationId}`);
+                });
+
+                socket.on('leave_conversation', (conversationId) => {
+                    socket.leave(`conversation_${conversationId}`);
+                });
+
+                socket.on('typing_start', ({ conversationId, toUserId }) => {
+                    this.io.to(`conversation_${conversationId}`).emit('typing_start', {
+                        conversationId,
+                        userId
+                    });
+                });
+
+                socket.on('typing_stop', ({ conversationId, toUserId }) => {
+                    this.io.to(`conversation_${conversationId}`).emit('typing_stop', {
+                        conversationId,
+                        userId
+                    });
+                });
+
+                socket.on('send_message', async (data) => {
+                    try {
+                        const { conversationId, content, toUserId } = data;
+
+                        // Ensure conversationId is a number
+                        const convId = typeof conversationId === 'string' ? parseInt(conversationId) : conversationId;
+
+                        // Save to DB
+                        const ChatService = (await import('../features/chat/chat.service')).default;
+                        const message = await ChatService.createMessage(userId, convId, content);
+
+                        // Broadcast to conversation room (includes sender for confirmation)
+                        this.io.to(`conversation_${convId}`).emit('new_message', message);
+
+                        // Also notify recipient globally if they are online but not in the conversation room
+                        this.io.to(`user_${toUserId}`).emit('message_notification', {
+                            ...message,
+                            type: 'new_message'
+                        });
+
+                    } catch (error) {
+                        console.error('Error sending message:', error);
+                        socket.emit('error', { message: 'Failed to send message' });
+                    }
+                });
+
+                socket.on('mark_read', async ({ conversationId }) => {
+                    try {
+                        // Ensure conversationId is a number
+                        const convId = typeof conversationId === 'string' ? parseInt(conversationId) : conversationId;
+
+                        const ChatService = (await import('../features/chat/chat.service')).default;
+                        await ChatService.markMessagesAsRead(convId, userId);
+
+                        // Notify others in conversation that messages were read
+                        this.io.to(`conversation_${convId}`).emit('messages_read', {
+                            conversationId: convId,
+                            userId,
+                            readAt: new Date()
+                        });
+                    } catch (error) {
+                        console.error('Error marking read:', error);
+                    }
+                });
+
                 socket.on('disconnect', () => {
                     this.removeUserSocket(userId, socket.id);
                     logger.info(`🔌 User disconnected: ${userId}`);
