@@ -12,27 +12,16 @@ class ContactController {
      */
     public submitContactForm = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            console.log('DEBUG: Controller - submitContactForm called');
-            console.log('DEBUG: Controller - Request body:', req.body);
-            console.log('DEBUG: Controller - Request headers:', req.headers);
-
             const contactData: ContactSubmissionDto = req.body;
-
-            // Get client IP
             const ipAddress = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
-            console.log('DEBUG: Controller - IP address:', ipAddress);
 
-            console.log('DEBUG: Controller - Calling service...');
             const contactResponse = await this.contactService.submitContactForm(
                 contactData,
                 ipAddress as string
             );
 
-            console.log('DEBUG: Controller - Service returned:', contactResponse);
             res.status(201).json(contactResponse);
         } catch (error) {
-            console.log('DEBUG: Controller - Error caught:', error.message);
-            console.log('DEBUG: Controller - Error stack:', error.stack);
             next(error);
         }
     };

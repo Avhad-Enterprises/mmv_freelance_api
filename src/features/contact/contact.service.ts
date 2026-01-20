@@ -12,12 +12,7 @@ export class ContactService {
      */
     async submitContactForm(contactData: ContactSubmissionDto, ipAddress?: string): Promise<ContactSubmissionResponse> {
         try {
-            console.log('DEBUG: Starting contact form submission');
-            console.log('DEBUG: Contact data:', contactData);
-            console.log('DEBUG: IP address:', ipAddress);
-
             // Insert contact submission into database
-            console.log('DEBUG: Inserting into database...');
             const [result] = await DB('contact_submissions')
                 .insert({
                     name: contactData.name,
@@ -33,44 +28,31 @@ export class ContactService {
 
             // Extract the actual contact_id value from the returned object
             const contactId = typeof result === 'object' && result.contact_id ? result.contact_id : result;
-            console.log('DEBUG: Insert successful, contact ID:', contactId);
 
             // Get the inserted contact for email sending
-            console.log('DEBUG: Retrieving inserted contact...');
             const contact = await DB('contact_submissions')
                 .where('contact_id', contactId)
                 .first();
 
             if (!contact) {
-                console.log('DEBUG: Failed to retrieve contact submission');
                 throw new Error('Failed to retrieve contact submission');
             }
 
-            console.log('DEBUG: Contact retrieved:', contact);
-
             // Send notification email to company owner (non-blocking, with timeout)
-            console.log('DEBUG: Sending notification email...');
             Promise.race([
                 sendContactNotificationEmail(contact),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Email timeout')), 5000))
-            ])
-                .then(() => console.log('DEBUG: Notification email sent'))
-                .catch((emailError) => {
-                    console.log('DEBUG: Notification email failed (non-blocking):', emailError.message);
-                });
+            ]).catch(() => {
+                // Email failed silently - non-blocking
+            });
 
             // Send auto-reply email to user (non-blocking, with timeout)
-            console.log('DEBUG: Sending auto-reply email...');
             Promise.race([
                 this.sendContactAutoReply(contact),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Email timeout')), 5000))
-            ])
-                .then(() => console.log('DEBUG: Auto-reply email sent'))
-                .catch((emailError) => {
-                    console.log('DEBUG: Auto-reply email failed (non-blocking):', emailError.message);
-                });
-
-            console.log('DEBUG: Contact form submission completed successfully');
+            ]).catch(() => {
+                // Email failed silently - non-blocking
+            });
 
             return {
                 success: true,
@@ -86,9 +68,6 @@ export class ContactService {
                 }
             };
         } catch (error) {
-            console.error('Error submitting contact form:', error);
-            console.error('Error details:', error.message);
-            console.error('Error stack:', error.stack);
             throw new Error('Failed to submit contact form');
         }
     }

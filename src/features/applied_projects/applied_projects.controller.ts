@@ -90,14 +90,6 @@ class AppliedProjectsController {
     try {
       const { applied_projects_id, status, rejection_reason } = req.body;
 
-      // Debug logging
-      console.log('=== UPDATE APPLICATION STATUS ===');
-      console.log('Request body:', req.body);
-      console.log('Applied Projects ID:', applied_projects_id);
-      console.log('Status:', status);
-      console.log('Rejection Reason:', rejection_reason);
-      console.log('================================');
-
       if (!applied_projects_id || typeof status === 'undefined') {
         throw new HttpException(400, "applied_projects_id and status are required");
       }
