@@ -32,7 +32,7 @@ class AppliedProjectsController {
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    const projects_task_id = parseInt(req.params.project_id);
+    const projects_task_id = parseInt(req.params.project_id as string);
     if (isNaN(projects_task_id)) {
       throw new HttpException(400, "Invalid Project Task ID");
     }
@@ -66,7 +66,7 @@ class AppliedProjectsController {
   ): Promise<void> => {
 
     const user_id = req.user.user_id;
-    const projects_task_id = parseInt(req.params.project_id);
+    const projects_task_id = parseInt(req.params.project_id as string);
     if (isNaN(projects_task_id)) {
       throw new HttpException(400, "Invalid project task id");
     }
@@ -126,7 +126,7 @@ class AppliedProjectsController {
       }
 
       const result = await this.AppliedProjectsService.withdrawApplication(
-        parseInt(application_id),
+        parseInt(application_id as string),
         user_id
       );
 
@@ -159,7 +159,7 @@ class AppliedProjectsController {
       const { status } = req.params;
 
       // Allow status: 0 = pending, 1 = completed, 2 = rejected
-      const statusNum = parseInt(status);
+      const statusNum = parseInt(status as string);
       if (isNaN(statusNum) || ![0, 1, 2, 3].includes(statusNum)) {
         return res.status(400).json({
           success: false,
@@ -216,11 +216,11 @@ class AppliedProjectsController {
       const filter = req.params.filter;
 
       const allowedFilters = ['new', 'ongoing', 'completed'];
-      if (!allowedFilters.includes(filter)) {
+      if (!allowedFilters.includes(filter as string)) {
         throw new HttpException(400, "Invalid filter value. Allowed: new, ongoing, completed");
       }
 
-      const projects = await this.AppliedProjectsService.getprojectsbyfilter(user_id, filter);
+      const projects = await this.AppliedProjectsService.getprojectsbyfilter(user_id, filter as string);
 
       res.status(200).json({
         success: true,
@@ -252,7 +252,7 @@ class AppliedProjectsController {
   public checkCanChat = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
     try {
       const currentUserId = req.user.user_id;
-      const otherUserId = parseInt(req.params.userId);
+      const otherUserId = parseInt(req.params.userId as string);
 
       if (isNaN(otherUserId)) {
         throw new HttpException(400, "Invalid user ID");
