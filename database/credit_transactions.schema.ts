@@ -36,7 +36,8 @@ export const migrate = async (dropFirst = false) => {
                 'refund',        // Credits returned
                 'admin_add',     // Admin added credits
                 'admin_deduct',  // Admin removed credits
-                'expiry'         // Credits expired (future use)
+                'expiry',        // Credits expired (future use)
+                'signup_bonus'   // Free credits for new freelancer signup
             ]).notNullable();
 
             // Amount (positive for add, negative for deduct)
