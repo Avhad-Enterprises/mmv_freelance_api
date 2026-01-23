@@ -3,9 +3,10 @@ import { UsersDto } from "../user/user.dto";
 import { Users } from "../user/user.interface";
 import emcService from "./emc.service";
 import HttpException from "../../exceptions/HttpException";
+import { RequestWithUser } from "../../interfaces/auth.interface";
 
 class EmcController {
-  public EMCService = emcService;s
+  public EMCService = emcService;
 
   public saveArtworkSelection = async (
     req: Request,
@@ -112,6 +113,32 @@ class EmcController {
         data: result,
         message: "Recommended editors retrieved successfully"
       });
+    } catch (err: any) {
+      next(err);
+    }
+  };
+
+  /**
+   * Get recommended projects for the logged-in freelancer (Video Editor or Videographer)
+   * Projects matching the freelancer's superpowers are prioritized first
+   * GET /api/v1/emc/recommended-projects
+   */
+  public getRecommendedProjectsForFreelancer = async (
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = req.user?.user_id;
+      const userRoles = req.user?.roles || [];
+      
+      if (!userId) {
+        throw new HttpException(401, 'User not authenticated');
+      }
+
+      const result = await this.EMCService.getRecommendedProjectsForFreelancer(userId, userRoles);
+      
+      res.status(200).json(result);
     } catch (err: any) {
       next(err);
     }
