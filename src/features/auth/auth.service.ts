@@ -11,6 +11,7 @@ import {
   UploadResult
 } from '../../utils/registration-upload';
 import { DocumentType, AccountType, MulterFile } from '../../interfaces/file-upload.interface';
+import { SignupBonusService } from '../credits/services/signup-bonus.service';
 
 export class AuthService {
   /**
@@ -240,6 +241,11 @@ export class AuthService {
       freelancer_id: freelancerProfile.freelancer_id,
     });
 
+    // Give signup bonus (5 free keys) to new videographer
+    const signupBonusService = new SignupBonusService();
+    const bonusResult = await signupBonusService.giveSignupBonus(user.user_id, 'VIDEOGRAPHER');
+    console.log(`[Videographer Registration] Signup bonus result for user ${user.user_id}:`, bonusResult);
+
     // Generate token
     const permissions = await getUserPermissions(user.user_id);
     const token = this.generateToken(user.user_id, user.email, ['VIDEOGRAPHER'], permissions);
@@ -253,6 +259,7 @@ export class AuthService {
         profile_picture: profilePictureUrl,
       },
       token,
+      signupBonus: bonusResult,
     };
   }
 
@@ -354,6 +361,11 @@ export class AuthService {
       freelancer_id: freelancerProfile.freelancer_id,
     });
 
+    
+    // Give signup bonus (5 free keys) to new video editor
+    const signupBonusService = new SignupBonusService();
+    const bonusResult = await signupBonusService.giveSignupBonus(user.user_id, 'VIDEO_EDITOR');
+    console.log(`[Video Editor Registration] Signup bonus result for user ${user.user_id}:`, bonusResult);
     // Generate token
     const permissions = await getUserPermissions(user.user_id);
     const token = this.generateToken(user.user_id, user.email, ['VIDEO_EDITOR'], permissions);
@@ -367,6 +379,7 @@ export class AuthService {
         profile_picture: profilePictureUrl,
       },
       token,
+      signupBonus: bonusResult,
     };
   }
 

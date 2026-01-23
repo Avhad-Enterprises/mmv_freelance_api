@@ -532,14 +532,21 @@ export class OAuthController {
 
             logger.info(`User ${userId} set role to ${normalizedRole}`);
 
+            // Build response message including signup bonus info
+            let message = 'Role set successfully';
+            if (result.signupBonus?.success) {
+                message = `Role set successfully! ${result.signupBonus.message}`;
+            }
+
             res.json({
                 success: true,
-                message: 'Role set successfully',
+                message,
                 data: {
                     user_id: userId,
                     role: normalizedRole,
                     redirect,
                     token: result.token, // New JWT with updated roles
+                    signupBonus: result.signupBonus, // Include signup bonus info
                 },
             });
 

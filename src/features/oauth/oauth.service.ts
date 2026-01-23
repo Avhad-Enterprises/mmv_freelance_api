@@ -31,6 +31,7 @@ import {
     AppleUserData,
 } from './oauth.interface';
 import { logger } from '../../utils/logger';
+import { SignupBonusService } from '../credits/services/signup-bonus.service';
 
 // Table names
 const USERS_TABLE = T.USERS_TABLE || 'users';
@@ -852,8 +853,9 @@ export class OAuthService {
      * Set role for OAuth user (called during role selection flow)
      * Creates appropriate profiles based on role
      */
-    public async setUserRole(userId: number, roleName: string): Promise<{ token: string }> {
+    public async setUserRole(userId: number, roleName: string): Promise<{ token: string; signupBonus?: { success: boolean; creditsAdded: number; message: string } }> {
         const trx = await DB.transaction();
+        let signupBonusResult: { success: boolean; creditsAdded: number; message: string } | undefined;
 
         try {
             // Verify user exists
@@ -892,11 +894,18 @@ export class OAuthService {
 
             logger.info(`Role "${roleName}" set for user ${userId}`);
 
+            // Give signup bonus for freelancers (after transaction commit)
+            if (roleName === 'VIDEOGRAPHER' || roleName === 'VIDEO_EDITOR') {
+                const signupBonusService = new SignupBonusService();
+                signupBonusResult = await signupBonusService.giveSignupBonus(userId, roleName);
+                logger.info(`[OAuth Role Selection] Signup bonus result for user ${userId}:`, signupBonusResult);
+            }
+
             // Generate new JWT with updated roles
             const updatedRoles = await this.getUserRoles(userId);
             const newToken = await this.generateJWT(user, updatedRoles);
 
-            return { token: newToken };
+            return { token: newToken, signupBonus: signupBonusResult };
         } catch (error) {
             await trx.rollback();
             throw error;

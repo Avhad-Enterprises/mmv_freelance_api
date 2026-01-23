@@ -94,14 +94,16 @@ export type CreditTransactionType =
     | 'refund'
     | 'admin_add'
     | 'admin_deduct'
-    | 'expiry';
+    | 'expiry'
+    | 'signup_bonus';
 
 // Reference types
 export type CreditReferenceType =
     | 'payment'
     | 'application'
     | 'admin'
-    | 'system';
+    | 'system'
+    | 'signup';
 
 // Refund reasons
 export enum RefundReason {
