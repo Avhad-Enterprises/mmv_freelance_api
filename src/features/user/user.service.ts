@@ -128,11 +128,21 @@ class UserService {
       throw new HttpException(404, "User not found");
     }
 
+    if (user.is_deleted) {
+      throw new HttpException(400, "User already deleted");
+    }
+
+    // Create unique email to allow future re-registration with same email
+    const timestamp = Date.now();
+    const deletedEmail = `${user.email}_deleted_${timestamp}`;
+
     const updated = await DB(T.USERS_TABLE)
       .where({ user_id })
       .update({
         is_active: false,
         is_deleted: true,
+        email: deletedEmail,
+        deleted_at: DB.fn.now(),
         updated_at: DB.fn.now()
       })
       .returning("*");
