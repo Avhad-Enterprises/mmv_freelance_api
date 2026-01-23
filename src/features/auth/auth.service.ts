@@ -11,6 +11,7 @@ import {
   UploadResult
 } from '../../utils/registration-upload';
 import { DocumentType, AccountType, MulterFile } from '../../interfaces/file-upload.interface';
+import { SignupBonusService } from '../credits/services/signup-bonus.service';
 
 export class AuthService {
   /**
@@ -353,6 +354,11 @@ export class AuthService {
     await DB('videoeditor_profiles').insert({
       freelancer_id: freelancerProfile.freelancer_id,
     });
+
+    // Give signup bonus (5 free keys) to new video editor
+    const signupBonusService = new SignupBonusService();
+    const bonusResult = await signupBonusService.giveSignupBonus(user.user_id, 'VIDEO_EDITOR');
+    console.log(`[Video Editor Registration] Signup bonus result for user ${user.user_id}:`, bonusResult);
 
     // Generate token
     const permissions = await getUserPermissions(user.user_id);
