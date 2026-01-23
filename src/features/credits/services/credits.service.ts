@@ -21,10 +21,10 @@ export class CreditsService {
     /**
      * Get freelancer credits balance
      */
-    public async getCreditsBalance(user_id: number): Promise<CreditBalance> {
+    public async getCreditsBalance(user_id: number): Promise<CreditBalance & { signup_bonus_claimed?: boolean }> {
         const freelancerProfile = await DB(T.FREELANCER_PROFILES)
             .where({ user_id })
-            .select('credits_balance', 'total_credits_purchased', 'credits_used')
+            .select('credits_balance', 'total_credits_purchased', 'credits_used', 'signup_bonus_claimed')
             .first();
 
         if (!freelancerProfile) {

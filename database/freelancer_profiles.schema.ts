@@ -89,6 +89,7 @@ export const migrate = async (dropFirst = false) => {
         table.integer('credits_balance').defaultTo(0);
         table.integer('total_credits_purchased').defaultTo(0);
         table.integer('credits_used').defaultTo(0);
+        table.boolean('signup_bonus_claimed').defaultTo(false).comment('Whether the 5 free keys signup bonus has been claimed');
 
         // Projects
         table.jsonb('projects_applied').defaultTo('[]');
