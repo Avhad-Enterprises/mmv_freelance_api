@@ -433,6 +433,10 @@ export class CreateFeaturedCreatorDto {
   @Max(9999, { message: "Sort order cannot exceed 9999" })
   sort_order?: number;
 
+  @IsOptional()
+  @IsInt({ message: "User ID must be an integer" })
+  user_id?: number;
+
   created_by?: number;
 }
 
@@ -502,6 +506,10 @@ export class UpdateFeaturedCreatorDto {
   @Min(0, { message: "Sort order cannot be negative" })
   @Max(9999, { message: "Sort order cannot exceed 9999" })
   sort_order?: number;
+
+  @IsOptional()
+  @IsInt({ message: "User ID must be an integer" })
+  user_id?: number;
 
   updated_by?: number;
 }

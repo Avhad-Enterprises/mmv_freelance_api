@@ -331,13 +331,72 @@ class CmsService {
   }
 
   public async getActiveFeaturedCreators(): Promise<any[]> {
-    return await DB(T.CMS)
+    const items = await DB(T.CMS)
       .where({
         section_type: SECTION_TYPES.FEATURED_CREATOR,
         is_active: true,
         is_deleted: false,
       })
-      .orderBy("sort_order", "asc");
+      .orderBy("sort_order", "asc")
+      .limit(4);
+
+    const userIds = items
+      .filter((i) => i.user_id)
+      .map((i) => i.user_id) as number[];
+
+    if (userIds.length > 0) {
+      const users = await DB(T.USERS_TABLE)
+        .leftJoin(
+          T.FREELANCER_PROFILES,
+          `${T.USERS_TABLE}.user_id`,
+          `${T.FREELANCER_PROFILES}.user_id`
+        )
+        .whereIn(`${T.USERS_TABLE}.user_id`, userIds)
+        .select(
+          `${T.USERS_TABLE}.user_id`,
+          `${T.USERS_TABLE}.first_name`,
+          `${T.USERS_TABLE}.last_name`,
+          `${T.USERS_TABLE}.profile_picture`,
+          `${T.USERS_TABLE}.city`,
+          `${T.USERS_TABLE}.country`,
+          `${T.FREELANCER_PROFILES}.skills`,
+          `${T.FREELANCER_PROFILES}.profile_title`,
+          `${T.FREELANCER_PROFILES}.projects_completed`,
+          `${T.FREELANCER_PROFILES}.rate_amount`
+        );
+
+      return items.map((item) => {
+        if (item.user_id) {
+          const user = users.find((u) => u.user_id === item.user_id);
+          if (user) {
+            let skills = user.skills;
+            if (typeof skills === "string") {
+              try {
+                skills = JSON.parse(skills);
+              } catch (e) {
+                skills = [];
+              }
+            }
+
+            return {
+              ...item,
+              name: `${user.first_name} ${user.last_name}`,
+              profile_image: user.profile_picture || item.profile_image,
+              title: user.profile_title || item.title,
+              skills: skills || item.skills,
+              // Add location to bio or separate field if needed, but existing comp uses stats?
+              // The frontend component uses 'city', 'country'.
+              // I should modify the CMS response to include these if I want the frontend to use them.
+              city: user.city,
+              country: user.country,
+            };
+          }
+        }
+        return item;
+      });
+    }
+
+    return items;
   }
 
   public async getFeaturedCreatorById(id: number): Promise<any> {
