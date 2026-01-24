@@ -3,6 +3,7 @@ import EmcController from "./emc.controller";
 import validationMiddleware from "../../middlewares/validation.middleware";
 import { CategorySelectionDto } from "./category.dto";
 import Route from "../../interfaces/routes.interface";
+import authMiddleware from "../../middlewares/auth.middleware";
 
 class EMCRoute implements Route{
 
@@ -19,6 +20,13 @@ class EMCRoute implements Route{
         this.router.post(`${this.path}/artwork-selection`, validationMiddleware(CategorySelectionDto, 'body', false, []), this.emcController.saveArtworkSelection);
         this.router.post(`${this.path}/category-selection`, validationMiddleware(CategorySelectionDto, 'body', false, []), this.emcController.saveCategorySelection);
         this.router.get(`${this.path}/recommended-editors/:projectid`, this.emcController.getRecommendedEditors);
+        
+        // NEW: Get recommended projects for freelancer (Video Editor/Videographer) based on superpowers
+        this.router.get(
+            `${this.path}/recommended-projects`,
+            authMiddleware,
+            this.emcController.getRecommendedProjectsForFreelancer
+        );
     }
 
    

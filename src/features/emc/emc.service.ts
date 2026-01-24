@@ -4,7 +4,11 @@ import HttpException from '../../exceptions/HttpException';
 import { USERS_TABLE } from '../../../database/users.schema';
 import { PROJECTS_TASK } from '../../../database/projectstask.schema';
 import { CATEGORY } from '../../../database/category.schema';
+import { FREELANCER_PROFILES } from '../../../database/freelancer_profiles.schema';
 import { calculateEmcScore } from './matchEngine';
+
+// Allowed roles for EMC recommendation feature
+const FREELANCER_ROLES = ['VIDEOGRAPHER', 'VIDEO_EDITOR'];
 
 class emcService {
 
@@ -260,6 +264,126 @@ class emcService {
     }).sort((a, b) => b.finalScore - a.finalScore);
 
     return ranked;
+  }
+
+  /**
+   * Get recommended projects for a freelancer (Video Editor or Videographer) based on their superpowers
+   * Projects matching freelancer's superpowers (which are categories) are prioritized first
+   * @param userId - The user ID of the freelancer
+   * @param userRoles - The roles array from the authenticated user's token
+   */
+  public async getRecommendedProjectsForFreelancer(userId: number, userRoles: string[]) {
+    // Step 1: Validate that user is a freelancer (Videographer or Video Editor)
+    const isFreelancer = userRoles.some(role => FREELANCER_ROLES.includes(role.toUpperCase()));
+    
+    if (!isFreelancer) {
+      throw new HttpException(403, 'This feature is only available for Video Editors and Videographers');
+    }
+
+    // Step 2: Get freelancer's superpowers from freelancer_profiles table
+    const freelancerProfile = await DB(FREELANCER_PROFILES)
+      .select('freelancer_id', 'superpowers', 'user_id')
+      .where('user_id', userId)
+      .first();
+
+    if (!freelancerProfile) {
+      throw new HttpException(404, 'Freelancer profile not found. Please complete your profile setup.');
+    }
+
+    // Parse superpowers (handle both string and array formats)
+    // Superpowers are categories selected during registration (max 3)
+    let superpowers: string[] = [];
+    if (freelancerProfile.superpowers) {
+      if (typeof freelancerProfile.superpowers === 'string') {
+        try {
+          superpowers = JSON.parse(freelancerProfile.superpowers);
+        } catch {
+          superpowers = [freelancerProfile.superpowers];
+        }
+      } else if (Array.isArray(freelancerProfile.superpowers)) {
+        superpowers = freelancerProfile.superpowers;
+      }
+    }
+
+    // Step 3: Get all active projects that are open for applications (status = 0)
+    const allProjects = await DB(PROJECTS_TASK)
+      .select(
+        'projects_task.*',
+        'users.first_name as client_first_name',
+        'users.last_name as client_last_name',
+        'users.profile_picture as client_profile_picture'
+      )
+      .leftJoin('client_profiles', 'projects_task.client_id', 'client_profiles.client_id')
+      .leftJoin('users', 'client_profiles.user_id', 'users.user_id')
+      .where('projects_task.is_active', true)
+      .where('projects_task.is_deleted', false)
+      .where('projects_task.status', 0) // Only open projects
+      .orderBy('projects_task.created_at', 'desc');
+
+    // Step 4: Score projects based on project_category matching with superpowers
+    // Superpowers ARE categories - so we do exact category matching
+    const scoredProjects = allProjects.map(project => {
+      let matchScore = 0;
+      let matchedCategory: string | null = null;
+      
+      const projectCategory = (project.project_category || '').trim();
+      
+      // Check if project category exactly matches any of the freelancer's superpowers
+      for (const superpower of superpowers) {
+        const normalizedSuperpower = superpower.trim();
+        
+        // Exact match (case-insensitive)
+        if (projectCategory.toLowerCase() === normalizedSuperpower.toLowerCase()) {
+          matchScore = 100;
+          matchedCategory = superpower;
+          break; // Found exact match, no need to check further
+        }
+      }
+
+      // Parse skills_required for response
+      let skillsRequired: string[] = [];
+      if (project.skills_required) {
+        if (typeof project.skills_required === 'string') {
+          try {
+            skillsRequired = JSON.parse(project.skills_required);
+          } catch {
+            skillsRequired = [project.skills_required];
+          }
+        } else if (Array.isArray(project.skills_required)) {
+          skillsRequired = project.skills_required;
+        }
+      }
+
+      return {
+        ...project,
+        skills_required: skillsRequired,
+        matchScore,
+        isRecommended: matchScore > 0,
+        matchedCategory
+      };
+    });
+
+    // Step 5: Sort by match score (highest first), then by date (newest first)
+    scoredProjects.sort((a, b) => {
+      if (b.matchScore !== a.matchScore) {
+        return b.matchScore - a.matchScore;
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+    // Determine user role for response
+    const userRole = userRoles.includes('VIDEO_EDITOR') ? 'Video Editor' : 'Videographer';
+
+    return {
+      success: true,
+      data: scoredProjects,
+      meta: {
+        totalProjects: scoredProjects.length,
+        recommendedCount: scoredProjects.filter(p => p.isRecommended).length,
+        freelancerSuperpowers: superpowers,
+        userRole: userRole
+      }
+    };
   }
 }
 
