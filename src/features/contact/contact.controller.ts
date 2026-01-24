@@ -60,7 +60,7 @@ class ContactController {
      */
     public updateContactStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const contactId = parseInt(req.params.id);
+            const contactId = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
             const { status, notes } = req.body;
 
             if (!status || !['pending', 'responded', 'closed'].includes(status)) {
@@ -88,7 +88,7 @@ class ContactController {
      */
     public getContactSubmissionById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const contactId = parseInt(req.params.id);
+            const contactId = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
 
             if (!contactId) {
                 throw new HttpException(400, "Contact ID is required");
