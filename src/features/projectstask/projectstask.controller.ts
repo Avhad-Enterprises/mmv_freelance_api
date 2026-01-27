@@ -33,10 +33,8 @@ class projectstaskcontroller {
 
   public getbytaskid = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = req.params.id;
-      const idNum: number = typeof raw === 'string'
-        ? parseInt(raw, 10)
-        : raw;
+      const raw = req.params.id as string;
+      const idNum: number = parseInt(raw, 10);
 
       if (isNaN(idNum)) {
         res.status(400).json({ error: 'project_task_id must be a number' });
@@ -59,8 +57,8 @@ class projectstaskcontroller {
 
   public update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = req.params.id;
-      const idNum: number = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      const raw = req.params.id as string;
+      const idNum: number = parseInt(raw, 10);
 
       if (isNaN(idNum)) {
         res.status(400).json({ error: 'projects_task_id must be a number' });
@@ -84,8 +82,8 @@ class projectstaskcontroller {
 
   public delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = req.params.id;
-      const idNum: number = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      const raw = req.params.id as string;
+      const idNum: number = parseInt(raw, 10);
 
       if (isNaN(idNum)) {
         res.status(400).json({ error: 'projects_task_id must be a number' });
@@ -135,8 +133,8 @@ class projectstaskcontroller {
 
   public updateProjectTaskStatus = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = req.params.id;
-      const projects_task_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      const raw = req.params.id as string;
+      const projects_task_id = parseInt(raw, 10);
       const { status, user_id } = req.body;
 
       if (!projects_task_id || typeof status === 'undefined') {
@@ -175,8 +173,8 @@ class projectstaskcontroller {
 
   public getProjectsByClientId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = req.params.clientId;
-      const clientId: number = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      const raw = req.params.clientId as string;
+      const clientId: number = parseInt(raw, 10);
 
       if (isNaN(clientId)) {
         res.status(400).json({ error: 'client_id must be a number' });

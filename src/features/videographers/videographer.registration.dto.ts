@@ -1,6 +1,7 @@
 // Videographer Registration DTO
 import { IsString, IsOptional, IsEmail, IsNumber, IsArray, IsEnum, IsNotEmpty, IsBoolean, ValidateIf, registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { IsYouTubeURLArray } from '../../utils/validation/validateYouTube';
 
 // Custom validator to ensure boolean is true
 function IsTrue(validationOptions?: ValidationOptions) {
@@ -117,6 +118,9 @@ export class VideographerRegistrationDto {
     return Array.isArray(value) ? value : [];
   })
   @IsArray()
+  @IsYouTubeURLArray(true, { 
+    message: 'All portfolio links must be valid YouTube URLs. Please provide links from youtube.com or youtu.be only.' 
+  })
   portfolio_links: string[];
 
   @IsOptional()

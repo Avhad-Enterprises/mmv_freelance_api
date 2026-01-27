@@ -83,7 +83,7 @@ class AdminInvitesController {
      */
     public revokeInvite = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const invitationId = parseInt(req.params.id);
+            const invitationId = parseInt(req.params.id as string);
 
             if (!invitationId || isNaN(invitationId)) {
                 res.status(400).json({ message: 'Invalid invitation ID' });

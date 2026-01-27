@@ -32,7 +32,7 @@ class TagsController {
     // Get tag by ID
     public getTagById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const tagId = parseInt(req.params.id);
+            const tagId = parseInt(req.params.id as string);
             const tag = await this.TagsService.GetTagById(tagId);
             res.status(200).json({ success: true, data: tag, message: "Tag fetched successfully" });
         } catch (error) {
@@ -44,7 +44,7 @@ class TagsController {
     // Get tags by type
     public getTagsByType = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const { type } = req.params;
+            const type = req.params.type as string;
             const tags = await this.TagsService.GetTagsByType(type);
             res.status(200).json({ success: true, data: tags, message: `Tags of type '${type}' fetched successfully` });
         } catch (error) {
@@ -56,7 +56,7 @@ class TagsController {
     // Update tag
     public updateTag = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const tagId = parseInt(req.params.id);
+            const tagId = parseInt(req.params.id as string);
             const updateData: Partial<TagsDto> = req.body;
             const updatedTag = await this.TagsService.UpdateTag(tagId, updateData);
             res.status(200).json({ success: true, data: updatedTag, message: "Tag updated successfully" });
@@ -69,7 +69,7 @@ class TagsController {
     // Delete tag (soft delete)
     public deleteTag = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const tagId = parseInt(req.params.id);
+            const tagId = parseInt(req.params.id as string);
             const deletedBy = req.body.deleted_by || 1; // Use deleted_by from body or default to 1
             const deletedTag = await this.TagsService.DeleteTag(tagId, deletedBy);
             res.status(200).json({ success: true, data: deletedTag, message: "Tag deleted successfully" });

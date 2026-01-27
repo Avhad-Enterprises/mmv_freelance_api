@@ -3,9 +3,10 @@ import { UsersDto } from "../user/user.dto";
 import { Users } from "../user/user.interface";
 import emcService from "./emc.service";
 import HttpException from "../../exceptions/HttpException";
+import { RequestWithUser } from "../../interfaces/auth.interface";
 
 class EmcController {
-  public EMCService = emcService;s
+  public EMCService = emcService;
 
   public saveArtworkSelection = async (
     req: Request,
@@ -14,7 +15,7 @@ class EmcController {
   ): Promise<void> => {
     try {
       const { account_type, user_id, projects_task_id, artworks } = req.body;
-      
+
       if (!account_type || !user_id) {
         throw new HttpException(400, 'account_type and user_id are required');
       }
@@ -56,7 +57,7 @@ class EmcController {
   ): Promise<void> => {
     try {
       const { account_type, user_id, projects_task_id, category } = req.body;
-      
+
       if (!account_type || !user_id) {
         throw new HttpException(400, 'account_type and user_id are required');
       }
@@ -65,7 +66,7 @@ class EmcController {
         if (!projects_task_id || !category) {
           throw new HttpException(400, 'projects_task_id and category are required for user');
         }
-        
+
         const result = await this.EMCService.saveUserCategorySelection(user_id, projects_task_id, category);
         res.status(200).json({
           data: result,
@@ -102,16 +103,42 @@ class EmcController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const projectid = parseInt(req.params.projectid);
+      const projectid = parseInt(req.params.projectid as string);
       if (!projectid) {
         throw new HttpException(400, 'Valid project ID is required');
       }
-      
+
       const result = await this.EMCService.getRecommendedEditors(projectid);
       res.status(200).json({
         data: result,
         message: "Recommended editors retrieved successfully"
       });
+    } catch (err: any) {
+      next(err);
+    }
+  };
+
+  /**
+   * Get recommended projects for the logged-in freelancer (Video Editor or Videographer)
+   * Projects matching the freelancer's superpowers are prioritized first
+   * GET /api/v1/emc/recommended-projects
+   */
+  public getRecommendedProjectsForFreelancer = async (
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = req.user?.user_id;
+      const userRoles = req.user?.roles || [];
+
+      if (!userId) {
+        throw new HttpException(401, 'User not authenticated');
+      }
+
+      const result = await this.EMCService.getRecommendedProjectsForFreelancer(userId, userRoles);
+
+      res.status(200).json(result);
     } catch (err: any) {
       next(err);
     }

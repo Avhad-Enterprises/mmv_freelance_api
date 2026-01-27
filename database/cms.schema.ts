@@ -44,6 +44,7 @@ export const migrate = async (dropFirst = false) => {
         { name: "project_type", type: "string", length: 255 },
         { name: "category", type: "string", length: 255 },
         { name: "tags", type: "jsonb" },
+        { name: "user_id", type: "integer" },
       ];
 
       for (const col of columnsToAdd) {
@@ -55,6 +56,7 @@ export const migrate = async (dropFirst = false) => {
             else if (col.type === "text") table.text(col.name).nullable();
             else if (col.type === "string")
               table.string(col.name, col.length as number).nullable();
+            else if (col.type === "integer") table.integer(col.name).nullable();
           });
         }
       }
@@ -107,6 +109,7 @@ export const migrate = async (dropFirst = false) => {
       table.jsonb("skills").nullable();
       table.jsonb("stats").nullable();
       table.string("portfolio_url", 2048).nullable();
+      table.integer("user_id").nullable(); // Link to users table
 
       // Success Stories Fields
       table.string("client_name", 255).nullable();

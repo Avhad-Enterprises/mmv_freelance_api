@@ -24,7 +24,7 @@ export class VideoEditorController {
   ): Promise<void> => {
     try {
       const profile = await this.videoEditorService.getVideoEditorProfile(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         data: profile
@@ -44,9 +44,9 @@ export class VideoEditorController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const editorId = parseInt(req.params.id);
+      const editorId = parseInt(req.params.id as string);
       const profile = await this.videoEditorService.getVideoEditorProfile(editorId);
-      
+
       res.status(200).json({
         success: true,
         data: profile
@@ -66,9 +66,9 @@ export class VideoEditorController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const { username } = req.params;
+      const username = req.params.username as string;
       const profile = await this.videoEditorService.getVideoEditorByUsername(username);
-      
+
       res.status(200).json({
         success: true,
         data: profile
@@ -89,7 +89,7 @@ export class VideoEditorController {
   ): Promise<void> => {
     try {
       const videoEditors = await this.videoEditorService.getAllVideoEditors();
-      
+
       res.status(200).json({
         success: true,
         count: videoEditors.length,
@@ -112,7 +112,7 @@ export class VideoEditorController {
     try {
       const limit = parseInt(req.query.limit as string) || 10;
       const videoEditors = await this.videoEditorService.getTopRated(limit);
-      
+
       res.status(200).json({
         success: true,
         count: videoEditors.length,
@@ -134,7 +134,7 @@ export class VideoEditorController {
   ): Promise<void> => {
     try {
       const editors = await this.videoEditorService.getAvailableEditorsCount();
-      
+
       res.status(200).json({
         success: true,
         count: editors.length,
@@ -240,7 +240,7 @@ export class VideoEditorController {
   ): Promise<void> => {
     try {
       const stats = await this.videoEditorService.getFreelancerStats(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         data: stats
@@ -261,7 +261,7 @@ export class VideoEditorController {
   ): Promise<void> => {
     try {
       await this.videoEditorService.softDelete(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         message: 'Account deleted successfully'
