@@ -439,7 +439,7 @@ export class OAuthController {
     public unlinkProvider = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const userId = (req as any).user?.user_id;
-            const { provider } = req.params;
+            const provider = req.params.provider as string;
 
             if (!userId) {
                 throw new HttpException(401, 'Authentication required');

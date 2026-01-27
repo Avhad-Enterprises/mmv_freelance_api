@@ -12,8 +12,8 @@ class SubmissionController {
    */
   public submitProject = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = req.params.id;
-      const projects_task_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      const raw = req.params.id as string;
+      const projects_task_id = parseInt(raw, 10);
 
       if (isNaN(projects_task_id)) {
         res.status(400).json({ error: 'projects_task_id must be a number' });
@@ -42,8 +42,8 @@ class SubmissionController {
    */
   public approveProjectSubmission = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = req.params.submissionId;
-      const submission_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      const raw = req.params.submissionId as string;
+      const submission_id = parseInt(raw, 10);
       const { status, rejection_reason } = req.body;
 
       if (isNaN(submission_id)) {
@@ -78,8 +78,8 @@ class SubmissionController {
    */
   public getSubmissionById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = req.params.submissionId;
-      const submission_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      const raw = req.params.submissionId as string;
+      const submission_id = parseInt(raw, 10);
 
       if (isNaN(submission_id)) {
         res.status(400).json({ error: 'submission_id must be a number' });
@@ -108,8 +108,8 @@ class SubmissionController {
    */
   public getSubmissionsByProject = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = req.params.projectId;
-      const projects_task_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      const raw = req.params.projectId as string;
+      const projects_task_id = parseInt(raw, 10);
 
       if (isNaN(projects_task_id)) {
         res.status(400).json({ error: 'projects_task_id must be a number' });
@@ -134,8 +134,8 @@ class SubmissionController {
    */
   public getSubmissionsByFreelancer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const raw = req.params.userId;
-      const user_id = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      const raw = req.params.userId as string;
+      const user_id = parseInt(raw, 10);
 
       if (isNaN(user_id)) {
         res.status(400).json({ error: 'user_id must be a number' });

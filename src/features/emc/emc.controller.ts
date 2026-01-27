@@ -15,7 +15,7 @@ class EmcController {
   ): Promise<void> => {
     try {
       const { account_type, user_id, projects_task_id, artworks } = req.body;
-      
+
       if (!account_type || !user_id) {
         throw new HttpException(400, 'account_type and user_id are required');
       }
@@ -57,7 +57,7 @@ class EmcController {
   ): Promise<void> => {
     try {
       const { account_type, user_id, projects_task_id, category } = req.body;
-      
+
       if (!account_type || !user_id) {
         throw new HttpException(400, 'account_type and user_id are required');
       }
@@ -66,7 +66,7 @@ class EmcController {
         if (!projects_task_id || !category) {
           throw new HttpException(400, 'projects_task_id and category are required for user');
         }
-        
+
         const result = await this.EMCService.saveUserCategorySelection(user_id, projects_task_id, category);
         res.status(200).json({
           data: result,
@@ -103,11 +103,11 @@ class EmcController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const projectid = parseInt(req.params.projectid);
+      const projectid = parseInt(req.params.projectid as string);
       if (!projectid) {
         throw new HttpException(400, 'Valid project ID is required');
       }
-      
+
       const result = await this.EMCService.getRecommendedEditors(projectid);
       res.status(200).json({
         data: result,
@@ -131,13 +131,13 @@ class EmcController {
     try {
       const userId = req.user?.user_id;
       const userRoles = req.user?.roles || [];
-      
+
       if (!userId) {
         throw new HttpException(401, 'User not authenticated');
       }
 
       const result = await this.EMCService.getRecommendedProjectsForFreelancer(userId, userRoles);
-      
+
       res.status(200).json(result);
     } catch (err: any) {
       next(err);

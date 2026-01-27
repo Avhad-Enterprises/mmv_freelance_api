@@ -40,6 +40,7 @@ const authMiddleware = async (
       "/blog", // GET /blog and GET /blog/:id (public read-only)
       "/faq", // GET /faq and GET /faq/:id (public read-only)
       "/contact/submit", // POST /contact/submit (public contact form)
+      "/careers", // GET /careers and GET /careers/:id (public read-only)
       // CMS Landing Page routes (public)
       "/cms-landing/public", // GET /cms-landing/public/* (all public CMS endpoints)
       // OAuth routes (public)

@@ -32,6 +32,7 @@ import supportTicketsRoute from './features/support-ticket/support-ticket.routes
 import EmailRoute from './features/email/email.routes';
 import ContactRoute from './features/contact/contact.routes';
 import ChatRoute from './features/chat/chat.routes';
+import CareersRoute from './features/careers/careers.routes';
 
 // Phase 8: Infrastructure Features
 import UploadRoute from './features/upload/upload.routes';
@@ -109,6 +110,7 @@ const app = new App([
   // OAuth Routes
   new OAuthRoutes(),
   new ChatRoute(),
+  new CareersRoute(),
 ]);
 
 // Start server

@@ -7,29 +7,29 @@ import HttpException from "../../exceptions/HttpException";
 class ReviewsController {
   public reviewsService = new ReviewsService();
 
-    // POST /api/reviews/create
-public createReview = async (
-  req: RequestWithUser,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const reviewData: ReviewDto = req.body; // DTO already validated and parsed
-    
-    // ✅ Security fix: Set reviewer user_id from JWT token instead of trusting client
-    // The authenticated user is always the reviewer (client who gives the review)
-    reviewData.client_id = req.user.user_id;
+  // POST /api/reviews/create
+  public createReview = async (
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const reviewData: ReviewDto = req.body; // DTO already validated and parsed
 
-    const createdReview = await this.reviewsService.createReview(reviewData);
+      // ✅ Security fix: Set reviewer user_id from JWT token instead of trusting client
+      // The authenticated user is always the reviewer (client who gives the review)
+      reviewData.client_id = req.user.user_id;
 
-    res.status(201).json({
-      data: createdReview,
-      message: "Review submitted successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+      const createdReview = await this.reviewsService.createReview(reviewData);
+
+      res.status(201).json({
+        data: createdReview,
+        message: "Review submitted successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 
   // GET /api/reviews/my-reviews - Get reviews received by the authenticated user
   public getMyReviews = async (
@@ -40,7 +40,7 @@ public createReview = async (
     try {
       // ✅ Security fix: Use authenticated user's ID to get their reviews
       const user_id = req.user.user_id;
-      
+
       const reviews = await this.reviewsService.getReviews(user_id);
       res.status(200).json({
         data: reviews,
@@ -58,7 +58,7 @@ public createReview = async (
     next: NextFunction
   ): Promise<void> => {
     try {
-      const user_id = parseInt(req.params.user_id);
+      const user_id = parseInt(req.params.user_id as string);
       if (!user_id || isNaN(user_id)) {
         throw new HttpException(400, "Invalid user_id parameter");
       }
@@ -73,7 +73,7 @@ public createReview = async (
     }
   };
 
- 
+
 
   // POST /api/reviews/delete
   public deleteReview = async (

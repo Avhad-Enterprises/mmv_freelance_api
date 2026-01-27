@@ -18,7 +18,7 @@ class NotificationController {
     }
 
     public notificationisread = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const id = parseInt(req.params.id);
+        const id = parseInt(req.params.id as string);
         if (!id) {
             throw new HttpException(400, " Id is required");
         }
@@ -54,7 +54,7 @@ class NotificationController {
 
     public deletenotification = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const id = parseInt(req.params.id);
+            const id = parseInt(req.params.id as string);
             if (!id) {
                 throw new HttpException(400, 'Id is required');
             }
