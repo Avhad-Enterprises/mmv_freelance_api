@@ -52,7 +52,6 @@ export default class RazorpayWebhookController {
         }
 
         const event = req.body.event;
-        console.log(`Webhook received: ${event}`);
 
         try {
             if (event === "payment.captured") {
@@ -83,12 +82,10 @@ export default class RazorpayWebhookController {
         const amountInPaise = payment.amount;
         const amountInRupees = amountInPaise / 100;
 
-        console.log(`Processing payment.captured - Order: ${razorpayOrderId}, Payment: ${razorpayPaymentId}`);
 
         // IDEMPOTENCY CHECK: Has this payment already been processed?
         const alreadyProcessed = await this.creditLogger.isPaymentProcessed(razorpayPaymentId);
         if (alreadyProcessed) {
-            console.log(`Payment ${razorpayPaymentId} already processed, skipping`);
             return;
         }
 
@@ -114,7 +111,6 @@ export default class RazorpayWebhookController {
                     "completed",
                     razorpayPaymentId
                 );
-                console.log(`Escrow payment captured: ${razorpayOrderId}`);
             }
         } catch (error) {
             console.error(`Error processing payment ${razorpayPaymentId}:`, error);
@@ -134,7 +130,6 @@ export default class RazorpayWebhookController {
         amount: number,
         packageId?: number
     ): Promise<void> {
-        console.log(`Adding ${credits} credits to user ${userId} for payment ${paymentId}`);
 
         // Use transaction to ensure atomicity
         await DB.transaction(async (trx) => {
@@ -179,7 +174,6 @@ export default class RazorpayWebhookController {
             }, trx);
         });
 
-        console.log(`Successfully added ${credits} credits to user ${userId}`);
     }
 
     /**
@@ -192,7 +186,6 @@ export default class RazorpayWebhookController {
         const errorCode = payment.error_code;
         const errorDescription = payment.error_description;
 
-        console.log(`Payment failed - Order: ${razorpayOrderId}, Error: ${errorCode} - ${errorDescription}`);
 
         try {
             // Check if it's a credit purchase or escrow
@@ -201,7 +194,6 @@ export default class RazorpayWebhookController {
 
             if (notes && notes.type === 'credit_purchase') {
                 // Log failed credit purchase attempt (for analytics)
-                console.log(`Credit purchase failed for user ${notes.user_id}: ${errorDescription}`);
             } else {
                 // Update escrow transaction status
                 await this.paymentService.updateOrderStatus(

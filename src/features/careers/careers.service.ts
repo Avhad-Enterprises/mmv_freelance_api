@@ -80,18 +80,15 @@ class CareersService {
 
     // Delete career (soft delete)
     public async DeleteCareer(id: number, deletedBy: number): Promise<any> {
-        console.log(`Attempting to delete career with ID: ${id}, deleted by user: ${deletedBy}`);
 
         const existingCareer = await DB(T.CAREERS_TABLE)
             .where({ job_id: id, is_deleted: false })
             .first();
 
         if (!existingCareer) {
-            console.log(`Career with ID ${id} not found or already deleted`);
             throw new HttpException(404, "Job not found");
         }
 
-        console.log(`Found career: ${existingCareer.title}, proceeding with soft delete`);
 
         const deletedCareer = await DB(T.CAREERS_TABLE)
             .where({ job_id: id })
@@ -102,7 +99,6 @@ class CareersService {
             })
             .returning("*");
 
-        console.log(`Successfully deleted career with ID: ${id}`);
         return deletedCareer[0];
     }
 }

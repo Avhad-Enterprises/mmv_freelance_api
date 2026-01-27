@@ -60,11 +60,8 @@ class SocketService {
                     secretKey = 'fallback-secret';
                 }
 
-                console.log(`🔌 Socket Auth Attempt: Token Length ${tokenString.length}`);
-
                 try {
                     const decoded: any = verify(tokenString, secretKey);
-                    console.log(`✅ Socket Auth Success: User ${decoded.id || decoded.user_id}`);
                     (socket as any).user = decoded; // Attach user to socket
                     next();
                 } catch (err) {

@@ -51,15 +51,6 @@ export async function uploadRegistrationFile(
 ): Promise<UploadResult> {
   
   // Log incoming file details for debugging
-  console.log(`🔍 Upload request details:`, {
-    originalName: file.originalname,
-    mimetype: file.mimetype,
-    size: file.size,
-    userId: userId,
-    documentType: documentType,
-    accountType: accountType,
-    bufferLength: file.buffer?.length
-  });
 
   // Validate file exists and has content
   if (!file.buffer || file.buffer.length === 0 || file.size === 0) {
@@ -88,8 +79,6 @@ export async function uploadRegistrationFile(
   const filePath = `${documentType}/${sanitizedUserId}/${fileName}`;
 
   try {
-    console.log(`🔄 Attempting upload: ${filePath}`);
-    console.log(`📁 File info: ${file.originalname} (${file.mimetype}, ${file.size} bytes)`);
     
     // Verify buffer exists and has content
     if (!file.buffer || file.buffer.length === 0) {
@@ -102,7 +91,6 @@ export async function uploadRegistrationFile(
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`🔄 Upload attempt ${attempt}/${maxRetries}`);
         
         // Upload to S3
         const uploadCommand = new PutObjectCommand({
@@ -114,7 +102,6 @@ export async function uploadRegistrationFile(
         });
 
         const result = await s3Client.send(uploadCommand);
-        console.log(`✅ Upload successful on attempt ${attempt}: ${filePath}`, result.ETag);
 
         // Generate public URL based on endpoint configuration
         const url = process.env.AWS_ENDPOINT
@@ -131,11 +118,9 @@ export async function uploadRegistrationFile(
         
       } catch (error: any) {
         lastError = error;
-        console.log(`❌ Upload attempt ${attempt} failed:`, error.message);
         
         // If it's a signature error and we have more attempts, wait and retry
         if (error.Code === 'SignatureDoesNotMatch' && attempt < maxRetries) {
-          console.log(`⏳ Waiting 1 second before retry...`);
           await new Promise(resolve => setTimeout(resolve, 1000));
           continue;
         }

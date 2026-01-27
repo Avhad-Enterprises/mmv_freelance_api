@@ -13,7 +13,6 @@ class notificationRoute implements Route {
     public notificationController = new notificationController();
 
     constructor() {
-        console.log('✅ Notification Routes Initialized');
         this.initializeRoutes();
     }
 

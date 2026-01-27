@@ -23,10 +23,6 @@ export function validateOAuthConfig(): void {
     }
 
     // Log OAuth provider status
-    console.log('📋 OAuth Provider Status:');
-    console.log(`   Google:   ${isGoogleEnabled() ? '✅ Enabled' : '❌ Disabled'}`);
-    console.log(`   Facebook: ${isFacebookEnabled() ? '✅ Enabled' : '❌ Disabled'}`);
-    console.log(`   Apple:    ${isAppleEnabled() ? '✅ Enabled' : '❌ Disabled'}`);
 }
 
 // ===========================================

@@ -31,13 +31,6 @@ export class AuthService {
     let businessDocumentUrls: string[] = [];
 
     if (files) {
-      console.log('📁 Files received for client registration:', Object.keys(files));
-      console.log('📋 File details:', Object.entries(files).map(([key, fileArray]) => ({
-        field: key,
-        count: fileArray?.length || 0,
-        files: fileArray?.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) || []
-      })));
-
       try {
         // Upload profile picture
         if (files.profile_picture && files.profile_picture[0]) {
@@ -52,13 +45,11 @@ export class AuthService {
 
         // Upload ID document (clients don't need this, but keeping for compatibility)
         if (files.id_document && files.id_document[0]) {
-          console.log('⚠️ Client registration received ID document, but clients do not require ID documents');
         }
 
         // Upload business documents (multiple allowed for clients)
         const businessFiles = files.business_document;
         if (businessFiles && businessFiles.length > 0) {
-          console.log(`📄 Processing ${businessFiles.length} business document(s) for client`);
 
           for (const businessFile of businessFiles) {
             if (businessFile.size === 0 || !businessFile.buffer || businessFile.buffer.length === 0) {
@@ -74,14 +65,12 @@ export class AuthService {
                 AccountType.CLIENT
               );
               businessDocumentUrls.push(businessUpload.url);
-              console.log(`✅ Uploaded business document: ${businessUpload.url}`);
             } catch (uploadError) {
               console.error(`❌ Failed to upload business document ${businessFile.originalname}:`, uploadError);
               // Continue with other files instead of failing completely
             }
           }
 
-          console.log(`📄 Successfully uploaded ${businessDocumentUrls.length} business document(s)`);
         }
       } catch (error: any) {
         console.error('❌ File upload error in auth service:', error.message);
@@ -244,7 +233,6 @@ export class AuthService {
     // Give signup bonus (5 free keys) to new videographer
     const signupBonusService = new SignupBonusService();
     const bonusResult = await signupBonusService.giveSignupBonus(user.user_id, 'VIDEOGRAPHER');
-    console.log(`[Videographer Registration] Signup bonus result for user ${user.user_id}:`, bonusResult);
 
     // Generate token
     const permissions = await getUserPermissions(user.user_id);
@@ -365,7 +353,6 @@ export class AuthService {
     // Give signup bonus (5 free keys) to new video editor
     const signupBonusService = new SignupBonusService();
     const bonusResult = await signupBonusService.giveSignupBonus(user.user_id, 'VIDEO_EDITOR');
-    console.log(`[Video Editor Registration] Signup bonus result for user ${user.user_id}:`, bonusResult);
     // Generate token
     const permissions = await getUserPermissions(user.user_id);
     const token = this.generateToken(user.user_id, user.email, ['VIDEO_EDITOR'], permissions);

@@ -64,7 +64,6 @@ export class SignupBonusService {
 
             // Check if bonus was already claimed
             if (freelancerProfile.signup_bonus_claimed) {
-                console.log(`[SignupBonus] Bonus already claimed for user ${userId}`);
                 return {
                     success: false,
                     creditsAdded: 0,
@@ -95,8 +94,6 @@ export class SignupBonusService {
                 reference_type: 'signup',
                 description: `Welcome bonus: ${SIGNUP_BONUS_CREDITS} free keys for new ${roleName.toLowerCase().replace('_', ' ')} registration`
             }, db);
-
-            console.log(`[SignupBonus] Successfully gave ${SIGNUP_BONUS_CREDITS} keys to user ${userId} (${roleName})`);
 
             return {
                 success: true,
