@@ -25,7 +25,7 @@ export class ClientController {
   ): Promise<void> => {
     try {
       const profile = await this.clientService.getClientProfile(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         data: profile
@@ -45,9 +45,9 @@ export class ClientController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const clientId = parseInt(req.params.id);
+      const clientId = parseInt(req.params.id as string);
       const profile = await this.clientService.getClientProfile(clientId);
-      
+
       res.status(200).json({
         success: true,
         data: profile
@@ -68,7 +68,7 @@ export class ClientController {
   ): Promise<void> => {
     try {
       const clients = await this.clientService.getAllClients();
-      
+
       res.status(200).json({
         success: true,
         count: clients.length,
@@ -167,7 +167,7 @@ export class ClientController {
   ): Promise<void> => {
     try {
       const stats = await this.clientService.getClientStats(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         data: stats
@@ -188,7 +188,7 @@ export class ClientController {
   ): Promise<void> => {
     try {
       await this.clientService.softDelete(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         message: 'Account deleted successfully'

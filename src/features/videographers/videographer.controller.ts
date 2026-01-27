@@ -24,7 +24,7 @@ export class VideographerController {
   ): Promise<void> => {
     try {
       const profile = await this.videographerService.getVideographerProfile(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         data: profile
@@ -44,9 +44,9 @@ export class VideographerController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const videographerId = parseInt(req.params.id);
+      const videographerId = parseInt(req.params.id as string);
       const profile = await this.videographerService.getVideographerProfile(videographerId);
-      
+
       res.status(200).json({
         success: true,
         data: profile
@@ -66,9 +66,9 @@ export class VideographerController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const { username } = req.params;
+      const username = req.params.username as string;
       const profile = await this.videographerService.getVideographerByUsername(username);
-      
+
       res.status(200).json({
         success: true,
         data: profile
@@ -89,7 +89,7 @@ export class VideographerController {
   ): Promise<void> => {
     try {
       const videographers = await this.videographerService.getAllVideographers();
-      
+
       res.status(200).json({
         success: true,
         count: videographers.length,
@@ -112,7 +112,7 @@ export class VideographerController {
     try {
       const limit = parseInt(req.query.limit as string) || 10;
       const videographers = await this.videographerService.getTopRated(limit);
-      
+
       res.status(200).json({
         success: true,
         count: videographers.length,
@@ -218,7 +218,7 @@ export class VideographerController {
   ): Promise<void> => {
     try {
       const stats = await this.videographerService.getFreelancerStats(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         data: stats
@@ -239,7 +239,7 @@ export class VideographerController {
   ): Promise<void> => {
     try {
       await this.videographerService.softDelete(req.user.user_id);
-      
+
       res.status(200).json({
         success: true,
         message: 'Account deleted successfully'

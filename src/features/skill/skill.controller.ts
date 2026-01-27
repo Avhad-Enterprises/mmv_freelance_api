@@ -32,7 +32,7 @@ class SkillsController {
     // Get skill by ID
     public getSkillById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const skillId = parseInt(req.params.id);
+            const skillId = parseInt(req.params.id as string);
             const skill = await this.SkillsService.GetSkillById(skillId);
             res.status(200).json({ success: true, data: skill, message: "Skill fetched successfully" });
         } catch (error) {
@@ -44,7 +44,7 @@ class SkillsController {
     // Update skill
     public updateSkill = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const skillId = parseInt(req.params.id);
+            const skillId = parseInt(req.params.id as string);
             const updateData: Partial<SkillsDto> = req.body;
             const updatedSkill = await this.SkillsService.UpdateSkill(skillId, updateData);
             res.status(200).json({ success: true, data: updatedSkill, message: "Skill updated successfully" });
@@ -57,7 +57,7 @@ class SkillsController {
     // Delete skill (soft delete)
     public deleteSkill = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const skillId = parseInt(req.params.id);
+            const skillId = parseInt(req.params.id as string);
             const deletedBy = req.body.deleted_by || 1; // Use deleted_by from body or default to 1
             const deletedSkill = await this.SkillsService.DeleteSkill(skillId, deletedBy);
             res.status(200).json({ success: true, data: deletedSkill, message: "Skill deleted successfully" });

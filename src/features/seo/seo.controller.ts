@@ -3,15 +3,15 @@ import { SeoDto, UpdateSeoDto } from "./seo.dto";
 import SeoService from "./seo.service";
 
 class SeoController {
-    private seoService: SeoService;
+  private seoService: SeoService;
 
-    constructor() {
-        this.seoService = new SeoService();
-    }
+  constructor() {
+    this.seoService = new SeoService();
+  }
 
-    // POST /api/v1/seos
-    // Create a new SEO entry
-    public createSeo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  // POST /api/v1/seos
+  // Create a new SEO entry
+  public createSeo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const seoData: SeoDto = req.body;
       const seo = await this.seoService.Insert(seoData);
@@ -26,9 +26,9 @@ class SeoController {
     }
   }
 
-    // GET /api/v1/seos
-    // Get all SEO entries
-    public getAllSeos = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  // GET /api/v1/seos
+  // Get all SEO entries
+  public getAllSeos = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const seos = await this.seoService.GetAllSeos();
 
@@ -42,11 +42,11 @@ class SeoController {
     }
   }
 
-    // GET /api/v1/seos/:id
-    // Get SEO entry by ID
-    public getSeoById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  // GET /api/v1/seos/:id
+  // Get SEO entry by ID
+  public getSeoById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(req.params.id as string);
       const seo = await this.seoService.GetSeoById(id);
 
       res.status(200).json({
@@ -59,11 +59,11 @@ class SeoController {
     }
   }
 
-    // PUT /api/v1/seos/:id
-    // Update SEO entry
-    public updateSeo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  // PUT /api/v1/seos/:id
+  // Update SEO entry
+  public updateSeo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(req.params.id as string);
       const updateData: UpdateSeoDto = req.body;
       const seo = await this.seoService.UpdateSeo(id, updateData);
 
@@ -77,11 +77,11 @@ class SeoController {
     }
   }
 
-    // DELETE /api/v1/seos/:id
-    // Soft delete SEO entry
-    public deleteSeo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  // DELETE /api/v1/seos/:id
+  // Soft delete SEO entry
+  public deleteSeo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(req.params.id as string);
       const seo = await this.seoService.DeleteSeo(id);
 
       res.status(200).json({
@@ -94,33 +94,33 @@ class SeoController {
     }
   }
 
-    // Legacy methods for backward compatibility (deprecated)
-    public insert = this.createSeo;
-    public getAllbyseodetail = this.getAllSeos;
-    public updatebyseodetail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        try {
-            const raw = (req.body as any).id;
-            const idNum: number = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+  // Legacy methods for backward compatibility (deprecated)
+  public insert = this.createSeo;
+  public getAllbyseodetail = this.getAllSeos;
+  public updatebyseodetail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const raw = (req.body as any).id;
+      const idNum: number = typeof raw === 'string' ? parseInt(raw, 10) : raw;
 
-            if (isNaN(idNum)) {
-                res.status(400).json({ error: 'id must be a number' });
-                return;
-            }
+      if (isNaN(idNum)) {
+        res.status(400).json({ error: 'id must be a number' });
+        return;
+      }
 
-            // Clone body and exclude collection_id
-            const fieldsToUpdate = req.body;
+      // Clone body and exclude collection_id
+      const fieldsToUpdate = req.body;
 
-            if (Object.keys(fieldsToUpdate).length === 0) {
-                res.status(400).json({ error: 'No update data provided' });
-                return;
-            }
+      if (Object.keys(fieldsToUpdate).length === 0) {
+        res.status(400).json({ error: 'No update data provided' });
+        return;
+      }
 
-            const updated = await this.seoService.UpdateSeo(idNum, fieldsToUpdate);
-            res.status(200).json({ data: updated, message: 'SEO updated' });
-        } catch (error) {
-            next(error);
-        }
-    };
+      const updated = await this.seoService.UpdateSeo(idNum, fieldsToUpdate);
+      res.status(200).json({ data: updated, message: 'SEO updated' });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default SeoController;

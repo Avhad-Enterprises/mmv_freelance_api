@@ -55,7 +55,7 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = parseInt(req.params.id as string);
       const user = await this.userService.getById(userId);
 
       res.status(200).json({
@@ -77,7 +77,7 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = parseInt(req.params.id as string);
       const profile = await this.userService.getUserWithProfile(userId);
 
       res.status(200).json({
@@ -100,7 +100,7 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = parseInt(req.params.id as string);
       const publicInfo = await this.userService.getUserPublicInfo(userId);
 
       res.status(200).json({
@@ -379,7 +379,7 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = parseInt(req.params.id as string);
       const { reason } = req.body;
 
       await this.userService.banUser(userId, reason);
@@ -403,7 +403,7 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = parseInt(req.params.id as string);
 
       await this.userService.unbanUser(userId);
 
@@ -477,7 +477,7 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = parseInt(req.params.id as string);
       const updateData = req.body;
 
       const result = await this.userService.updateUserById(userId, updateData);
@@ -502,7 +502,7 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = parseInt(req.params.id as string);
 
       await this.userService.deleteUserById(userId);
 
@@ -527,7 +527,7 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = parseInt(req.params.id as string);
 
       const roles = await this.userService.getUserRoles(userId);
 
@@ -550,7 +550,7 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = parseInt(req.params.id as string);
       const { roleName } = req.body;
 
       if (!roleName) {
@@ -578,8 +578,8 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = parseInt(req.params.id);
-      const roleId = parseInt(req.params.roleId);
+      const userId = parseInt(req.params.id as string);
+      const roleId = parseInt(req.params.roleId as string);
 
       await this.userService.removeRoleFromUser(userId, roleId);
 
@@ -602,7 +602,7 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = parseInt(req.params.id as string);
 
       const permissions = await this.userService.getUserPermissions(userId);
 

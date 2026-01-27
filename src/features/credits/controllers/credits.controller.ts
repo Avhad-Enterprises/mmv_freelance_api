@@ -312,7 +312,7 @@ export class CreditsController {
             const refundService = new CreditRefundService();
 
             const eligibility = await refundService.checkRefundEligibility(
-                parseInt(application_id),
+                parseInt(application_id as string),
                 user_id,
                 RefundReason.WITHDRAWAL
             );
@@ -320,7 +320,7 @@ export class CreditsController {
             res.status(200).json({
                 success: true,
                 data: {
-                    application_id: parseInt(application_id),
+                    application_id: parseInt(application_id as string),
                     eligible: eligibility.eligible,
                     refund_amount: eligibility.refundAmount,
                     refund_percent: eligibility.refundPercent,

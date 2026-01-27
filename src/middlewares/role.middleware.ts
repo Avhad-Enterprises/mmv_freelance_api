@@ -80,7 +80,7 @@ export const requireSelfOrRole = (...roles: string[]) => {
         throw new HttpException(401, "Authentication required");
       }
 
-      const requestedUserId = parseInt(req.params.id);
+      const requestedUserId = parseInt(req.params.id as string);
       const currentUserId = req.user.user_id;
       const userRoleNames = req.user.roles || [];
 
