@@ -40,9 +40,9 @@ class FirebaseAdmin {
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       };
 
-      // Validate required configuration
+      // Check if Firebase credentials are available
       if (!serviceAccount.projectId || !serviceAccount.privateKey || !serviceAccount.clientEmail) {
-        logger.warn('Firebase Admin configuration incomplete. Custom token generation will be unavailable.');
+        logger.info('Firebase Admin is disabled. Firebase features will be unavailable.');
         return;
       }
 

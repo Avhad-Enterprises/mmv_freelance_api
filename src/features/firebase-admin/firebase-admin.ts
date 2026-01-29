@@ -6,11 +6,8 @@ if (!admin.apps.length) {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-  if (!projectId || !clientEmail || !privateKey) {
-    console.warn(
-      "Missing Firebase Admin credentials. Firebase Admin features will be unavailable."
-    );
-  } else {
+  // Only initialize if credentials are available
+  if (projectId && clientEmail && privateKey) {
     try {
       admin.initializeApp({
         credential: admin.credential.cert({
@@ -23,6 +20,7 @@ if (!admin.apps.length) {
       console.error("Failed to initialize Firebase Admin:", error);
     }
   }
+  // If credentials are missing, Firebase remains uninitialized (disabled)
 }
 
 export default admin;
