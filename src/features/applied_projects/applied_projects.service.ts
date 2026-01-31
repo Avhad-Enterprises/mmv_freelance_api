@@ -352,15 +352,6 @@ class AppliedProjectsService {
             updateData.rejection_reason = rejection_reason;
         }
 
-        // Debug logging
-        console.log('=== SERVICE: Preparing Database Update ===');
-        console.log('Status:', status);
-        console.log('Rejection Reason (received):', rejection_reason);
-        console.log('Rejection Reason (type):', typeof rejection_reason);
-        console.log('Rejection Reason (length):', rejection_reason?.length);
-        console.log('Update Data:', updateData);
-        console.log('========================================');
-
         // Update the application status
         const updated = await DB(T.APPLIED_PROJECTS)
             .where({ applied_projects_id })
@@ -386,7 +377,6 @@ class AppliedProjectsService {
                 // If this application has a bid_amount (bidding was enabled), update the project budget
                 if (application.bid_amount && application.bid_amount > 0) {
                     projectUpdateData.budget = application.bid_amount;
-                    console.log(`Updating project budget to approved bid amount: ${application.bid_amount}`);
                 }
 
                 // Update the project to assign the freelancer and set status to assigned

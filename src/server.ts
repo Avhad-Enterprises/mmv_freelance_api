@@ -126,7 +126,6 @@ let appInstance: any;
 
 // Graceful shutdown
 const gracefulShutdown = async (signal: string) => {
-  console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
   try {
     if (appInstance) {
       // Close app/socket resources if exposed

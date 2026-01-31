@@ -34,9 +34,7 @@ class App {
   public async listen() {
     try {
       // Test database connection before starting server
-      console.log("🔍 Testing database connection...");
       await DB.raw("SELECT 1 as test");
-      console.log("✅ Database connection successful");
 
       const server = this.app.listen(this.port, "0.0.0.0", () => {
         logger.info(

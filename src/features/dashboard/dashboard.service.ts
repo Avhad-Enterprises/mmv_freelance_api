@@ -64,8 +64,6 @@ class dashboardservice {
 
     for (const field of fields) {
       const value = row[field];
-      console.log(`${field}: ${value}`);
-
       if (!this.isValidCDN(value)) {
         missing.push(field); // ✅ now it's defined and usable
       }

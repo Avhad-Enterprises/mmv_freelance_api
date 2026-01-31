@@ -34,7 +34,6 @@ export const sendSupportEmail = async ({
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Support email sent:', info.response);
   } catch (err) {
     console.error('❌ Failed to send support email:', err);
     throw new Error('Support email failed');

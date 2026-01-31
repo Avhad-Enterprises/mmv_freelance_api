@@ -92,10 +92,6 @@ class ProjectstaskService {
     updateData: any
   ): Promise<any> => {
     try {
-      console.log('=== UPDATE PROJECT DEBUG ===');
-      console.log('Project ID:', projects_task_id);
-      console.log('Incoming updateData:', JSON.stringify(updateData, null, 2));
-
       // 1. check if project exists
       const project = await DB(T.PROJECTS_TASK)
         .where({ projects_task_id })
@@ -160,8 +156,6 @@ class ProjectstaskService {
         }
       });
 
-      console.log('Formatted update payload:', JSON.stringify(formattedUpdate, null, 2));
-
       // 6. update project
       await DB(T.PROJECTS_TASK)
         .where({ projects_task_id })
@@ -172,7 +166,6 @@ class ProjectstaskService {
         .where({ projects_task_id })
         .first();
 
-      console.log('=== UPDATE SUCCESS ===');
       return updatedProjecttask;
     } catch (error) {
       console.error("=== UPDATE ERROR ===");
