@@ -11,7 +11,7 @@ import { IsEmpty } from "class-validator";
 const authMiddleware = async (
   req: RequestWithUser,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     // Allow OPTIONS requests for CORS preflight
@@ -59,7 +59,7 @@ const authMiddleware = async (
     // Exclude admin-only endpoints like /faq/all that need auth
     const adminOnlyRoutes = ["/faq/all"];
     const isAdminOnlyRoute = adminOnlyRoutes.some((route) =>
-      req.path.startsWith(route)
+      req.path.startsWith(route),
     );
 
     const isPublicGetRoute =
@@ -80,6 +80,7 @@ const authMiddleware = async (
       "/users/password-reset-request",
       "/users/password-reset",
       "/contact/submit",
+      "/subscribed/insert",
     ];
     const isPublicPostRoute =
       publicPostRoutes.some((route) => req.path.includes(route)) &&
@@ -101,7 +102,7 @@ const authMiddleware = async (
         try {
           const verificationResponse = (await jwt.verify(
             bearerToken,
-            secret
+            secret,
           )) as any;
 
           if (verificationResponse) {
@@ -139,8 +140,8 @@ const authMiddleware = async (
             next(
               new HttpException(
                 401,
-                "Authentication token has expired. Please login again."
-              )
+                "Authentication token has expired. Please login again.",
+              ),
             );
           } else if (error.name === "JsonWebTokenError") {
             next(new HttpException(401, "Invalid authentication token"));
@@ -148,7 +149,10 @@ const authMiddleware = async (
             next(new HttpException(401, "Authentication token not active"));
           } else {
             next(
-              new HttpException(401, "Authentication token verification failed")
+              new HttpException(
+                401,
+                "Authentication token verification failed",
+              ),
             );
           }
         }
